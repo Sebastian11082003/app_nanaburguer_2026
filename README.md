@@ -1,3 +1,9 @@
+![Node.js](https://img.shields.io/badge/Node.js-18+-green)
+![NestJS](https://img.shields.io/badge/NestJS-Backend-red)
+![Docker](https://img.shields.io/badge/Docker-Container-blue)
+![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+
 # 🍔 NanaBurguer 2026
 
 Restaurant Operations System (Single-Tenant MVP, SaaS-Ready)
