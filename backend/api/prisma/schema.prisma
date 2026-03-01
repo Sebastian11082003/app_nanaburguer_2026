@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  CASHIER
+  WAITER
+}
+
+enum OrderType {
+  DINE_IN
+  DELIVERY
+  PICKUP
+}
+
+enum OrderStatus {
+  CREATED
+  IN_PREPARATION
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CLOSED
+  CANCELED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole
+  isActive     Boolean  @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  createdOrders Order[] @relation("orders_created")
+  updatedOrders Order[] @relation("orders_updated")
+  statusChanges OrderStatusHistory[]
+
+  @@map("user")
+}
+
+model Category {
+  id       String  @id @default(uuid())
+  name     String
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  items MenuItem[]
+
+  @@map("category")
+}
+
+model MenuItem {
+  id          String   @id @default(uuid())
+  categoryId  String   @map("category_id")
+  name        String
+  description String?
+  priceCents  Int      @map("price_cents")
+  isAvailable Boolean  @default(true) @map("is_available")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  category Category @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@map("menu_item")
+}
+
+model TableEntity {
+  id       String  @id @default(uuid())
+  label    String
+  capacity Int
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  orders Order[]
+
+  @@map("table_entity")
+}
+
+model Order {
+  id     String     @id @default(uuid())
+  type   OrderType
+  status OrderStatus
+
+  tableId String? @map("table_id")
+
+  customerName    String? @map("customer_name")
+  customerPhone   String? @map("customer_phone")
+  deliveryAddress String? @map("delivery_address")
+
+  subtotalCents Int @map("subtotal_cents")
+  taxCents      Int @map("tax_cents")
+  totalCents    Int @map("total_cents")
+
+  createdById String @map("created_by")
+  updatedById String @map("updated_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  closedAt  DateTime? @map("closed_at")
+
+  table TableEntity? @relation(fields: [tableId], references: [id])
+
+  createdBy User @relation("orders_created", fields: [createdById], references: [id])
+  updatedBy User @relation("orders_updated", fields: [updatedById], references: [id])
+
+  items   OrderItem[]
+  payment Payment?
+  history OrderStatusHistory[]
+
+  @@index([tableId])
+  @@index([createdById])
+  @@index([updatedById])
+  @@map("order_entity")
+}
+
+model OrderItem {
+  id           String @id @default(uuid())
+  orderId      String @map("order_id")
+  menuItemId   String @map("menu_item_id")
+  quantity     Int
+  unitPriceCents Int  @map("unit_price_cents")
+  lineTotalCents Int  @map("line_total_cents")
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+  @@index([menuItemId])
+  @@map("order_item")
+}
+
+model Payment {
+  id         String @id @default(uuid())
+  orderId    String @unique @map("order_id")
+  method     PaymentMethod
+  amountCents Int   @map("amount_cents")
+  currency   String @default("COP")
+  paidAt     DateTime @default(now()) @map("paid_at")
+  createdById String @map("created_by")
+
+  order     Order @relation(fields: [orderId], references: [id])
+  createdBy User  @relation(fields: [createdById], references: [id])
+
+  @@index([createdById])
+  @@map("payment")
+}
+
+model OrderStatusHistory {
+  id        String @id @default(uuid())
+  orderId   String @map("order_id")
+  fromStatus OrderStatus @map("from_status")
+  toStatus   OrderStatus @map("to_status")
+  changedById String @map("changed_by")
+  changedAt DateTime @default(now()) @map("changed_at")
+
+  order     Order @relation(fields: [orderId], references: [id])
+  changedBy User  @relation(fields: [changedById], references: [id])
+
+  @@index([orderId])
+  @@index([changedById])
+  @@map("order_status_history")
+}
