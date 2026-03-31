@@ -6,6 +6,10 @@ import { HealthController } from './interfaces/health/health.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { UsersModule } from './modules/users/users.module';
+import { MenuItemsModule } from './modules/menu-items/menu-items.module';
+import { OrdersModule } from './modules/orders/orders.module';
+import { TablesModule } from './modules/tables/tables.module';
+import { PaymentsModule } from './modules/payment/payments.module';
 
 const configOptions: ConfigModuleOptions = {
   isGlobal: true,
@@ -20,6 +24,10 @@ const configOptions: ConfigModuleOptions = {
     AuthModule,
     CategoriesModule,
     UsersModule,
+    MenuItemsModule,
+    OrdersModule,
+    TablesModule,
+    PaymentsModule,
   ],
   controllers: [HealthController],
 })
