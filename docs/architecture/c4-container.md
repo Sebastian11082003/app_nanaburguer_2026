@@ -1,61 +1,29 @@
 ![Diagrama context](./img/2.jpeg)
 
-
-
 ```mermaid
+flowchart LR
+    classDef frontend fill:#E1F5FE,stroke:#039BE5,stroke-width:2px
+    classDef backend fill:#E8F5E9,stroke:#43A047,stroke-width:2px
+    classDef db fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px
+    classDef external fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px
 
-flowchart TB
+    POS["💻 POS Caja"]:::frontend
+    Mobile["📱 APK Meseros"]:::frontend
+    Admin["🌐 Admin Panel"]:::frontend
 
-  %% ====== People ======
-  subgraph People["People"]
-    W[Waiter]
-    C[Cashier - Admin]
-    U[Customer]
-  end
+    API["⚙️ Backend API\nNestJS Multi-Tenant"]:::backend
 
-  %% ====== Client Apps ======
-  subgraph Clients["Client Applications"]
-    IA[Ionic Internal App]
-    PW[Public Ordering Web]
-  end
+    DB["🗄 PostgreSQL\nMulti-Tenant DB"]:::db
 
-  %% ====== Backend ======
-  subgraph Backend["Backend"]
-    API[NestJS API - Modular Monolith]
-  end
+    Factus["🧾 Factus API"]:::external
+    WhatsApp["📲 WhatsApp API"]:::external
 
-  %% ====== Data ======
-  subgraph Data["Data Store"]
-    DB[(PostgreSQL)]
-  end
+    POS --> API
+    Mobile --> API
+    Admin --> API
 
-  %% ====== External ======
-  subgraph External["External Systems"]
-    WA[WhatsApp API]
-    SG[Siigo API]
-  end
+    API --> DB
+    API --> Factus
+    API --> WhatsApp
 
-  %% ====== Flows ======
-  W --> IA
-  C --> IA
-  U --> PW
-
-  IA -->|HTTPS REST| API
-  PW -->|HTTPS REST| API
-
-  API -->|SQL| DB
-  API -->|HTTPS| WA
-  API -->|HTTPS| SG
-
-  %% ====== Styles ======
-  classDef person fill:#1f2937,stroke:#111827,color:#ffffff;
-  classDef client fill:#0f766e,stroke:#0b3d39,color:#ffffff;
-  classDef backend fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff;
-  classDef data fill:#374151,stroke:#111827,color:#ffffff;
-  classDef external fill:#7c3aed,stroke:#4c1d95,color:#ffffff;
-
-  class W,C,U person;
-  class IA,PW client;
-  class API backend;
-  class DB data;
-  class WA,SG external;
+```

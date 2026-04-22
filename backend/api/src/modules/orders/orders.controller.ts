@@ -5,48 +5,69 @@ import {
   Param,
   Post,
   Query,
-  Req,
   UseGuards,
   Patch,
+  Req,
 } from '@nestjs/common';
+
 import { UserRole } from '@prisma/client';
+
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FindOrdersDto } from './dto/find-orders.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
+
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { TenantGuard } from '../../common/guards/tenant.guard';
+
 import { Roles } from '../../common/decorators/roles.decorator';
-import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { Tenant } from '../../common/decorators/tenant.decorator';
 
 @Controller('orders')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
-  create(@Body() dto: CreateOrderDto, @Req() req: { user: { id: string } }) {
-    return this.ordersService.create(dto, req.user.id);
+  create(
+    @Body() dto: CreateOrderDto,
+    @Tenant() restaurantId: string,
+    @Req() req: { user: { id: string } },
+  ) {
+    return this.ordersService.create(dto, restaurantId, req.user.id);
   }
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
-  findAll(@Query() query: FindOrdersDto) {
-    return this.ordersService.findAll(query);
+  findAll(
+    @Tenant() restaurantId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Query() _query: FindOrdersDto,
+  ) {
+    return this.ordersService.findAll(restaurantId);
   }
 
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
-  findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(id);
+  findOne(@Param('id') id: string, @Tenant() restaurantId: string) {
+    return this.ordersService.findOne(id, restaurantId);
   }
+
   @Patch(':id/status')
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
   updateStatus(
     @Param('id') id: string,
-    @Body() dto: UpdateOrderStatusDto,
+    @Body() dto: UpdateStatusDto,
+    @Tenant() restaurantId: string,
     @Req() req: { user: { id: string } },
   ) {
-    return this.ordersService.updateStatus(id, dto.status, req.user.id);
+    return this.ordersService.updateStatus(
+      id,
+      dto.status,
+      restaurantId,
+      req.user.id,
+    );
   }
 }

@@ -4,12 +4,14 @@ import { validateEnvForNest } from './config/env.schema';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { HealthController } from './interfaces/health/health.controller';
 import { AuthModule } from './modules/auth/auth.module';
-import { CategoriesModule } from './modules/categories/categories.module';
 import { UsersModule } from './modules/users/users.module';
-import { MenuItemsModule } from './modules/menu-items/menu-items.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { TablesModule } from './modules/tables/tables.module';
 import { PaymentsModule } from './modules/payment/payments.module';
+import { APP_GUARD } from '@nestjs/core';
+import { TenantGuard } from './common/guards/tenant.guard';
+import { InvoicesModule } from './modules/invoices/invoices.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 const configOptions: ConfigModuleOptions = {
   isGlobal: true,
@@ -22,12 +24,18 @@ const configOptions: ConfigModuleOptions = {
     ConfigModule.forRoot(configOptions),
     PrismaModule,
     AuthModule,
-    CategoriesModule,
     UsersModule,
-    MenuItemsModule,
     OrdersModule,
     TablesModule,
     PaymentsModule,
+    InvoicesModule,
+    ReportsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: TenantGuard,
+    },
   ],
   controllers: [HealthController],
 })

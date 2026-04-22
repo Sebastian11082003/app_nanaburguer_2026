@@ -1,91 +1,216 @@
-# Security Baseline (MVP)
+# Security Baseline (Multi-Tenant SaaS)
 
 ## Purpose
-Define the minimum security posture for a production MVP.
+
+Define the minimum security posture for a production-ready multi-tenant SaaS platform.
 
 ---
 
-## 1. Authentication
-- JWT access token for API access.
-- Passwords must be hashed (bcrypt/argon2).
-- Access tokens must be short-lived (e.g., 15m).
-- Refresh tokens (optional MVP) stored securely if implemented.
+# CORE PRINCIPLE
+
+Tenant isolation is mandatory.
+
+- Every request MUST include `restaurant_id`
+- No cross-tenant data access is allowed
+- All queries MUST be scoped by tenant
 
 ---
 
-## 2. Authorization (RBAC)
-Roles (MVP):
-- `ADMIN` (Owner)
-- `CASHIER`
-- `WAITER`
+# 1. Authentication
 
-Rules:
-- Waiter can create/update orders assigned to tables.
-- Cashier can close orders and manage payments.
-- Admin can manage menu, users, tables, and view reports.
+- JWT-based authentication
+- Password hashing (bcrypt or argon2)
+
+## JWT Payload (REQUIRED)
+
+{
+"userId": "uuid",
+"role": "ADMIN | CASHIER | WAITER",
+"restaurant_id": "uuid"
+}
+
+## Rules
+
+- Access tokens must be short-lived (15 minutes)
+- Refresh tokens recommended for production
+- Tokens MUST always include tenant context
 
 ---
 
-## 3. Input Validation
-- Use DTO validation on controllers (class-validator).
-- Sanitize and validate:
+# 2. Authorization (RBAC)
+
+## Roles
+
+- ADMIN
+- CASHIER
+- WAITER
+- KITCHEN (optional but recommended)
+
+## Rules
+
+- All permissions are tenant-scoped
+- No cross-tenant access allowed
+
+## Permissions Matrix
+
+| Action                | Role             |
+| --------------------- | ---------------- |
+| Create Order          | WAITER           |
+| Update Order          | WAITER           |
+| Kitchen Status Update | KITCHEN / WAITER |
+| Close Sale            | CASHIER          |
+| Manage Menu           | ADMIN            |
+| Manage Users          | ADMIN            |
+
+---
+
+# 3. Multi-Tenant Isolation (CRITICAL)
+
+## Rules
+
+- Every database query MUST include:
+  WHERE restaurant_id = ?
+
+- Tenant must be resolved from JWT and injected into request context
+
+## Forbidden Pattern
+
+SELECT \* FROM orders;
+
+## Correct Pattern
+
+SELECT \* FROM orders WHERE restaurant_id = ?;
+
+---
+
+# 4. External API Security (Factus)
+
+## Rules
+
+- Each restaurant has its own Factus credentials
+- Credentials must be securely stored
+- Never expose credentials to frontend
+
+## Flow
+
+1. Load credentials per tenant
+2. Call Factus securely
+3. Store response (CUFE, status)
+
+---
+
+# 5. Input Validation
+
+- Use DTO validation (class-validator)
+- Validate:
   - phone numbers
   - addresses
-  - product quantities
-  - price fields (never trust client totals)
+  - quantities
+  - enums (status/type)
+
+## Rule
+
+- Never trust client totals
+- All monetary values must be calculated server-side
 
 ---
 
-## 4. Secrets Management
-- Never hardcode secrets in code.
-- Use environment variables:
-  - DB connection string
-  - JWT secret
-  - Siigo credentials (future)
-  - WhatsApp token (future)
+# 6. CORS
+
+- Allow only trusted domains
+- Separate:
+  - Admin panel
+  - Public ordering
 
 ---
 
-## 5. CORS
-- Only allow known origins (Public Web domain and Internal App domain).
-- Restrict methods and headers.
+# 7. Rate Limiting
+
+- Apply rate limiting at Nginx level
+- Optional: NestJS throttler
 
 ---
 
-## 6. Rate Limiting
-- Basic rate limiting at Nginx (recommended).
-- Optional API rate limiting via NestJS throttler.
+# 8. Security Headers
 
----
-
-## 7. Security Headers (Nginx)
 - HSTS
 - X-Frame-Options
 - X-Content-Type-Options
 - Referrer-Policy
-- Content-Security-Policy (basic in MVP)
+- Basic Content-Security-Policy
 
 ---
 
-## 8. Database Security
-- Use AWS RDS.
-- Restrict inbound access to EC2 security group only.
-- Apply migrations through CI/CD or controlled process.
-- Backups enabled.
+# 9. Database Security
+
+- Use AWS RDS
+- Restrict inbound access (only backend)
+- Use private subnet if possible
+- Enable automatic backups
+- Apply migrations via CI/CD
 
 ---
 
-## 9. Logging & Audit
-- Log authentication events (success/failure).
-- Order lifecycle changes should store:
-  - created_by, updated_by
-  - timestamps
-  - status history (optional but recommended)
+# 10. WebSocket Security
+
+## Rules
+
+- JWT required on connection
+- Validate restaurant_id
+- Only emit events to same tenant
+
+## Example
+
+- Order READY → only that restaurant receives event
 
 ---
 
-## 10. Threats & Mitigations (MVP)
-- SQL Injection: use Prisma parameterization (no raw queries without escaping).
-- Broken Access Control: enforce RBAC checks in use cases.
-- Secrets leakage: .env never committed; use GitHub secrets.
-- DoS: rate limits + security groups.
+# 11. Logging & Audit
+
+## Must Log
+
+- requestId
+- userId
+- restaurant_id
+- action
+- result
+
+## Order Tracking
+
+- created_by / updated_by
+- timestamps
+- status history
+
+---
+
+# 12. Threats & Mitigations
+
+## SQL Injection
+
+- Use Prisma (parameterized queries)
+- Avoid raw queries
+
+## Broken Access Control
+
+- Enforce RBAC + tenant filtering
+
+## Data Leakage
+
+- Always filter by restaurant_id
+
+## Secrets Leakage
+
+- .env never committed
+- Use secure secret storage
+
+## DoS Attacks
+
+- Rate limiting
+- Security groups
+- Reverse proxy
+
+---
+
+# FINAL RULE
+
+If a request does NOT validate tenant context → REJECT immediately.

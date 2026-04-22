@@ -1,6 +1,6 @@
-import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { IsInt, IsUUID, Min, IsOptional, IsString } from 'class-validator';
 
-export class CreateOrderItemDto {
+export class AddItemDto {
   @IsUUID()
   menuItemId!: string;
 

@@ -1,13 +1,16 @@
 import { Module } from '@nestjs/common';
+
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
-import { CategoriesController } from './categories.controller';
-import { CategoriesService } from './categories.service';
+
+import { RestaurantController } from './restaurant.controller';
+import { RestaurantService } from './restaurant.service';
+
 import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Module({
   imports: [PrismaModule, AuthModule],
-  controllers: [CategoriesController],
-  providers: [CategoriesService, RolesGuard],
+  controllers: [RestaurantController],
+  providers: [RestaurantService, RolesGuard],
 })
-export class CategoriesModule {}
+export class RestaurantModule {}

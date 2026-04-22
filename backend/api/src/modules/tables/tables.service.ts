@@ -7,27 +7,34 @@ import { UpdateTableDto } from './dto/update-table.dto';
 export class TablesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateTableDto) {
+  async create(dto: CreateTableDto, restaurantId: string) {
     return this.prisma.tableEntity.create({
       data: {
         label: dto.label,
         capacity: dto.capacity,
         isActive: true,
+        restaurantId,
       },
     });
   }
 
-  async findAll() {
+  async findAll(restaurantId: string) {
     return this.prisma.tableEntity.findMany({
+      where: {
+        restaurantId,
+      },
       orderBy: {
-        createdAt: 'asc',
+        id: 'asc',
       },
     });
   }
 
-  async findOne(id: string) {
-    const table = await this.prisma.tableEntity.findUnique({
-      where: { id },
+  async findOne(id: string, restaurantId: string) {
+    const table = await this.prisma.tableEntity.findFirst({
+      where: {
+        id,
+        restaurantId,
+      },
     });
 
     if (!table) {
@@ -37,9 +44,12 @@ export class TablesService {
     return table;
   }
 
-  async update(id: string, dto: UpdateTableDto) {
-    const existing = await this.prisma.tableEntity.findUnique({
-      where: { id },
+  async update(id: string, dto: UpdateTableDto, restaurantId: string) {
+    const existing = await this.prisma.tableEntity.findFirst({
+      where: {
+        id,
+        restaurantId,
+      },
     });
 
     if (!existing) {

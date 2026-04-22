@@ -1,45 +1,58 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
-import { UserRole } from '@prisma/client';
+import { CreateUserDto } from './dto/create-user.dto';
+import { FindUsersDto } from './dto/find-users.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async updateRole(id: string, role: UserRole) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
+  async create(dto: CreateUserDto, restaurantId: string) {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    return this.prisma.user.create({
+      data: {
+        email: dto.email,
+        passwordHash: hashedPassword, // ✅ CORRECTO
+        fullName: dto.fullName,
+        role: dto.role,
+        restaurantId,
+      },
+    });
+  }
+
+  async findAll(restaurantId: string, query: FindUsersDto) {
+    return this.prisma.user.findMany({
+      where: {
+        restaurantId,
+        ...(query.role && { role: query.role }),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async findOne(id: string, restaurantId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, restaurantId },
     });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    return this.prisma.user.update({
-      where: { id },
-      data: { role },
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        role: true,
-        isActive: true,
-      },
-    });
-  }
-  async findAll() {
-    return this.prisma.user.findMany({
-      select: {
-        id: true,
-        fullName: true,
-        email: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    return user;
   }
 }

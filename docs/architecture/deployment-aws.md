@@ -1,57 +1,40 @@
-
-
 ```markdown
 # C4 – Level 2 (Container Diagram)
 ```
+
 ![Diagrama context](./img/3.jpeg)
 
-
 ## Purpose
+
 Show the major containers (applications/data stores) and how they communicate.
 
 ## Mermaid Diagram (Container)
 
-
-
 ```mermaid
-flowchart LR
-  subgraph Users["Users"]
-    U[Internal Users + Customers]
-  end
+flowchart TB
+    classDef cloud fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px
+    classDef service fill:#E8F5E9,stroke:#43A047,stroke-width:2px
+    classDef external fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px
 
-  subgraph Edge["Edge - EC2 Host"]
-    NGINX[Nginx Container\nTLS + Reverse Proxy]
-    API[NestJS API Container\nDocker]
-  end
+    Internet["Internet"]
 
-  subgraph Data["Data"]
-    RDS[(AWS RDS PostgreSQL)]
-    BK[Automated Backups]
-  end
+    EC2["EC2\nDocker + Backend"]:::service
+    Nginx["Nginx Reverse Proxy"]:::service
 
-  subgraph Observability["Observability"]
-    CW[CloudWatch Logs]
-  end
+    RDS["PostgreSQL RDS"]:::cloud
+    S3["S3 (logs / backups)"]:::cloud
 
-  subgraph External["External Systems"]
-    WA[WhatsApp API]
-    SG[Siigo API]
-  end
+    Factus["Factus API"]:::external
+    WhatsApp["WhatsApp API"]:::external
 
-  subgraph CICD["CI/CD"]
-    GH[GitHub Actions]
-  end
+    Internet --> Nginx
+    Nginx --> EC2
 
-  U -->|HTTPS 443| NGINX
-  NGINX -->|HTTP internal| API
+    EC2 --> RDS
+    EC2 --> S3
 
-  API -->|TCP 5432| RDS
-  RDS --> BK
+    EC2 --> Factus
+    EC2 --> WhatsApp
+```
 
-  API -->|HTTPS| WA
-  API -->|HTTPS| SG
-
-  API --> CW
-  GH -->|Deploy via SSH| NGINX
-  GH -->|Deploy via SSH| API
-  ```
+---

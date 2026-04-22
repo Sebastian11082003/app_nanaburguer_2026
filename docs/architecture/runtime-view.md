@@ -1,99 +1,205 @@
-# Runtime View (End-to-End Flows)
+# Runtime View (End-to-End Flows - Multi-Tenant SaaS)
 
 ## Purpose
-Describe the main runtime scenarios (sequence of interactions) across the Web/Mobile clients, API, database and external integrations.
+
+Describe the runtime behavior of the system including:
+
+- Multi-tenant context
+- Kitchen flow (printer + KDS)
+- POS vs Invoice separation
+- External integrations (Factus, WhatsApp)
 
 ---
 
-## Flow 1: Public Web Order (Delivery / Pickup)
+# 🧠 GLOBAL RULE
 
-### Steps
-1. Customer browses the menu on the **Public Ordering Web**.
-2. Customer submits an order (delivery or pickup).
-3. Public Web calls `POST /orders` on the **NestJS API**.
-4. API validates input, computes totals, assigns initial status `CREATED`.
-5. API persists the order in **PostgreSQL (RDS)**.
-6. API emits an internal domain event `OrderCreated`.
-7. API triggers WhatsApp adapter (optional for MVP) to send confirmation to the customer.
-8. API returns `{ code: "ORDER_CREATED", data: { orderId } }` to the Public Web.
-9. Customer sees confirmation message in the selected language (EN/ES) on the UI.
+All requests are tenant-aware:
 
-### Key Notes
-- UI displays localized messages. Backend returns stable response codes.
-- WhatsApp failures must NOT block order creation; WhatsApp is best-effort.
+- Every request includes `restaurant_id`
+- All queries are scoped by tenant
+- No cross-tenant access is allowed
 
 ---
 
-## Flow 2: Internal Dine-In Order (Waiter)
+# 🔄 Flow 1: Public Web Order (Delivery / Pickup)
 
-### Steps
-1. Waiter logs in using the **Ionic Internal App**.
-2. Waiter selects a table and creates an order.
-3. Internal App calls `POST /tables/{tableId}/orders`.
-4. API validates RBAC permissions and business rules.
-5. API persists order in DB with status `CREATED`.
-6. API returns `{ code: "ORDER_CREATED" }`.
+## Steps
+
+1. Customer browses menu (Public Web).
+2. Customer submits order.
+3. Frontend calls `POST /orders`.
+4. API:
+   - validates input
+   - resolves `restaurant_id`
+   - calculates totals
+5. API persists Order with status `CREATED`.
+6. API emits `OrderCreated`.
+7. API sends command to kitchen printer.
+8. API updates status → `SENT_TO_KITCHEN`.
+9. API triggers WhatsApp (non-blocking).
+10. API returns response.
 
 ---
 
-## Flow 3: Order State Transition (Kitchen/Preparation)
+## Key Notes
 
-### Steps
-1. Cashier/Admin or Waiter updates order status in Internal App.
-2. Internal App calls `PATCH /orders/{orderId}/status`.
+- WhatsApp is best-effort (never blocks).
+- Kitchen printing is part of core flow.
+- All operations are tenant-scoped.
+
+---
+
+# 🍽 Flow 2: Internal Order (Waiter App)
+
+## Steps
+
+1. Waiter logs in → JWT includes `restaurant_id`.
+2. Waiter creates order.
 3. API validates:
-   - Allowed transition (finite state machine rules)
-   - RBAC permissions
-   - Order belongs to the restaurant context (single-tenant in MVP)
-4. API stores the new status in DB.
-5. API returns `{ code: "ORDER_STATUS_UPDATED" }`.
-
-### Recommended Status Lifecycle (MVP)
-- `CREATED`
-- `IN_PREPARATION`
-- `READY`
-- `OUT_FOR_DELIVERY` (delivery only)
-- `DELIVERED` (delivery only)
-- `CLOSED`
+   - RBAC
+   - tenant ownership
+4. API saves Order (`CREATED`).
+5. API sends to kitchen (printer).
+6. API updates → `SENT_TO_KITCHEN`.
+7. API returns success.
 
 ---
 
-## Flow 4: Close Sale (Cashier)
+# 👨‍🍳 Flow 3: Kitchen Flow (KDS)
 
-### Steps
-1. Cashier closes an order from Internal App.
-2. Internal App calls `POST /orders/{orderId}/close`.
-3. API validates:
-   - Order is eligible for closure
-   - Payment method is present
-4. API persists closure info:
-   - payment method
-   - closed_at
-   - closed_by
-5. API (optional) creates an Integration Outbox record for Siigo:
-   - status `PENDING`
-6. API returns `{ code: "ORDER_CLOSED" }`.
+## Steps
 
-### Key Notes
-- Siigo sync is async (outbox) to avoid blocking the cashier operation.
-- If Siigo is unavailable, the sale is still closed locally.
+1. Kitchen sees incoming orders (KDS or printed).
+2. Kitchen starts preparation:
+   - API → `IN_PREPARATION`
+3. Kitchen finishes:
+   - API → `READY`
 
 ---
 
-## Flow 5: Sync Sale to Siigo (Future Adapter)
+## Status Lifecycle (UPDATED)
 
-### Steps
-1. Background job scans Outbox records with `PENDING`.
-2. Job sends payload to Siigo via HTTPS.
-3. On success: mark as `SENT` and store external reference.
-4. On failure: mark as `FAILED`, keep error details, retry with backoff.
+CREATED  
+→ SENT_TO_KITCHEN  
+→ IN_PREPARATION  
+→ READY  
+→ DELIVERED  
+→ CLOSED
 
 ---
 
-## Observability (Across All Flows)
-- Each request must carry a `requestId`.
-- Log at least:
+# 💳 Flow 4: Close Sale (POS)
+
+## Steps
+
+1. Cashier closes order.
+2. API validates:
+   - Order is READY or DELIVERED
+3. API creates **Sale entity**.
+4. API creates **Payment**.
+5. API marks Order → `CLOSED`.
+
+---
+
+## Key Notes
+
+- Order ≠ Sale
+- Sale is financial record
+
+---
+
+# 🧾 Flow 5: Electronic Invoice (Factus)
+
+## Steps
+
+1. Customer requests invoice.
+2. API loads tenant Factus config.
+3. API sends invoice to Factus.
+4. Factus responds:
+
+### Success
+
+- CUFE generated
+- status = ACCEPTED
+
+### Failure
+
+- status = PENDING
+- retry mechanism triggered
+
+---
+
+## Key Notes
+
+- Invoice is optional
+- POS does NOT require Factus
+
+---
+
+# 🔁 Flow 6: Retry Mechanism (Factus)
+
+## Steps
+
+1. Background job scans pending invoices.
+2. Retries sending to Factus.
+3. Updates status accordingly.
+
+---
+
+# 📡 Flow 7: Real-Time Updates
+
+## Steps
+
+1. Kitchen updates status.
+2. API persists change.
+3. API emits WebSocket event.
+4. Waiter app receives update instantly.
+
+---
+
+# 🔐 Security & Observability
+
+- JWT includes tenant context
+- Every request logs:
   - requestId
-  - actor (userId/role)
-  - orderId (when applicable)
-  - action and outcome
+  - restaurant_id
+  - userId
+  - action
+  - result
+
+---
+
+# 📊 Runtime Diagram
+
+```mermaid
+sequenceDiagram
+    participant Waiter
+    participant API
+    participant DB
+    participant Printer
+    participant Kitchen
+    participant Factus
+
+    Waiter->>API: Create Order
+    API->>DB: Save (CREATED)
+
+    API->>Printer: Print
+    API->>DB: SENT_TO_KITCHEN
+
+    Kitchen->>API: IN_PREPARATION
+    API->>DB: Update
+
+    Kitchen->>API: READY
+    API->>DB: Update
+
+    Waiter->>API: Close Sale
+    API->>DB: Create Sale + Payment
+
+    alt Invoice requested
+        API->>Factus: Send
+        Factus-->>API: CUFE
+        API->>DB: Save Invoice
+    end
+```
+
+---

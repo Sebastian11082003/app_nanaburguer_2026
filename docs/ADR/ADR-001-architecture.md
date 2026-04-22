@@ -1,33 +1,29 @@
 # ADR-001: Architectural Style Decision
 
+# 🏗️ 6. ADR-001
+
 ## Status
+
 Accepted
+
+---
 
 ## Context
 
-The project aims to build a real, production-deployable restaurant operations system that may evolve into a SaaS platform.
+The system is designed as a production-ready SaaS platform.
 
-The system must:
+It must:
 
 - Be maintainable by a single developer
-- Support clean separation of responsibilities
-- Allow future scalability
-- Be deployable on AWS
-- Demonstrate architectural maturity for portfolio purposes
-
-Possible architectural options considered:
-
-1. Traditional layered monolith
-2. Microservices from the start
-3. Modular monolith with Clean Architecture
+- Support multi-tenant architecture from the core
+- Scale without major refactoring
+- Be deployable in cloud environments
 
 ---
 
 ## Decision
 
-We will implement a:
-
-> Modular Monolith using Clean Architecture principles.
+Modular Monolith + Clean Architecture + Multi-Tenant Model
 
 ---
 
@@ -35,49 +31,64 @@ We will implement a:
 
 ### Why NOT microservices?
 
-- Operational overhead (networking, service discovery, observability)
-- Increased deployment complexity
-- Overengineering for MVP
-- Not aligned with single-developer constraints
-
-### Why NOT traditional layered monolith?
-
-- High coupling risk
-- Controllers directly depending on persistence
-- Poor testability
-- Violates Dependency Inversion Principle
-
-### Why Modular Monolith + Clean Architecture?
-
-- Clear separation between Domain and Infrastructure
-- Use cases are independent of frameworks
-- Easier to test
-- Easier future extraction into microservices
-- Aligns with SOLID principles
-- Production-ready structure
+- High operational complexity
+- Infrastructure overhead
+- Not suitable for MVP
+- Difficult for solo development
 
 ---
 
-## Architectural Layers
+### Why NOT layered monolith?
 
-### Domain
-- Entities
-- Value Objects
-- Business rules
+- Tight coupling
+- Poor separation of concerns
+- Hard to evolve into SaaS
 
-### Application
-- Use Cases
-- Interfaces (Repository contracts)
+---
 
-### Infrastructure
-- Prisma repositories
-- Database access
-- External adapters (Siigo, WhatsApp)
+### Why Modular Monolith?
 
-### Interface
-- HTTP controllers
-- Guards
-- DTO validation
+- Clear separation of layers
+- Domain independence from frameworks
+- High testability
+- Scalable architecture
+
+---
+
+## Multi-Tenant Strategy
+
+```mermaid
+flowchart LR
+    classDef tenant fill:#E8F5E9,stroke:#43A047,stroke-width:2px
+    classDef db fill:#F3E5F5,stroke:#8E24AA,stroke-width:2px
+
+    Tenant1["Restaurant A"]:::tenant
+    Tenant2["Restaurant B"]:::tenant
+
+    DB["Shared Database\nPostgreSQL"]:::db
+
+    Tenant1 --> DB
+    Tenant2 --> DB
+```
+
+---
+
+## Approach
+
+- Single database
+- Logical isolation via `restaurant_id`
+- Tenant-aware authentication (JWT)
+- All entities scoped per tenant
+- No cross-tenant data access
+
+---
+
+## Implications
+
+- Every query MUST include tenant context
+- Authentication includes restaurant_id
+- Factus integration is per tenant
+- Logs include tenant context
 
 ---
 
@@ -85,28 +96,32 @@ We will implement a:
 
 ### Positive
 
-- High maintainability
-- Clear module boundaries
-- SaaS-ready evolution
-- Good portfolio demonstration
-- Testable business logic
-
-### Negative
-
-- Slightly more boilerplate than simple monolith
-- Requires discipline to avoid layer leakage
+- Scalable SaaS architecture
+- Clean and maintainable codebase
+- Easy onboarding of new restaurants
+- Strong data isolation
 
 ---
 
-## Future Considerations
+### Negative
 
-If the system evolves into SaaS:
-
-- Introduce tenant isolation
-- Add billing service
-- Extract integrations into independent services if needed
+- Requires strict discipline in queries
+- Slightly more complex than single-tenant systems
 
 ---
 
 ## Decision Owner
+
 Project Author
+
+---
+
+# 📊 7. SUCCESS METRICS
+
+- Stable cloud deployment
+- Correct tenant isolation
+- Complete order lifecycle without inconsistencies
+- Successful integration with Factus
+- SaaS-ready onboarding for new restaurants
+
+---

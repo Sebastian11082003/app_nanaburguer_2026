@@ -1,23 +1,53 @@
+# Internationalization Strategy (Multi-Tenant SaaS)
+
+## 🌍 Scope
+
+- **Backend (API):** English only (machine-readable)
+- **Frontend (Web + Mobile):** Multi-language (EN default, ES supported)
+- **Per-tenant customization supported (future-ready)**
 
 ---
 
-## ✅ `/docs/architecture/i18n-strategy.md`
+# 🧠 Core Principles
 
-```markdown
-# Internationalization Strategy (EN/ES)
+1. Backend NEVER returns translated messages.
+2. Backend returns stable, machine-readable `code`.
+3. Frontend maps `code → translation key`.
+4. Same `code` must work across:
+   - REST responses
+   - WebSocket events
+   - Logs
+5. Codes are immutable once published.
 
-## Scope
-- **Documentation and codebase:** English.
-- **User Interface (Ionic Web + Mobile):** English (default) + Spanish toggle.
+---
 
-## Design Principles
-1. Backend does not return localized UI messages.
-2. Backend returns stable machine-readable `code` fields.
-3. Frontend maps `code` → translation keys.
-```
-### Example API Response
+# 🧩 Response Structure
+
+## ✅ Success Response
+
 ```json
 {
   "code": "ORDER_CREATED",
-  "data": { "orderId": "abc123" }
+  "data": {
+    "orderId": "abc123"
+  }
 }
+```
+
+```json
+{
+  "code": "ORDER_INVALID_STATUS_TRANSITION",
+  "error": {
+    "details": "Cannot move from READY to CREATED"
+  }
+}
+```
+
+```json
+{
+  "code": "ORDER_READY",
+  "data": {
+    "orderId": "abc123"
+  }
+}
+```

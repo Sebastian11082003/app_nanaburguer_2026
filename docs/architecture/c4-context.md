@@ -1,56 +1,34 @@
 # C4 – Level 1 (Context Diagram)
 
-![Diagrama context](./img/1.jpeg)
+![Diagrama context](./img/.jpeg)
 
-## Purpose
-Show the system as a whole and how it interacts with users and external systems.
+# C4 Context Diagram
 
-## Mermaid Diagram (Context)
+## NanaBurguer SaaS Platform
 
 ```mermaid
-flowchart LR
-  %% ====== Boundaries ======
-  subgraph People["People"]
-    W[Waiter]
-    C[Cashier / Admin]
-    U[Customer]
-  end
+flowchart TB
+    classDef tenant fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px,color:#0D47A1
+    classDef system fill:#E8F5E9,stroke:#43A047,stroke-width:2px,color:#1B5E20
+    classDef external fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px,color:#E65100
 
-  subgraph Interfaces["Client Interfaces"]
-    IA[Ionic Internal App]
-    PW[Public Ordering Web]
-  end
+    Admin["👨‍💼 Admin"]:::tenant
+    Cashier["💳 Cashier"]:::tenant
+    Waiter["🧑‍🍳 Waiter"]:::tenant
 
-  subgraph SystemBoundary["System"]
-    S[Restaurant Operations System]
-  end
+    System["🍔 NanaBurguer SaaS\nMulti-Tenant Backend"]:::system
 
-  subgraph External["External Systems"]
-    WA[WhatsApp API]
-    SG[Siigo API]
-  end
+    Factus["🧾 Factus API"]:::external
+    WhatsApp["📲 WhatsApp API"]:::external
+    Siigo["📊 Siigo API"]:::external
+    Customer["🧍 Customer"]:::external
 
-  %% ====== Relationships ======
-  W -->|uses| IA
-  C -->|uses| IA
-  U -->|orders| PW
+    Admin --> System
+    Cashier --> System
+    Waiter --> System
+    Customer --> System
 
-  IA -->|HTTPS REST| S
-  PW -->|HTTPS REST| S
-
-  S -->|notifications| WA
-  S -->|sales data sync| SG
-
-  %% ====== Styles ======
-  classDef person fill:#1f2937,stroke:#111827,color:#ffffff;
-  classDef client fill:#0f766e,stroke:#0b3d39,color:#ffffff;
-  classDef system fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff;
-  classDef external fill:#7c3aed,stroke:#4c1d95,color:#ffffff;
-
-  class W,C,U person;
-  class IA,PW client;
-  class S system;
-  class WA,SG external;
-
+    System --> Factus
+    System --> WhatsApp
+    System --> Siigo
 ```
-

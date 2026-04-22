@@ -1,122 +1,123 @@
-![Node.js](https://img.shields.io/badge/Node.js-18+-green)
-![NestJS](https://img.shields.io/badge/NestJS-Backend-red)
-![Docker](https://img.shields.io/badge/Docker-Container-blue)
-![AWS](https://img.shields.io/badge/AWS-Cloud-orange)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+# 🍔 NanaBurguer Platform
 
-# 🍔 NanaBurguer 2026
-
-Restaurant Operations System (Single-Tenant MVP, SaaS-Ready)
+## Vision, Scope, Actors & ADR (Multi-Tenant SaaS)
 
 ---
 
-## 📌 Overview
+# 🧠 1. SYSTEM VISION
 
-NanaBurguer is a cloud-based restaurant operations platform designed to manage:
+The NanaBurguer Platform is a cloud-native, multi-tenant SaaS system designed to digitalize and centralize restaurant operations.
 
-- Dine-in orders (tables)
-- Delivery & pickup orders
+The system is built from inception as a multi-tenant architecture, where each restaurant operates as an isolated tenant within a shared infrastructure.
+
+This ensures:
+
+- Scalability across multiple restaurants
+- Strong data isolation
+- Centralized infrastructure
+- SaaS-ready evolution from day one
+
+---
+
+# 🎯 2. OBJECTIVES
+
+- Replace manual and fragmented workflows
+- Provide real-time operational visibility
+- Enable structured order lifecycle management
+- Integrate with fiscal systems (Factus)
+- Allow scalable onboarding of new restaurants
+
+---
+
+# ⚠️ 3. PROBLEM STATEMENT
+
+Restaurants commonly rely on:
+
+- Paper-based processes
+- WhatsApp coordination
+- Disconnected tools
+
+This produces:
+
+- Order errors
+- Lack of traceability
+- Operational inefficiency
+- No accounting integration
+
+---
+
+# 👥 4. ACTORS
+
+## Internal Users (per tenant)
+
+- Administrator / Owner
+- Cashier
+- Waiter
+
+Each user belongs to exactly one restaurant.
+
+---
+
+## External Actors
+
+- Customer (web / delivery)
+- Factus API (electronic invoicing)
+- WhatsApp API (notifications)
+- Siigo API (future)
+
+---
+
+## Actor Interaction Diagram
+
+```mermaid
+flowchart TB
+    classDef internal fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px
+    classDef external fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px
+    classDef system fill:#E8F5E9,stroke:#43A047,stroke-width:2px
+
+    Admin["Admin"]:::internal
+    Cashier["Cashier"]:::internal
+    Waiter["Waiter"]:::internal
+
+    Customer["Customer"]:::external
+    Factus["Factus API"]:::external
+    WhatsApp["WhatsApp API"]:::external
+
+    System["NanaBurguer SaaS\nMulti-Tenant Backend"]:::system
+
+    Admin --> System
+    Cashier --> System
+    Waiter --> System
+    Customer --> System
+
+    System --> Factus
+    System --> WhatsApp
+```
+
+---
+
+# 🧩 5. SCOPE (MVP SaaS)
+
+## Included
+
+- Multi-tenant architecture
+- Authentication + RBAC (tenant-aware)
+- Menu management per restaurant
+- Orders (dine-in, delivery, pickup)
 - Order lifecycle management
-- Cashier closure
+- POS flow
+- Optional electronic invoicing (Factus)
 - WhatsApp notifications
-- AWS deployment with Docker
-
-Built using a Modular Monolith + Clean Architecture approach.
+- Audit fields (created_at, updated_at, restaurant_id)
 
 ---
 
-## 🏗 Architecture
+## Excluded
 
-- Clean Architecture (Domain / Application / Infrastructure / Interfaces)
-- Modular Monolith
-- Dockerized production deployment
-- Nginx Reverse Proxy
-- AWS EC2 + RDS
-
-See `/docs/architecture` for diagrams.
+- Multi-location per tenant
+- Subscription billing system
+- Inventory management
+- Native mobile apps
+- Advanced analytics
 
 ---
-
-## 🛠 Tech Stack
-
-### Backend
-- Node.js
-- NestJS
-- Prisma ORM
-- PostgreSQL (AWS RDS)
-- JWT Authentication
-- Docker
-
-### Frontend
-- Ionic (Web + Mobile)
-- Angular
-- i18n (EN / ES)
-
-### DevOps
-- Docker Compose
-- Nginx
-- GitHub Actions (CI/CD)
-- AWS EC2
-- AWS RDS
-- CloudWatch
-
----
-
-## 🔐 Security
-
-- JWT authentication
-- Role-based access control (RBAC)
-- Rate limiting (Nginx)
-- Secure headers
-- Environment-based secrets
-
-See `/docs/architecture/security-baseline.md`.
-
----
-
-## 🌍 Internationalization
-
-- Default language: English
-- Optional: Spanish
-- Backend returns stable codes
-- UI handles translations
-
----
-
-## 📊 Core Features (MVP)
-
-- Authentication (Admin / Cashier / Waiter)
-- Menu management
-- Table management
-- Create and update orders
-- Order status lifecycle
-- Close order with payment method
-- Integration-ready architecture (WhatsApp / Siigo)
-
----
-
-## 🚀 Deployment
-
-Production architecture:
-
-- EC2 (Docker)
-- Nginx Reverse Proxy
-- RDS PostgreSQL
-- HTTPS
-
-See `/docs/architecture/deployment-aws.md`.
-
----
-
-## 📈 Roadmap
-
-- Public ordering web
-- WhatsApp confirmation automation
-- Basic analytics dashboard
-- SaaS multi-tenant evolution (Phase 2)
-
----
-
-## 📄 Documentation
-
-Full architecture documentation is available in:

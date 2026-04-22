@@ -4,41 +4,29 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
-export class CategoriesService {
+export class CategoryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateCategoryDto) {
+  async create(dto: CreateCategoryDto, restaurantId: string) {
     return this.prisma.category.create({
       data: {
         name: dto.name,
         isActive: true,
+        restaurantId,
       },
     });
   }
 
-  async findAll() {
+  async findAll(restaurantId: string) {
     return this.prisma.category.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { restaurantId },
+      orderBy: { id: 'asc' },
     });
   }
 
-  async findOne(id: string) {
-    const category = await this.prisma.category.findUnique({
-      where: { id },
-    });
-
-    if (!category) {
-      throw new NotFoundException('Category not found');
-    }
-
-    return category;
-  }
-
-  async update(id: string, dto: UpdateCategoryDto) {
-    const existing = await this.prisma.category.findUnique({
-      where: { id },
+  async update(id: string, dto: UpdateCategoryDto, restaurantId: string) {
+    const existing = await this.prisma.category.findFirst({
+      where: { id, restaurantId },
     });
 
     if (!existing) {
@@ -51,20 +39,6 @@ export class CategoriesService {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
       },
-    });
-  }
-
-  async remove(id: string) {
-    const existing = await this.prisma.category.findUnique({
-      where: { id },
-    });
-
-    if (!existing) {
-      throw new NotFoundException('Category not found');
-    }
-
-    return this.prisma.category.delete({
-      where: { id },
     });
   }
 }

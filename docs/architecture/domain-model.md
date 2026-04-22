@@ -1,121 +1,185 @@
-# Domain Model (Conceptual)
+# Domain Model (Multi-Tenant SaaS)
 
 ## Purpose
-Define the core business concepts (entities, aggregates, invariants) for the MVP:
-- Dine-in (tables)
-- Delivery
-- Pickup
-- Cashier close sale
+
+Define the core business concepts for a multi-tenant restaurant SaaS platform.
 
 ---
 
-## Core Aggregates
+# 🧠 CORE CONCEPT
 
-### 1) Order Aggregate (Root: Order)
-**Why an aggregate?** Orders are transactional and must maintain strict consistency:
-- items, totals, status transitions, close sale
+The system is multi-tenant.
+
+👉 Every aggregate belongs to a:
+
+- Restaurant (Tenant)
+
+---
+
+# 🏢 0) Restaurant Aggregate (ROOT OF EVERYTHING)
+
+Represents a business using the platform.
+
+**Key responsibilities**
+
+- Configuration
+- Factus credentials
+- Ownership of all data
+
+---
+
+# 🧾 1) Order Aggregate (Root: Order)
+
+Handles operational flow (NOT money).
 
 **Entities inside**
-- Order (aggregate root)
-- OrderItem (child entity)
-- OrderStatusHistory (optional in MVP but recommended)
 
-**Key fields**
-- type: DINE_IN | DELIVERY | PICKUP
-- status: CREATED | IN_PREPARATION | READY | OUT_FOR_DELIVERY | DELIVERED | CLOSED | CANCELED
-- money: subtotal, taxes, total (server-calculated)
-- customer snapshot (for delivery/pickup): name, phone, address
-- audit: createdBy, updatedBy, timestamps
-
-**Invariants**
-- Totals are calculated server-side; client totals are never trusted.
-- Status transitions follow an allowed transition map.
-- CLOSED orders cannot be modified (except admin correction flow if later).
-- DELIVERY requires address and phone.
-- DINE_IN requires table assignment (tableId not null).
-- Order must have at least one OrderItem.
+- Order
+- OrderItem
+- OrderStatusHistory
 
 ---
 
-### 2) Menu Aggregate (Root: MenuItem)
-- Category (grouping)
-- MenuItem (product)
-- Price and availability
+## Status Flow (IMPORTANT)
 
-**Invariants**
-- Price must be positive.
-- MenuItem can be disabled (soft availability).
-
----
-
-### 3) Table Aggregate (Root: Table)
-- Table number/name
-- Status: AVAILABLE | OCCUPIED (optional) | RESERVED (future)
-
-**Invariants**
-- A table can have multiple orders over time.
-- For MVP, you may allow multiple open orders per table or restrict to one (decide later).
+CREATED  
+→ SENT_TO_KITCHEN  
+→ IN_PREPARATION  
+→ READY  
+→ DELIVERED  
+→ CLOSED
 
 ---
 
-### 4) User / Auth Aggregate
-- Users with roles: ADMIN | CASHIER | WAITER
-- Authentication handled by Auth module
-- Authorization enforced at use-case level
+## Invariants
+
+- Orders must have at least one item
+- Status transitions are controlled
+- CLOSED orders are immutable
+- DINE_IN requires table
+- DELIVERY requires address + phone
 
 ---
 
-## Conceptual Relationships
-- User creates/updates Orders.
-- Orders contain OrderItems.
-- OrderItems reference MenuItems.
-- DINE_IN Orders are linked to Tables.
-- DELIVERY/PICKUP Orders store customer snapshot.
+# 💳 2) Sale Aggregate (NEW - CRITICAL)
+
+Represents financial transaction.
+
+**Why separate from Order?**
+
+👉 Because:
+
+- Not all orders are invoiced
+- POS ≠ Invoice
+- Accounting requires separation
+
 ---
 
+## Entities
 
+- Sale
+- Payment
 
-## Mermaid Diagram (Conceptual)
+---
+
+## Invariants
+
+- One Sale per Order
+- Payment must match total
+- Sale is immutable once closed
+
+---
+
+# 🧾 3) Invoice Aggregate (Factus)
+
+Represents electronic invoicing.
+
+---
+
+## Entities
+
+- Invoice
+
+---
+
+## States
+
+- PENDING
+- ACCEPTED
+- REJECTED
+
+---
+
+## Invariants
+
+- Not all Sales generate Invoice
+- Invoice depends on customer request
+
+---
+
+# 🍔 4) Menu Aggregate
+
+- Category
+- MenuItem
+
+---
+
+# 🪑 5) Table Aggregate
+
+- Table
+
+---
+
+# 👤 6) User Aggregate
+
+- User
+- Role
+
+---
+
+# 🔥 RELATIONSHIPS (CORRECTED)
 
 ```mermaid
-
 flowchart TB
 
-  %% Auth Aggregate
-  subgraph Auth["Auth Aggregate"]
-    User[User]
-    Role[Role - ADMIN / CASHIER / WAITER]
-  end
+  classDef tenant fill:#E8F5E9,stroke:#43A047,stroke-width:2px
+  classDef core fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px
 
-  %% Menu Aggregate
-  subgraph Menu["Menu Aggregate"]
-    Category[Category]
-    MenuItem[MenuItem]
-  end
+  Restaurant["Restaurant (Tenant)"]:::tenant
 
-  %% Tables Aggregate
-  subgraph Tables["Table Aggregate"]
-    Table[Table]
-  end
+  User["User"]:::core
+  Order["Order"]:::core
+  OrderItem["OrderItem"]:::core
+  Sale["Sale"]:::core
+  Payment["Payment"]:::core
+  Invoice["Invoice"]:::core
+  MenuItem["MenuItem"]:::core
+  Table["Table"]:::core
 
-  %% Orders Aggregate
-  subgraph Orders["Order Aggregate"]
-    Order[Order]
-    OrderItem[OrderItem]
-    Payment[Payment]
-    StatusHistory[OrderStatusHistory]
-  end
-
-  %% Relationships
-  User --> Order
-  Role --> User
-
-  Category --> MenuItem
+  Restaurant --> User
+  Restaurant --> Order
+  Restaurant --> Sale
+  Restaurant --> Invoice
+  Restaurant --> MenuItem
+  Restaurant --> Table
 
   Order --> OrderItem
+  Order --> Sale
+
+  Sale --> Payment
+  Sale --> Invoice
+
   OrderItem --> MenuItem
+```
 
-  Table --> Order
+---
 
-  Order --> Payment
-  Order --> StatusHistory
+# 🧠 CLAVE FINAL
+
+👉 Order = operación  
+👉 Sale = dinero  
+👉 Invoice = DIAN
+
+👉 Restaurant = TODO
+
+---

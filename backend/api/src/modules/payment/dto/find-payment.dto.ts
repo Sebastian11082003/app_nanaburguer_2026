@@ -4,7 +4,7 @@ import { PaymentMethod } from '@prisma/client';
 export class FindPaymentsDto {
   @IsOptional()
   @IsUUID()
-  orderId?: string;
+  saleId?: string;
 
   @IsOptional()
   @IsEnum(PaymentMethod)

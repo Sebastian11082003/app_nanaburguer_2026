@@ -17,18 +17,27 @@ export class AuthService {
     private readonly jwt: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  // ============================
+  // REGISTER
+  // ============================
+  async register(dto: RegisterDto, restaurantId: string) {
     try {
-      const existingUser = await this.prisma.user.findUnique({
-        where: { email: dto.email },
+      // 🔎 validar si ya existe usuario en ese restaurante
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          email: dto.email,
+          restaurantId,
+        },
       });
 
       if (existingUser) {
         throw new BadRequestException('Email already registered');
       }
 
+      // 🔐 hash password
       const passwordHash = await bcrypt.hash(dto.password, 10);
 
+      // 🧱 crear usuario
       const user = await this.prisma.user.create({
         data: {
           fullName: dto.fullName,
@@ -36,20 +45,22 @@ export class AuthService {
           passwordHash,
           role: dto.role ?? UserRole.WAITER,
           isActive: true,
+          restaurantId,
         },
       });
 
+      // 🎟 JWT payload consistente
       const payload = {
         sub: user.id,
         email: user.email,
         role: user.role,
+        restaurantId: user.restaurantId,
       };
 
       return {
         accessToken: await this.jwt.signAsync(payload),
         user: {
           id: user.id,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           fullName: user.fullName,
           email: user.email,
           role: user.role,
@@ -66,23 +77,30 @@ export class AuthService {
       ) {
         throw new BadRequestException('Email already registered');
       }
+
       console.error('REGISTER ERROR:', error);
       throw new InternalServerErrorException('Could not register user');
     }
   }
 
-  async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
+  // ============================
+  // LOGIN (MULTI-TENANT SAFE)
+  // ============================
+  async login(email: string, password: string, restaurantId: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email,
+        restaurantId,
+      },
     });
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const ok = await bcrypt.compare(password, user.passwordHash);
+    const isValid = await bcrypt.compare(password, user.passwordHash);
 
-    if (!ok) {
+    if (!isValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -90,13 +108,13 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      restaurantId: user.restaurantId,
     };
 
     return {
       accessToken: await this.jwt.signAsync(payload),
       user: {
         id: user.id,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         fullName: user.fullName,
         email: user.email,
         role: user.role,

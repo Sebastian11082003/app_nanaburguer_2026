@@ -1,15 +1,29 @@
 import {
-  ArrayMinSize,
-  IsArray,
   IsEnum,
   IsOptional,
   IsString,
   IsUUID,
   ValidateNested,
+  IsArray,
+  IsInt,
+  Min,
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
 import { OrderType } from '@prisma/client';
-import { CreateOrderItemDto } from './create-order-item.dto';
+
+class CreateOrderItemDto {
+  @IsUUID()
+  menuItemId!: string;
+
+  @IsInt()
+  @Min(1)
+  quantity!: number;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
 
 export class CreateOrderDto {
   @IsEnum(OrderType)
@@ -32,7 +46,6 @@ export class CreateOrderDto {
   deliveryAddress?: string;
 
   @IsArray()
-  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
   items!: CreateOrderItemDto[];

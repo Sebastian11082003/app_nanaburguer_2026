@@ -6,10 +6,15 @@ datasource db {
   provider = "postgresql"
 }
 
+//////////////////////
+// ENUMS
+//////////////////////
+
 enum UserRole {
   ADMIN
   CASHIER
   WAITER
+  KITCHEN
 }
 
 enum OrderType {
@@ -20,9 +25,9 @@ enum OrderType {
 
 enum OrderStatus {
   CREATED
+  SENT_TO_KITCHEN
   IN_PREPARATION
   READY
-  OUT_FOR_DELIVERY
   DELIVERED
   CLOSED
   CANCELED
@@ -35,6 +40,43 @@ enum PaymentMethod {
   OTHER
 }
 
+enum InvoiceStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+//////////////////////
+// TENANT
+//////////////////////
+
+model Restaurant {
+  id        String   @id @default(uuid())
+  name      String
+  nit       String
+  email     String?
+  phone     String?
+
+  factusApiKey String? @map("factus_api_key")
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users     User[]
+  categories Category[]
+  menuItems MenuItem[]
+  tables    TableEntity[]
+  orders    Order[]
+  sales     Sale[]
+  invoices  Invoice[]
+  payments  Payment[]
+
+  @@map("restaurant")
+}
+
+//////////////////////
+// USERS
+//////////////////////
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -43,6 +85,9 @@ model User {
   role         UserRole
   isActive     Boolean  @default(true) @map("is_active")
 
+  restaurantId String   @map("restaurant_id")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -50,138 +95,219 @@ model User {
   updatedOrders Order[] @relation("orders_updated")
   statusChanges OrderStatusHistory[]
 
-  @@map("user")
   payments Payment[]
+
+  @@index([restaurantId])
+  @@map("user")
 }
 
+//////////////////////
+// MENU
+//////////////////////
+
 model Category {
-  id       String  @id @default(uuid())
-  name     String
-  isActive Boolean @default(true) @map("is_active")
+  id           String  @id @default(uuid())
+  name         String
+  isActive     Boolean @default(true) @map("is_active")
+
+  restaurantId String  @map("restaurant_id")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   items MenuItem[]
 
+  @@index([restaurantId])
   @@map("category")
 }
 
 model MenuItem {
   id          String   @id @default(uuid())
-  categoryId  String   @map("category_id")
   name        String
   description String?
   priceCents  Int      @map("price_cents")
   isAvailable Boolean  @default(true) @map("is_available")
 
+  categoryId  String   @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  restaurantId String  @map("restaurant_id")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  category Category @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
 
+  @@index([restaurantId])
   @@index([categoryId])
   @@map("menu_item")
 }
 
-model TableEntity {
-  id       String  @id @default(uuid())
-  label    String
-  capacity Int
-  isActive Boolean @default(true) @map("is_active")
+//////////////////////
+// TABLES
+//////////////////////
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+model TableEntity {
+  id           String  @id @default(uuid())
+  label        String
+  capacity     Int
+  isActive     Boolean @default(true) @map("is_active")
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 
   orders Order[]
 
+  @@index([restaurantId])
   @@map("table_entity")
 }
+
+//////////////////////
+// ORDER (OPERACIÓN)
+//////////////////////
 
 model Order {
   id     String     @id @default(uuid())
   type   OrderType
   status OrderStatus
 
-  tableId String? @map("table_id")
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 
-  customerName    String? @map("customer_name")
-  customerPhone   String? @map("customer_phone")
-  deliveryAddress String? @map("delivery_address")
+  tableId String?
+  table   TableEntity? @relation(fields: [tableId], references: [id])
 
-  subtotalCents Int @map("subtotal_cents")
-  taxCents      Int @map("tax_cents")
-  totalCents    Int @map("total_cents")
+  customerName    String?
+  customerPhone   String?
+  deliveryAddress String?
 
-  createdById String @map("created_by")
-  updatedById String @map("updated_by")
+  subtotalCents Int
+  taxCents      Int
+  totalCents    Int
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  closedAt  DateTime? @map("closed_at")
-
-  table TableEntity? @relation(fields: [tableId], references: [id])
+  createdById String
+  updatedById String
 
   createdBy User @relation("orders_created", fields: [createdById], references: [id])
   updatedBy User @relation("orders_updated", fields: [updatedById], references: [id])
 
-  items   OrderItem[]
-  payment Payment?
-  history OrderStatusHistory[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  closedAt  DateTime?
 
+  items   OrderItem[]
+  history OrderStatusHistory[]
+  sale    Sale?
+
+  @@index([restaurantId])
   @@index([tableId])
-  @@index([createdById])
-  @@index([updatedById])
   @@map("order_entity")
 }
 
 model OrderItem {
-  id           String @id @default(uuid())
-  orderId      String @map("order_id")
-  menuItemId   String @map("menu_item_id")
-  quantity     Int
-  unitPriceCents Int  @map("unit_price_cents")
-  lineTotalCents Int  @map("line_total_cents")
-  notes        String?
-  createdAt    DateTime @default(now()) @map("created_at")
+  id             String @id @default(uuid())
+  orderId        String
+  menuItemId     String
+  quantity       Int
+  unitPriceCents Int
+  lineTotalCents Int
+  notes          String?
 
   order    Order    @relation(fields: [orderId], references: [id])
   menuItem MenuItem @relation(fields: [menuItemId], references: [id])
 
   @@index([orderId])
-  @@index([menuItemId])
   @@map("order_item")
 }
 
-model Payment {
-  id         String @id @default(uuid())
-  orderId    String @unique @map("order_id")
-  method     PaymentMethod
-  amountCents Int   @map("amount_cents")
-  currency   String @default("COP")
-  paidAt     DateTime @default(now()) @map("paid_at")
-  createdById String @map("created_by")
-
-  order     Order @relation(fields: [orderId], references: [id])
-  createdBy User  @relation(fields: [createdById], references: [id])
-
-  @@index([createdById])
-  @@map("payment")
-}
-
 model OrderStatusHistory {
-  id        String @id @default(uuid())
-  orderId   String @map("order_id")
-  fromStatus OrderStatus @map("from_status")
-  toStatus   OrderStatus @map("to_status")
-  changedById String @map("changed_by")
-  changedAt DateTime @default(now()) @map("changed_at")
+  id           String @id @default(uuid())
+  orderId      String
+  fromStatus   OrderStatus
+  toStatus     OrderStatus
+  changedById  String
+  changedAt    DateTime @default(now())
 
   order     Order @relation(fields: [orderId], references: [id])
   changedBy User  @relation(fields: [changedById], references: [id])
 
   @@index([orderId])
-  @@index([changedById])
   @@map("order_status_history")
+}
+
+//////////////////////
+// SALE (DINERO)
+//////////////////////
+
+model Sale {
+  id           String @id @default(uuid())
+  orderId      String @unique
+  restaurantId String
+
+  totalCents Int
+
+  order      Order      @relation(fields: [orderId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  payment Payment?
+  invoice Invoice?
+
+  createdAt DateTime @default(now())
+
+  @@index([restaurantId])
+  @@map("sale")
+}
+
+model Payment {
+  id           String @id @default(uuid())
+  saleId       String @unique
+  restaurantId String
+
+  method       PaymentMethod
+  amountCents  Int
+  currency     String @default("COP")
+
+  createdById String
+  createdBy   User @relation(fields: [createdById], references: [id])
+
+  sale       Sale       @relation(fields: [saleId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  invoice Invoice?
+
+  paidAt DateTime @default(now())
+
+  @@index([restaurantId])
+  @@map("payment")
+}
+
+//////////////////////
+// FACTUS (INVOICE)
+//////////////////////
+
+model Invoice {
+  id           String @id @default(uuid())
+  saleId       String @unique
+  paymentId    String @unique
+  restaurantId String
+
+  number String @unique
+  cufe   String?
+  status InvoiceStatus
+
+  totalCents Int
+  currency   String
+
+  responseJson Json?
+
+  sale       Sale       @relation(fields: [saleId], references: [id])
+  payment    Payment    @relation(fields: [paymentId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([restaurantId])
+  @@map("invoice")
 }

@@ -6,11 +6,12 @@ import {
   IsUUID,
   Min,
 } from 'class-validator';
+
 import { PaymentMethod } from '@prisma/client';
 
 export class CreatePaymentDto {
   @IsUUID()
-  orderId!: string;
+  saleId!: string;
 
   @IsEnum(PaymentMethod)
   method!: PaymentMethod;

@@ -1,103 +1,254 @@
-
----
-
-## ✅ `/docs/architecture/module-boundaries.md`
-
-```markdown
-# Module Boundaries (Backend)
+# Module Boundaries (Backend - Multi-Tenant SaaS)
 
 ## Purpose
-Define clear module ownership to enforce SOLID and prevent god-modules.
-```
+
+Define clear module ownership enforcing:
+
+- Clean Architecture
+- Multi-tenant isolation
+- Domain separation (Order vs Sale vs Invoice)
+- Scalability for SaaS
+
 ---
 
-## Modules (NestJS)
+# 🧠 GLOBAL RULE
 
-### 1) Auth Module
-**Owns**
-- User authentication (login/register)
-- JWT issuing/verification
+All modules MUST be tenant-aware:
+
+- Every request includes `restaurant_id`
+- All repositories filter by tenant
+- No cross-tenant data access
+
+---
+
+# 🧩 MODULES (NestJS)
+
+---
+
+## 1) Auth Module
+
+### Owns
+
+- Authentication (login)
+- JWT issuing (includes `restaurant_id`)
 - Password hashing
-- RBAC guards (role checks)
 
-**Does NOT own**
-- Order logic
-- Menu logic
+### Does NOT own
 
----
-
-### 2) Users Module
-**Owns**
-- User CRUD (Admin only)
-- Activate/deactivate users
-- Role assignment
+- Business logic
+- Tenant resolution logic (delegated)
 
 ---
 
-### 3) Menu Module
-**Owns**
+## 2) Users Module
+
+### Owns
+
+- User CRUD
+- Role assignment (ADMIN, CASHIER, WAITER)
+- Activation/deactivation
+
+### Rules
+
+- Users belong to ONE restaurant
+- No cross-tenant user access
+
+---
+
+## 3) Restaurant Module (NEW - CRITICAL)
+
+### Owns
+
+- Tenant configuration
+- Factus credentials
+- Business info (name, NIT, etc.)
+
+### Why it exists
+
+👉 This is the ROOT of SaaS
+
+---
+
+## 4) Menu Module
+
+### Owns
+
 - Category CRUD
 - MenuItem CRUD
-- Availability toggling
-- Pricing rules (price > 0)
+- Availability
+- Pricing rules
+
+### Rules
+
+- All menu items are tenant-scoped
 
 ---
 
-### 4) Tables Module
-**Owns**
+## 5) Tables Module
+
+### Owns
+
 - Table CRUD
-- Table activation/deactivation
-- Optional occupancy logic (future)
+- Table assignment
+- Optional occupancy logic
 
 ---
 
-### 5) Orders Module (Core)
-**Owns**
-- Create order (dine-in, delivery, pickup)
-- Add/remove/update items
-- Calculate totals server-side
-- Status transitions + transition validation
-- Close sale + Payment record
-- Audit + optional status history
+## 6) Orders Module (Operational Core)
 
-**Does NOT own**
-- WhatsApp/Siigo protocol details (delegates to Integrations)
+### Owns
 
----
+- Create Order
+- Manage OrderItems
+- Status transitions:
+  - CREATED
+  - SENT_TO_KITCHEN
+  - IN_PREPARATION
+  - READY
+  - DELIVERED
 
-### 6) Integrations Module
-**Owns**
-- WhatsApp adapter (best-effort notifications)
-- Siigo adapter (future, async outbox)
-- Retry logic and integration states (PENDING/SENT/FAILED) when implemented
+### Does NOT own
+
+- Payments
+- Invoicing
 
 ---
 
-## Clean Architecture Mapping
+## 7) Kitchen Module (NEW - CRITICAL)
 
-### Domain
-- Entities: Order, OrderItem, MenuItem, Category, Table, Payment
-- Value Objects (optional): Money, PhoneNumber
-- Business rules: status transitions map, totals rules
+### Owns
 
-### Application
-- Use Cases: CreateOrder, UpdateOrderStatus, CloseOrder, ManageMenuItems, etc.
-- Ports (interfaces): OrderRepository, MenuRepository, TableRepository, NotificationPort
+- Kitchen state transitions:
+  - SENT_TO_KITCHEN
+  - IN_PREPARATION
+  - READY
+- Kitchen display logic (KDS)
+- Printer integration trigger
 
-### Infrastructure
-- Prisma implementations of repositories
-- External HTTP clients for WhatsApp/Siigo
-- Config loading
+### Why it exists
 
-### Interfaces
+👉 Separates operational flow from UI
+
+---
+
+## 8) Sales Module (NEW - CRITICAL)
+
+### Owns
+
+- Create Sale from Order
+- Payment processing
+- Closing financial transaction
+
+### Rules
+
+- One Sale per Order
+- Immutable after closing
+
+---
+
+## 9) Payments Module
+
+### Owns
+
+- Payment records
+- Payment validation
+
+---
+
+## 10) Invoice Module (Factus)
+
+### Owns
+
+- Electronic invoicing
+- Factus integration
+- CUFE storage
+- Invoice status:
+  - PENDING
+  - ACCEPTED
+  - REJECTED
+
+### Rules
+
+- Invoice is optional
+- Depends on Sale
+
+---
+
+## 11) Integrations Module
+
+### Owns
+
+- WhatsApp adapter (notifications)
+- External API abstraction
+
+### Does NOT own
+
+- Business logic
+
+---
+
+# 🧠 CLEAN ARCHITECTURE MAPPING
+
+---
+
+## Domain Layer
+
+- Entities:
+  - Restaurant
+  - Order
+  - OrderItem
+  - Sale
+  - Payment
+  - Invoice
+  - User
+  - MenuItem
+  - Table
+
+- Business rules:
+  - Order lifecycle
+  - Sale invariants
+  - Invoice rules
+
+---
+
+## Application Layer
+
+- Use Cases:
+  - CreateOrder
+  - SendToKitchen
+  - UpdateKitchenStatus
+  - CloseSale
+  - CreateInvoice
+
+- Interfaces (Ports):
+  - OrderRepository
+  - SaleRepository
+  - InvoiceRepository
+  - NotificationPort
+
+---
+
+## Infrastructure Layer
+
+- Prisma repositories (tenant-aware)
+- Factus HTTP client
+- WhatsApp adapter
+- Queue / retry system
+
+---
+
+## Interface Layer
+
 - Controllers
-- DTO validation
-- Guards
+- DTOs
+- Guards (JWT + tenant validation)
 
 ---
 
-## Cross-Cutting Rules
-- Controllers are thin. No business logic.
-- Use cases enforce business rules.
-- Infrastructure depends on Application; Application depends on Domain.
-- No direct Prisma calls inside controllers.
+# 🔐 CROSS-CUTTING RULES
+
+- Controllers MUST be thin
+- No business logic outside Use Cases
+- All queries include `restaurant_id`
+- No direct Prisma usage in controllers
+- Tenant isolation is mandatory

@@ -1,24 +1,46 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+
+import { UserRole } from '@prisma/client';
+
 import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { FindUsersDto } from './dto/find-users.dto';
+
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { TenantGuard } from '../../common/guards/tenant.guard';
+
 import { Roles } from '../../common/decorators/roles.decorator';
-import { UserRole } from '@prisma/client';
-import { UpdateUserRoleDto } from './dto/update-user-role.dto';
+import { Tenant } from '../../common/decorators/tenant.decorator';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Patch(':id/role')
+  @Post()
   @Roles(UserRole.ADMIN)
-  updateRole(@Param('id') id: string, @Body() dto: UpdateUserRoleDto) {
-    return this.usersService.updateRole(id, dto.role);
+  create(@Body() dto: CreateUserDto, @Tenant() restaurantId: string) {
+    return this.usersService.create(dto, restaurantId);
   }
+
   @Get()
   @Roles(UserRole.ADMIN)
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Tenant() restaurantId: string, @Query() query: FindUsersDto) {
+    return this.usersService.findAll(restaurantId, query);
+  }
+
+  @Get(':id')
+  @Roles(UserRole.ADMIN)
+  findOne(@Param('id') id: string, @Tenant() restaurantId: string) {
+    return this.usersService.findOne(id, restaurantId);
   }
 }
