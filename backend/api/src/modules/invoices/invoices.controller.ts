@@ -1,7 +1,6 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 
 import { InvoicesService } from './invoices.service';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
@@ -13,11 +12,6 @@ import { Tenant } from '../../common/decorators/tenant.decorator';
 export class InvoicesController {
   constructor(private readonly service: InvoicesService) {}
 
-  @Post()
-  create(@Body() dto: CreateInvoiceDto, @Tenant() restaurantId: string) {
-    return this.service.create(dto, restaurantId);
-  }
-
   @Get()
   findAll(@Tenant() restaurantId: string) {
     return this.service.findAll(restaurantId);
@@ -26,6 +20,12 @@ export class InvoicesController {
   @Get(':id')
   findOne(@Param('id') id: string, @Tenant() restaurantId: string) {
     return this.service.findOne(id, restaurantId);
+  }
+
+  // 🔥 ESTE ES EL IMPORTANTE
+  @Get(':id/print')
+  print(@Param('id') id: string, @Tenant() restaurantId: string) {
+    return this.service.print(id, restaurantId);
   }
 
   @Post(':id/accept')

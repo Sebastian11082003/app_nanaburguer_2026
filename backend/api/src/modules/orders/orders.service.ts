@@ -5,145 +5,268 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
-import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderStatus, OrderType } from '@prisma/client';
 
-import { OrderStatus, OrderType, Prisma } from '@prisma/client';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { AddItemDto } from './dto/add-item.dto';
+import { TransferTableDto } from './dto/transfer-table.dto';
+import { FindOrdersDto } from './dto/find-orders.dto';
 
 @Injectable()
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ================================
-  // BUSINESS RULES
+  // HELPERS
   // ================================
   private validateOrderBusinessRules(dto: CreateOrderDto): void {
     if (dto.type === OrderType.DINE_IN && !dto.tableId) {
       throw new BadRequestException('tableId required for DINE_IN');
     }
-
-    if (dto.type === OrderType.DELIVERY) {
-      if (!dto.customerName || !dto.customerPhone || !dto.deliveryAddress) {
-        throw new BadRequestException('Missing delivery data');
-      }
-    }
-
-    if (dto.type === OrderType.PICKUP && !dto.customerName) {
-      throw new BadRequestException('customerName required for PICKUP');
-    }
   }
 
-  // ================================
-  // STATUS FLOW
-  // ================================
-  private getAllowedNextStatuses(status: OrderStatus): OrderStatus[] {
-    const map: Record<OrderStatus, OrderStatus[]> = {
-      CREATED: [OrderStatus.IN_PREPARATION, OrderStatus.CANCELED],
-      IN_PREPARATION: [OrderStatus.READY, OrderStatus.CANCELED],
-      READY: [OrderStatus.DELIVERED, OrderStatus.CLOSED],
-      DELIVERED: [OrderStatus.CLOSED],
-      CLOSED: [],
-      CANCELED: [],
-      SENT_TO_KITCHEN: [OrderStatus.IN_PREPARATION],
+  private calculateTotals(items: { lineTotalCents: number }[]) {
+    const subtotal = items.reduce((acc, i) => acc + i.lineTotalCents, 0);
+
+    return {
+      subtotalCents: subtotal,
+      taxCents: 0, // opcional: puedes eliminarlo del schema luego
+      totalCents: subtotal,
     };
-
-    return map[status] ?? [];
   }
 
   // ================================
-  // CREATE ORDER
+  // CREATE ORDER (VACÍA)
   // ================================
   async create(dto: CreateOrderDto, restaurantId: string, userId: string) {
     this.validateOrderBusinessRules(dto);
 
-    // validar mesa (tenant-safe)
-    if (dto.tableId) {
-      const table = await this.prisma.tableEntity.findFirst({
-        where: {
-          id: dto.tableId,
-          restaurantId,
+    return this.prisma.$transaction(async (tx) => {
+      // 1. VALIDAR MESA
+      if (dto.tableId) {
+        const table = await tx.tableEntity.findFirst({
+          where: { id: dto.tableId, restaurantId },
+        });
+
+        if (!table) throw new NotFoundException('Table not found');
+        if (!table.isActive) throw new BadRequestException('Table not active');
+      }
+
+      // 2. EVITAR DUPLICADOS
+      if (dto.tableId) {
+        const existingOrder = await tx.order.findFirst({
+          where: {
+            tableId: dto.tableId,
+            restaurantId,
+            status: { not: OrderStatus.CLOSED },
+          },
+          include: { items: true },
+        });
+
+        if (existingOrder) return existingOrder;
+      }
+
+      // 3. GENERAR NÚMERO
+      const lastOrder = await tx.order.findFirst({
+        where: { restaurantId },
+        orderBy: { orderNumber: 'desc' },
+      });
+
+      const nextOrderNumber = (lastOrder?.orderNumber ?? 0) + 1;
+
+      // 4. CREAR ORDEN
+      return tx.order.create({
+        data: {
+          type: dto.type,
+          status: OrderStatus.CREATED,
+          source: dto.source,
+
+          orderNumber: nextOrderNumber,
+
+          restaurant: {
+            connect: { id: restaurantId },
+          },
+
+          table: dto.tableId ? { connect: { id: dto.tableId } } : undefined,
+
+          createdBy: {
+            connect: { id: userId },
+          },
+          updatedBy: {
+            connect: { id: userId },
+          },
+
+          subtotalCents: 0,
+          taxCents: 0,
+          totalCents: 0,
+        },
+        include: {
+          items: true,
+          table: true,
+        },
+      });
+    });
+  }
+
+  // ================================
+  // ADD ITEM
+  // ================================
+  async addItem(orderId: string, dto: AddItemDto, restaurantId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findFirst({
+        where: { id: orderId, restaurantId },
+      });
+
+      if (!order) throw new NotFoundException('Order not found');
+      if (order.status === OrderStatus.CLOSED)
+        throw new BadRequestException('Order closed');
+
+      const menuItem = await tx.menuItem.findFirst({
+        where: { id: dto.menuItemId, restaurantId },
+      });
+
+      if (!menuItem) throw new NotFoundException('Menu item not found');
+      if (!menuItem.isAvailable)
+        throw new BadRequestException('Item not available');
+
+      await tx.orderItem.create({
+        data: {
+          order: { connect: { id: orderId } },
+          menuItem: { connect: { id: menuItem.id } },
+          quantity: dto.quantity,
+          unitPriceCents: menuItem.priceCents,
+          lineTotalCents: menuItem.priceCents * dto.quantity,
+          notes: dto.notes,
         },
       });
 
-      if (!table) throw new NotFoundException('Table not found');
-      if (!table.isActive) throw new BadRequestException('Table not active');
-    }
+      const items = await tx.orderItem.findMany({
+        where: { orderId },
+      });
 
-    // traer menu items
-    const menuItems = await this.prisma.menuItem.findMany({
-      where: {
-        id: { in: dto.items.map((i) => i.menuItemId) },
-        restaurantId,
-      },
+      const totals = this.calculateTotals(items);
+
+      return tx.order.update({
+        where: { id: orderId },
+        data: totals,
+        include: { items: true },
+      });
+    });
+  }
+
+  // ================================
+  // UPDATE STATUS
+  // ================================
+  async updateStatus(
+    orderId: string,
+    status: OrderStatus,
+    restaurantId: string,
+    userId: string,
+  ) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, restaurantId },
     });
 
-    if (menuItems.length !== dto.items.length) {
-      throw new NotFoundException('Menu items mismatch');
-    }
+    if (!order) throw new NotFoundException('Order not found');
 
-    const map = new Map(menuItems.map((m) => [m.id, m]));
-
-    const itemsData = dto.items.map((i) => {
-      const m = map.get(i.menuItemId);
-
-      if (!m) throw new NotFoundException('Menu item not found');
-      if (!m.isAvailable)
-        throw new BadRequestException(`Item ${m.name} not available`);
-
-      return {
-        menuItemId: i.menuItemId,
-        quantity: i.quantity,
-        unitPriceCents: m.priceCents,
-        lineTotalCents: m.priceCents * i.quantity,
-        notes: i.notes,
-      };
-    });
-
-    const subtotal = itemsData.reduce((a, i) => a + i.lineTotalCents, 0);
-    const tax = Math.floor(subtotal * 0.19);
-    const total = subtotal + tax;
-
-    return this.prisma.order.create({
+    return this.prisma.order.update({
+      where: { id: orderId },
       data: {
-        type: dto.type,
-        status: OrderStatus.CREATED,
-        tableId: dto.tableId,
-        customerName: dto.customerName,
-        customerPhone: dto.customerPhone,
-        deliveryAddress: dto.deliveryAddress,
-        subtotalCents: subtotal,
-        taxCents: tax,
-        totalCents: total,
-        restaurantId,
-        createdById: userId,
-        updatedById: userId,
-        items: {
-          create: itemsData,
-        },
-      },
-      include: {
-        items: true,
+        status,
+        updatedBy: { connect: { id: userId } },
       },
     });
   }
 
   // ================================
-  // FIND ALL
+  // TRANSFER TABLE
   // ================================
-  async findAll(restaurantId: string) {
+  async transferTable(
+    orderId: string,
+    dto: TransferTableDto,
+    restaurantId: string,
+  ) {
+    const table = await this.prisma.tableEntity.findFirst({
+      where: { id: dto.newTableId, restaurantId },
+    });
+
+    if (!table) throw new NotFoundException('Table not found');
+    if (!table.isActive) throw new BadRequestException('Table not active');
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        table: { connect: { id: dto.newTableId } },
+      },
+    });
+  }
+
+  // ================================
+  // CLOSE ORDER
+  // ================================
+  async closeOrder(orderId: string, restaurantId: string, userId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findFirst({
+        where: { id: orderId, restaurantId },
+        include: { sale: true },
+      });
+
+      if (!order) throw new NotFoundException('Order not found');
+
+      if (order.status === OrderStatus.CLOSED) {
+        throw new BadRequestException('Already closed');
+      }
+
+      // 🔥 SOLO cerrar (NO tocar dinero)
+      const updated = await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: OrderStatus.CLOSED,
+          closedAt: new Date(),
+          updatedBy: { connect: { id: userId } },
+        },
+      });
+
+      // 🔥 Crear SALE (solo consumo)
+      if (!order.sale) {
+        await tx.sale.create({
+          data: {
+            order: { connect: { id: orderId } },
+            restaurant: { connect: { id: restaurantId } },
+            totalCents: order.totalCents,
+          },
+        });
+      }
+
+      return updated;
+    });
+  }
+
+  // ================================
+  // FIND
+  // ================================
+  async findAll(restaurantId: string, query: FindOrdersDto) {
     return this.prisma.order.findMany({
-      where: { restaurantId },
+      where: {
+        restaurantId,
+        ...(query.status && { status: query.status }),
+        ...(query.type && { type: query.type }),
+        ...(query.tableId && { tableId: query.tableId }),
+      },
+      include: {
+        items: true,
+        table: true,
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  // ================================
-  // FIND ONE
-  // ================================
   async findOne(id: string, restaurantId: string) {
     const order = await this.prisma.order.findFirst({
       where: { id, restaurantId },
       include: {
         items: true,
+        table: true,
         sale: true,
       },
     });
@@ -151,64 +274,5 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Order not found');
 
     return order;
-  }
-
-  // ================================
-  // UPDATE STATUS
-  // ================================
-  async updateStatus(
-    id: string,
-    newStatus: OrderStatus,
-    restaurantId: string,
-    userId: string,
-  ) {
-    const order = await this.prisma.order.findFirst({
-      where: { id, restaurantId },
-      include: {
-        sale: true,
-      },
-    });
-
-    if (!order) throw new NotFoundException('Order not found');
-
-    if (order.status === newStatus) {
-      throw new BadRequestException('Same status');
-    }
-
-    const allowed = this.getAllowedNextStatuses(order.status);
-
-    if (!allowed.includes(newStatus)) {
-      throw new BadRequestException(
-        `Invalid transition ${order.status} → ${newStatus}`,
-      );
-    }
-
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const updated = await tx.order.update({
-        where: { id },
-        data: {
-          status: newStatus,
-          updatedById: userId,
-          ...(newStatus === OrderStatus.CLOSED && {
-            closedAt: new Date(),
-          }),
-        },
-      });
-
-      // 🔥 CREATE SALE WHEN CLOSED
-      if (newStatus === OrderStatus.CLOSED) {
-        if (!order.sale) {
-          await tx.sale.create({
-            data: {
-              orderId: order.id,
-              restaurantId,
-              totalCents: order.totalCents,
-            },
-          });
-        }
-      }
-
-      return updated;
-    });
   }
 }

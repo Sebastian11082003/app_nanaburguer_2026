@@ -1,26 +1,22 @@
-import {
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Min,
-} from 'class-validator';
-
 import { PaymentMethod } from '@prisma/client';
+import { IsEnum, IsInt, IsOptional } from 'class-validator';
 
 export class CreatePaymentDto {
-  @IsUUID()
-  saleId!: string;
-
   @IsEnum(PaymentMethod)
   method!: PaymentMethod;
 
   @IsInt()
-  @Min(0)
   amountCents!: number;
 
   @IsOptional()
-  @IsString()
+  @IsInt()
+  tipCents?: number;
+
+  @IsOptional()
   currency?: string;
+
+  // 🔥 SOLO PARA CASH
+  @IsOptional()
+  @IsInt()
+  receivedCents?: number;
 }

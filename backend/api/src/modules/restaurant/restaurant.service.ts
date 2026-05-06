@@ -14,6 +14,7 @@ export class RestaurantService {
         nit: dto.nit,
         email: dto.email,
         phone: dto.phone,
+        address: dto.address,
       },
     });
   }

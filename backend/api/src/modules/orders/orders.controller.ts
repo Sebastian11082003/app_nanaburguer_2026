@@ -10,12 +10,14 @@ import {
   Req,
 } from '@nestjs/common';
 
-import { UserRole } from '@prisma/client';
+import { OrderStatus, UserRole } from '@prisma/client';
 
 import { OrdersService } from './orders.service';
+
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FindOrdersDto } from './dto/find-orders.dto';
-import { UpdateStatusDto } from './dto/update-status.dto';
+import { AddItemDto } from './dto/add-item.dto';
+import { TransferTableDto } from './dto/transfer-table.dto';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -29,6 +31,7 @@ import { Tenant } from '../../common/decorators/tenant.decorator';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  // 🟢 CREAR ORDEN (vacía)
   @Post()
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
   create(
@@ -39,35 +42,65 @@ export class OrdersController {
     return this.ordersService.create(dto, restaurantId, req.user.id);
   }
 
-  @Get()
+  // 🟢 AGREGAR ITEMS
+  @Post(':id/items')
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
-  findAll(
+  addItem(
+    @Param('id') id: string,
+    @Body() dto: AddItemDto,
     @Tenant() restaurantId: string,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    @Query() _query: FindOrdersDto,
   ) {
-    return this.ordersService.findAll(restaurantId);
+    return this.ordersService.addItem(id, dto, restaurantId);
   }
 
-  @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
-  findOne(@Param('id') id: string, @Tenant() restaurantId: string) {
-    return this.ordersService.findOne(id, restaurantId);
-  }
-
+  // 🟢 CAMBIAR ESTADO (cocina)
   @Patch(':id/status')
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
   updateStatus(
     @Param('id') id: string,
-    @Body() dto: UpdateStatusDto,
+    @Body('status') status: OrderStatus,
     @Tenant() restaurantId: string,
     @Req() req: { user: { id: string } },
   ) {
     return this.ordersService.updateStatus(
       id,
-      dto.status,
+      status,
       restaurantId,
       req.user.id,
     );
+  }
+
+  // 🟢 TRANSFERIR MESA
+  @Patch(':id/transfer')
+  @Roles(UserRole.ADMIN, UserRole.WAITER)
+  transferTable(
+    @Param('id') id: string,
+    @Body() dto: TransferTableDto,
+    @Tenant() restaurantId: string,
+  ) {
+    return this.ordersService.transferTable(id, dto, restaurantId);
+  }
+
+  // 🟢 CERRAR ORDEN (caja)
+  @Patch(':id/close')
+  @Roles(UserRole.ADMIN, UserRole.CASHIER)
+  closeOrder(
+    @Param('id') id: string,
+    @Tenant() restaurantId: string,
+    @Req() req: { user: { id: string } },
+  ) {
+    return this.ordersService.closeOrder(id, restaurantId, req.user.id);
+  }
+
+  // 🟢 LISTAR
+  @Get()
+  findAll(@Tenant() restaurantId: string, @Query() query: FindOrdersDto) {
+    return this.ordersService.findAll(restaurantId, query);
+  }
+
+  // 🟢 DETALLE
+  @Get(':id')
+  findOne(@Param('id') id: string, @Tenant() restaurantId: string) {
+    return this.ordersService.findOne(id, restaurantId);
   }
 }

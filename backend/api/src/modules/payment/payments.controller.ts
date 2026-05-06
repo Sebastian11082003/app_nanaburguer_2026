@@ -22,28 +22,36 @@ import { TenantGuard } from '../../common/guards/tenant.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Tenant } from '../../common/decorators/tenant.decorator';
 
-@Controller('payments')
+@Controller('sales')
 @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post()
+  @Post(':saleId/payments')
   @Roles(UserRole.ADMIN, UserRole.CASHIER)
   create(
+    @Param('saleId') saleId: string,
     @Body() dto: CreatePaymentDto,
     @Tenant() restaurantId: string,
     @Req() req: { user: { id: string } },
   ) {
-    return this.paymentsService.create(dto, restaurantId, req.user.id);
+    return this.paymentsService.create(saleId, dto, restaurantId, req.user.id);
   }
 
-  @Get()
+  @Get(':saleId/payments')
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
-  findAll(@Tenant() restaurantId: string, @Query() query: FindPaymentsDto) {
-    return this.paymentsService.findAll(restaurantId, query);
+  findAll(
+    @Param('saleId') saleId: string,
+    @Tenant() restaurantId: string,
+    @Query() query: FindPaymentsDto,
+  ) {
+    return this.paymentsService.findAll(restaurantId, {
+      ...query,
+      saleId,
+    });
   }
 
-  @Get(':id')
+  @Get(':saleId/payments/:id')
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
   findOne(@Param('id') id: string, @Tenant() restaurantId: string) {
     return this.paymentsService.findOne(id, restaurantId);

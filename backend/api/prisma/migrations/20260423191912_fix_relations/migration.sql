@@ -1,0 +1,2 @@
+-- CreateEnum
+CREATE TYPE "TipType" AS ENUM ('NONE', 'PERCENTAGE', 'FIXED');

@@ -1,38 +1,15 @@
-import {
-  IsEnum,
-  IsOptional,
-  IsString,
-  IsUUID,
-  ValidateNested,
-  IsArray,
-  IsInt,
-  Min,
-} from 'class-validator';
-
-import { Type } from 'class-transformer';
-import { OrderType } from '@prisma/client';
-
-class CreateOrderItemDto {
-  @IsUUID()
-  menuItemId!: string;
-
-  @IsInt()
-  @Min(1)
-  quantity!: number;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-}
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { OrderType, OrderSource } from '@prisma/client';
 
 export class CreateOrderDto {
   @IsEnum(OrderType)
   type!: OrderType;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   tableId?: string;
 
+  // 🔥 DELIVERY / PICKUP (solo si aplica)
   @IsOptional()
   @IsString()
   customerName?: string;
@@ -45,8 +22,15 @@ export class CreateOrderDto {
   @IsString()
   deliveryAddress?: string;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateOrderItemDto)
-  items!: CreateOrderItemDto[];
+  @IsOptional()
+  @IsString()
+  neighborhood?: string;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
+
+  // 🔥 ORIGEN
+  @IsEnum(OrderSource)
+  source!: OrderSource;
 }

@@ -1,7 +1,15 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '@prisma/client';
 import { ROLES_KEY } from '../decorators/roles.decorator';
+
+interface RequestUser {
+  userId: string;
+  email: string;
+  role: UserRole;
+  restaurantId: string;
+}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -17,10 +25,12 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const request = context.switchToHttp().getRequest();
-    const user = request.user as { role?: UserRole };
+    const request = context.switchToHttp().getRequest<{ user?: RequestUser }>();
 
-    return !!user?.role && requiredRoles.includes(user.role);
+    const user = request.user;
+
+    if (!user) return false;
+
+    return requiredRoles.includes(user.role);
   }
 }
