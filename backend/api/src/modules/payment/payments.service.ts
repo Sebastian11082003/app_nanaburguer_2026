@@ -30,6 +30,7 @@ type SaleWithRelations = Prisma.SaleGetPayload<{
     order: {
       include: {
         table: true;
+        delivery: true;
         items: {
           include: {
             menuItem: true;
@@ -59,6 +60,7 @@ export class PaymentsService {
           order: {
             include: {
               table: true,
+              delivery: true,
               items: {
                 include: { menuItem: true },
               },
