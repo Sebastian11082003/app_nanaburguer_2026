@@ -17,6 +17,10 @@ export class ReportsController {
   summary(@Tenant() restaurantId: string) {
     return this.service.summary(restaurantId);
   }
+  @Get('delivery/summary')
+  deliverySummary(@Tenant() restaurantId: string) {
+    return this.service.deliverySummary(restaurantId);
+  }
 
   @Get('sales-by-day')
   salesByDay(@Tenant() restaurantId: string) {

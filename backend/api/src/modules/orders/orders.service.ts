@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
-import { OrderStatus, OrderType } from '@prisma/client';
+
+import { OrderStatus, OrderType, PaymentMethod } from '@prisma/client';
 
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AddItemDto } from './dto/add-item.dto';
@@ -30,13 +31,13 @@ export class OrdersService {
 
     return {
       subtotalCents: subtotal,
-      taxCents: 0, // opcional: puedes eliminarlo del schema luego
+      taxCents: 0,
       totalCents: subtotal,
     };
   }
 
   // ================================
-  // CREATE ORDER (VACÍA)
+  // CREATE ORDER
   // ================================
   async create(dto: CreateOrderDto, restaurantId: string, userId: string) {
     this.validateOrderBusinessRules(dto);
@@ -45,11 +46,19 @@ export class OrdersService {
       // 1. VALIDAR MESA
       if (dto.tableId) {
         const table = await tx.tableEntity.findFirst({
-          where: { id: dto.tableId, restaurantId },
+          where: {
+            id: dto.tableId,
+            restaurantId,
+          },
         });
 
-        if (!table) throw new NotFoundException('Table not found');
-        if (!table.isActive) throw new BadRequestException('Table not active');
+        if (!table) {
+          throw new NotFoundException('Table not found');
+        }
+
+        if (!table.isActive) {
+          throw new BadRequestException('Table not active');
+        }
       }
 
       // 2. EVITAR DUPLICADOS
@@ -58,51 +67,112 @@ export class OrdersService {
           where: {
             tableId: dto.tableId,
             restaurantId,
-            status: { not: OrderStatus.CLOSED },
+            status: {
+              not: OrderStatus.CLOSED,
+            },
           },
-          include: { items: true },
+
+          include: {
+            items: true,
+            table: true,
+            delivery: true,
+          },
         });
 
-        if (existingOrder) return existingOrder;
+        if (existingOrder) {
+          return existingOrder;
+        }
       }
 
       // 3. GENERAR NÚMERO
       const lastOrder = await tx.order.findFirst({
         where: { restaurantId },
-        orderBy: { orderNumber: 'desc' },
+
+        orderBy: {
+          orderNumber: 'desc',
+        },
       });
 
       const nextOrderNumber = (lastOrder?.orderNumber ?? 0) + 1;
 
       // 4. CREAR ORDEN
-      return tx.order.create({
+      const order = await tx.order.create({
         data: {
-          type: dto.type,
-          status: OrderStatus.CREATED,
-          source: dto.source,
-
           orderNumber: nextOrderNumber,
 
+          type: dto.type,
+          source: dto.source,
+
+          status: OrderStatus.CREATED,
+
           restaurant: {
-            connect: { id: restaurantId },
+            connect: {
+              id: restaurantId,
+            },
           },
 
-          table: dto.tableId ? { connect: { id: dto.tableId } } : undefined,
+          table: dto.tableId
+            ? {
+                connect: {
+                  id: dto.tableId,
+                },
+              }
+            : undefined,
 
           createdBy: {
-            connect: { id: userId },
+            connect: {
+              id: userId,
+            },
           },
+
           updatedBy: {
-            connect: { id: userId },
+            connect: {
+              id: userId,
+            },
           },
 
           subtotalCents: 0,
           taxCents: 0,
           totalCents: 0,
         },
+
         include: {
           items: true,
           table: true,
+          delivery: true,
+        },
+      });
+
+      // 5. CREAR DELIVERY
+      if (dto.type === OrderType.DELIVERY) {
+        await tx.delivery.create({
+          data: {
+            orderId: order.id,
+
+            customerName: dto.customerName!,
+            phone: dto.customerPhone!,
+            address: dto.deliveryAddress,
+            neighborhood: dto.neighborhood,
+
+            paymentMethod: dto.paymentMethod as PaymentMethod,
+
+            restaurantId,
+
+            deliveryUserId: userId,
+          },
+        });
+      }
+
+      // 6. RETORNAR COMPLETA
+      return tx.order.findUnique({
+        where: {
+          id: order.id,
+        },
+
+        include: {
+          items: true,
+          table: true,
+          delivery: true,
         },
       });
     });
@@ -114,28 +184,55 @@ export class OrdersService {
   async addItem(orderId: string, dto: AddItemDto, restaurantId: string) {
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
-        where: { id: orderId, restaurantId },
+        where: {
+          id: orderId,
+          restaurantId,
+        },
       });
 
-      if (!order) throw new NotFoundException('Order not found');
-      if (order.status === OrderStatus.CLOSED)
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+
+      if (order.status === OrderStatus.CLOSED) {
         throw new BadRequestException('Order closed');
+      }
 
       const menuItem = await tx.menuItem.findFirst({
-        where: { id: dto.menuItemId, restaurantId },
+        where: {
+          id: dto.menuItemId,
+          restaurantId,
+        },
       });
 
-      if (!menuItem) throw new NotFoundException('Menu item not found');
-      if (!menuItem.isAvailable)
+      if (!menuItem) {
+        throw new NotFoundException('Menu item not found');
+      }
+
+      if (!menuItem.isAvailable) {
         throw new BadRequestException('Item not available');
+      }
 
       await tx.orderItem.create({
         data: {
-          order: { connect: { id: orderId } },
-          menuItem: { connect: { id: menuItem.id } },
+          order: {
+            connect: {
+              id: orderId,
+            },
+          },
+
+          menuItem: {
+            connect: {
+              id: menuItem.id,
+            },
+          },
+
           quantity: dto.quantity,
+
           unitPriceCents: menuItem.priceCents,
+
           lineTotalCents: menuItem.priceCents * dto.quantity,
+
           notes: dto.notes,
         },
       });
@@ -147,9 +244,17 @@ export class OrdersService {
       const totals = this.calculateTotals(items);
 
       return tx.order.update({
-        where: { id: orderId },
+        where: {
+          id: orderId,
+        },
+
         data: totals,
-        include: { items: true },
+
+        include: {
+          items: true,
+          table: true,
+          delivery: true,
+        },
       });
     });
   }
@@ -164,16 +269,35 @@ export class OrdersService {
     userId: string,
   ) {
     const order = await this.prisma.order.findFirst({
-      where: { id: orderId, restaurantId },
+      where: {
+        id: orderId,
+        restaurantId,
+      },
     });
 
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
 
     return this.prisma.order.update({
-      where: { id: orderId },
+      where: {
+        id: orderId,
+      },
+
       data: {
         status,
-        updatedBy: { connect: { id: userId } },
+
+        updatedBy: {
+          connect: {
+            id: userId,
+          },
+        },
+      },
+
+      include: {
+        items: true,
+        table: true,
+        delivery: true,
       },
     });
   }
@@ -187,16 +311,37 @@ export class OrdersService {
     restaurantId: string,
   ) {
     const table = await this.prisma.tableEntity.findFirst({
-      where: { id: dto.newTableId, restaurantId },
+      where: {
+        id: dto.newTableId,
+        restaurantId,
+      },
     });
 
-    if (!table) throw new NotFoundException('Table not found');
-    if (!table.isActive) throw new BadRequestException('Table not active');
+    if (!table) {
+      throw new NotFoundException('Table not found');
+    }
+
+    if (!table.isActive) {
+      throw new BadRequestException('Table not active');
+    }
 
     return this.prisma.order.update({
-      where: { id: orderId },
+      where: {
+        id: orderId,
+      },
+
       data: {
-        table: { connect: { id: dto.newTableId } },
+        table: {
+          connect: {
+            id: dto.newTableId,
+          },
+        },
+      },
+
+      include: {
+        items: true,
+        table: true,
+        delivery: true,
       },
     });
   }
@@ -207,32 +352,65 @@ export class OrdersService {
   async closeOrder(orderId: string, restaurantId: string, userId: string) {
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
-        where: { id: orderId, restaurantId },
-        include: { sale: true },
+        where: {
+          id: orderId,
+          restaurantId,
+        },
+
+        include: {
+          sale: true,
+          delivery: true,
+        },
       });
 
-      if (!order) throw new NotFoundException('Order not found');
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
 
       if (order.status === OrderStatus.CLOSED) {
         throw new BadRequestException('Already closed');
       }
 
-      // 🔥 SOLO cerrar (NO tocar dinero)
+      // CERRAR ORDEN
       const updated = await tx.order.update({
-        where: { id: orderId },
+        where: {
+          id: orderId,
+        },
+
         data: {
           status: OrderStatus.CLOSED,
           closedAt: new Date(),
-          updatedBy: { connect: { id: userId } },
+
+          updatedBy: {
+            connect: {
+              id: userId,
+            },
+          },
+        },
+
+        include: {
+          items: true,
+          table: true,
+          delivery: true,
         },
       });
 
-      // 🔥 Crear SALE (solo consumo)
+      // CREAR SALE
       if (!order.sale) {
         await tx.sale.create({
           data: {
-            order: { connect: { id: orderId } },
-            restaurant: { connect: { id: restaurantId } },
+            order: {
+              connect: {
+                id: orderId,
+              },
+            },
+
+            restaurant: {
+              connect: {
+                id: restaurantId,
+              },
+            },
+
             totalCents: order.totalCents,
           },
         });
@@ -243,35 +421,60 @@ export class OrdersService {
   }
 
   // ================================
-  // FIND
+  // FIND ALL
   // ================================
   async findAll(restaurantId: string, query: FindOrdersDto) {
     return this.prisma.order.findMany({
       where: {
         restaurantId,
-        ...(query.status && { status: query.status }),
-        ...(query.type && { type: query.type }),
-        ...(query.tableId && { tableId: query.tableId }),
-      },
-      include: {
-        items: true,
-        table: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
 
-  async findOne(id: string, restaurantId: string) {
-    const order = await this.prisma.order.findFirst({
-      where: { id, restaurantId },
+        ...(query.status && {
+          status: query.status,
+        }),
+
+        ...(query.type && {
+          type: query.type,
+        }),
+
+        ...(query.tableId && {
+          tableId: query.tableId,
+        }),
+      },
+
       include: {
         items: true,
         table: true,
         sale: true,
+        delivery: true,
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  // ================================
+  // FIND ONE
+  // ================================
+  async findOne(id: string, restaurantId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: {
+        id,
+        restaurantId,
+      },
+
+      include: {
+        items: true,
+        table: true,
+        sale: true,
+        delivery: true,
       },
     });
 
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
 
     return order;
   }

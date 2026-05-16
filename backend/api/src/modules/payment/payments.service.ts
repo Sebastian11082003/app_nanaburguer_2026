@@ -23,7 +23,7 @@ type SaleWithRelations = Prisma.SaleGetPayload<{
         name: true;
         nit: true;
         phone: true;
-        address: true; // 👈 CLAVE
+        address: true; // CLAVE
       };
     };
     payment: true;

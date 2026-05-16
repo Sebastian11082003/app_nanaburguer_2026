@@ -26,6 +26,54 @@ export class ReportsService {
       totalOrders: orders,
     };
   }
+  // ============================
+  // DELIVERY SUMMARY
+  // ============================
+  async deliverySummary(restaurantId: string) {
+    const deliveries = await this.prisma.delivery.findMany({
+      where: {
+        restaurantId,
+      },
+
+      include: {
+        order: {
+          include: {
+            sale: true,
+          },
+        },
+      },
+    });
+
+    const totalDeliveries = deliveries.length;
+
+    const totalRevenue = deliveries.reduce(
+      (acc, d) => acc + (d.order.sale?.totalCents ?? 0),
+      0,
+    );
+
+    const cashPayments = deliveries.filter(
+      (d) => d.paymentMethod === 'CASH',
+    ).length;
+
+    const cardPayments = deliveries.filter(
+      (d) => d.paymentMethod === 'CARD',
+    ).length;
+
+    const transferPayments = deliveries.filter(
+      (d) => d.paymentMethod === 'TRANSFER',
+    ).length;
+
+    return {
+      totalDeliveries,
+      totalRevenue,
+
+      payments: {
+        cash: cashPayments,
+        card: cardPayments,
+        transfer: transferPayments,
+      },
+    };
+  }
 
   // ============================
   // VENTAS POR DÍA

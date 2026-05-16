@@ -33,7 +33,7 @@ export class OrdersController {
 
   // 🟢 CREAR ORDEN (vacía)
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
   create(
     @Body() dto: CreateOrderDto,
     @Tenant() restaurantId: string,
@@ -44,7 +44,7 @@ export class OrdersController {
 
   // 🟢 AGREGAR ITEMS
   @Post(':id/items')
-  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
   addItem(
     @Param('id') id: string,
     @Body() dto: AddItemDto,
@@ -55,7 +55,7 @@ export class OrdersController {
 
   // 🟢 CAMBIAR ESTADO (cocina)
   @Patch(':id/status')
-  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
   updateStatus(
     @Param('id') id: string,
     @Body('status') status: OrderStatus,
