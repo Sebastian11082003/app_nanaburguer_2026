@@ -1,63 +1,195 @@
-# Vision & Scope Document
+# Actors Vision & Scope
 
-## Multi-Tenant Restaurant Operations SaaS
+# 📌 Objective
 
----
-
-## 🧠 System Vision
-
-The NanaBurguer Platform is a cloud-native, multi-tenant SaaS system designed to digitalize and centralize restaurant operations.
-
-The system is built from inception as a scalable SaaS platform, where each restaurant operates as an isolated tenant.
+Clearly define the actors interacting with NanaBurger SaaS, including their responsibilities, functional scope, and operational restrictions.
 
 ---
 
-## 🎯 Objectives
+# 👥 System Actors
 
-- Replace manual and fragmented workflows
-- Provide real-time operational visibility
-- Enable scalable multi-restaurant management
-- Integrate with fiscal and notification services
-
----
-
-## ⚠️ Problem Statement
-
-Restaurants commonly rely on:
-
-- Paper-based workflows
-- WhatsApp coordination
-- Disconnected tools
-
-This results in:
-
-- Order errors
-- Lack of traceability
-- Inefficient operations
-- No accounting integration
+| Actor         | Type            |
+| ------------- | --------------- |
+| Administrator | Internal        |
+| Cashier       | Internal        |
+| Waiter        | Internal        |
+| Delivery      | Internal        |
+| Kitchen       | Internal        |
+| Customer      | Future External |
 
 ---
 
-## 👥 Actors
+# 🧠 Administrator (ADMIN)
 
-```mermaid
-flowchart TB
-    classDef internal fill:#E3F2FD,stroke:#1E88E5,stroke-width:2px
-    classDef external fill:#FFF3E0,stroke:#FB8C00,stroke-width:2px
+## Description
 
-    Admin[👨‍💼 Admin]:::internal
-    Cashier[💳 Cashier]:::internal
-    Waiter[🧑‍🍳 Waiter]:::internal
+User with full system access responsible for overall platform configuration and administration.
 
-    Customer[🧍 Customer]:::external
-    Factus[🧾 Factus API]:::external
-    WhatsApp[📲 WhatsApp API]:::external
+## Responsibilities
 
-    Admin --> System
-    Cashier --> System
-    Waiter --> System
-    Customer --> System
+- Create users
+- Edit users
+- Disable users
+- Assign roles
+- Manage menu
+- Manage categories
+- Access reports
+- Configure restaurant
+- Supervise sales
+- Reset passwords
+- Full module access
 
-    System --> Factus
-    System --> WhatsApp
-```
+## Restrictions
+
+None.
+
+## Access Level
+
+FULL ACCESS
+
+---
+
+# 💰 Cashier (CASHIER)
+
+## Description
+
+Responsible for restaurant financial operations and sales closing.
+
+## Responsibilities
+
+- Process payments
+- Generate POS invoices
+- Close cash register
+- Register payments
+- Manage pickup orders
+- Manage delivery orders
+- View sales reports
+
+## Restrictions
+
+- Cannot manage users
+- Cannot modify global configuration
+
+## Access Level
+
+FINANCIAL OPERATIONS
+
+---
+
+# 🍽 Waiter (WAITER)
+
+## Description
+
+Responsible for table service and order management.
+
+## Responsibilities
+
+- Create orders
+- Assign orders to tables
+- Transfer tables
+- Add products to orders
+- Send orders to kitchen
+
+## Restrictions
+
+- Cannot process payments
+- Cannot close cash register
+- Cannot modify menu
+- Cannot cancel orders without ADMIN authorization
+
+## Access Level
+
+RESTAURANT OPERATIONS
+
+---
+
+# 🛵 Delivery
+
+## Description
+
+Responsible for registering delivery and pickup orders.
+
+## Responsibilities
+
+- Register delivery orders
+- Register pickup orders
+- View active orders
+
+## Restrictions
+
+- Does not manage deliveries
+- Does not update logistics statuses
+- Does not manage payments
+
+## Access Level
+
+DELIVERY OPERATIONS
+
+---
+
+# 👨‍🍳 Kitchen (KITCHEN)
+
+## Description
+
+Actor responsible only for viewing kitchen orders.
+
+## Responsibilities
+
+- View incoming orders
+- View active kitchen tickets
+
+## Restrictions
+
+- Cannot modify orders
+- Cannot manage sales
+- Cannot manage payments
+
+## Access Level
+
+OPERATIONAL VIEW ONLY
+
+---
+
+# 👤 Customer (Future)
+
+## Status
+
+Not implemented in current MVP.
+
+## Future Features
+
+- Online ordering
+- Online payments
+- Order tracking
+- MercadoPago integration
+- Public landing page
+
+---
+
+# 📌 Current MVP Scope
+
+## Included
+
+- Restaurant POS
+- Table management
+- Order management
+- Manual delivery registration
+- POS invoicing
+- Reports
+- JWT security
+- Swagger documentation
+
+## Not Included
+
+- DIAN electronic invoicing
+- External integrations
+- Multi-branch support
+- Full multi-tenant architecture
+- Mobile application
+- Online payments
+
+---
+
+# 🎯 Strategic Goal
+
+Build a scalable SaaS platform for restaurants capable of evolving from an operational MVP into an enterprise-grade multi-tenant cloud solution.
