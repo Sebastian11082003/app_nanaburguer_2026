@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 //////////////////////
@@ -76,9 +77,24 @@ enum TipType {
 // TENANT
 //////////////////////
 
+model PlatformAdmin {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  fullName     String   @map ("full_name")
+  passwordHash String   @map("password_hash")
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lastLoginAt DateTime?
+}
+
 model Restaurant {
   id           String   @id @default(uuid())
   name         String
+  slug         String   @unique
   nit          String @unique
   email        String?
   phone        String?
@@ -128,7 +144,7 @@ model User {
 
   payments      Payment[]
   cashMovements CashMovement[]
-
+  @@unique([email, restaurantId])
   @@index([restaurantId])
 }
 

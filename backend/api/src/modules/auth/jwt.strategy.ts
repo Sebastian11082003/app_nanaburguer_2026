@@ -29,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   validate(payload: JwtPayload) {
     console.log('JWT Payload:', payload); // 🔥 LOGUEA EL PAYLOAD PARA DEBUG
     return {
-      id: payload.sub,
+      userId: payload.sub,
       email: payload.email,
       role: payload.role,
       restaurantId: payload.restaurantId,

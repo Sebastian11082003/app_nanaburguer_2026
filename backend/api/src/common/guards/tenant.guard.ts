@@ -9,7 +9,7 @@ import { Request } from 'express';
 
 interface RequestWithUser extends Request {
   user?: {
-    userId: string;
+    id: string;
     role: string;
     restaurantId: string;
   };

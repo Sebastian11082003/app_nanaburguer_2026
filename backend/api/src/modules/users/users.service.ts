@@ -13,8 +13,8 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateUserDto, restaurantId: string) {
-    const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+    const existing = await this.prisma.user.findFirst({
+      where: { email: dto.email, restaurantId },
     });
 
     if (existing) {

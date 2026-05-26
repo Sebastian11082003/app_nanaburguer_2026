@@ -1,23 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
-import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 
 @Injectable()
 export class RestaurantService {
   constructor(private readonly prisma: PrismaService) {}
-
-  async create(dto: CreateRestaurantDto) {
-    return this.prisma.restaurant.create({
-      data: {
-        name: dto.name,
-        nit: dto.nit,
-        email: dto.email,
-        phone: dto.phone,
-        address: dto.address,
-      },
-    });
-  }
 
   async findAll() {
     return this.prisma.restaurant.findMany({

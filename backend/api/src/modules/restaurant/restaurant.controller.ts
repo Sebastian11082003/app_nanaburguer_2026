@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  Post,
   Patch,
   Delete,
   UseGuards,
@@ -12,9 +11,7 @@ import {
 import { UserRole } from '@prisma/client';
 
 import { RestaurantService } from './restaurant.service';
-import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
-
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
@@ -24,15 +21,6 @@ import { Roles } from '../../common/decorators/roles.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RestaurantController {
   constructor(private readonly restaurantService: RestaurantService) {}
-
-  // =========================
-  // CREATE
-  // =========================
-  @Post()
-  @Roles(UserRole.ADMIN)
-  create(@Body() dto: CreateRestaurantDto) {
-    return this.restaurantService.create(dto);
-  }
 
   // =========================
   // FIND ALL

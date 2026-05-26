@@ -4,19 +4,24 @@ services:
   db:
     image: postgres:15
     container_name: nanaburguer_db
+
     environment:
       POSTGRES_USER: nanaburguer
       POSTGRES_PASSWORD: nanaburguer
       POSTGRES_DB: nanaburguer_dev
+
     ports:
       - "5432:5432"
+
     volumes:
       - nanaburguer_db_data:/var/lib/postgresql/data
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nanaburguer -d nanaburguer_dev"]
-      interval: 5s  
+      interval: 5s
       timeout: 5s
       retries: 10
+
     networks:
       - nanaburguer_net
 
@@ -24,20 +29,51 @@ services:
     build:
       context: ../backend/api
       dockerfile: Dockerfile.dev
+
     container_name: nanaburguer_api
+
     environment:
       NODE_ENV: development
       PORT: "3000"
       DATABASE_URL: "postgresql://nanaburguer:nanaburguer@db:5432/nanaburguer_dev?schema=public"
       JWT_SECRET: "dev-secret-change-me"
+
     ports:
       - "3000:3000"
+
     volumes:
       - ../backend/api:/app
       - /app/node_modules
+
     depends_on:
       db:
         condition: service_healthy
+
+    networks:
+      - nanaburguer_net
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+
+    container_name: nanaburguer_frontend
+
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+
+    ports:
+      - "3001:3000"
+
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+    depends_on:
+      - api
+
     networks:
       - nanaburguer_net
 

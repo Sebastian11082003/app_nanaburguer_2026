@@ -19,4 +19,7 @@ export class CreateRestaurantDto {
   @IsOptional()
   @IsString()
   address!: string;
+
+  @IsString()
+  slug!: string;
 }

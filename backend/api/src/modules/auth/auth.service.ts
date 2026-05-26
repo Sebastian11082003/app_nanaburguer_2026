@@ -11,7 +11,6 @@ import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 
 import { RegisterDto } from './dto/register.dto';
-import { RegisterRestaurantDto } from './dto/register-restaurant.dto';
 
 @Injectable()
 export class AuthService {
@@ -19,45 +18,6 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
   ) {}
-
-  // ============================
-  // 🏢 REGISTER RESTAURANT (ENTRY POINT SAAS)
-  // ============================
-  async registerRestaurant(dto: RegisterRestaurantDto) {
-    const existing = await this.prisma.restaurant.findUnique({
-      where: { nit: dto.nit },
-    });
-
-    if (existing) {
-      throw new BadRequestException('Restaurant already exists');
-    }
-
-    const passwordHash = await bcrypt.hash(dto.adminPassword, 10);
-
-    return this.prisma.$transaction(async (tx) => {
-      const restaurant = await tx.restaurant.create({
-        data: {
-          name: dto.name,
-          nit: dto.nit,
-          phone: dto.phone,
-          address: dto.address,
-        },
-      });
-
-      const admin = await tx.user.create({
-        data: {
-          fullName: dto.adminName,
-          email: dto.adminEmail,
-          passwordHash,
-          role: UserRole.ADMIN,
-          restaurantId: restaurant.id,
-          isActive: true,
-        },
-      });
-
-      return this.buildAuthResponse(admin);
-    });
-  }
 
   // ============================
   // 👤 REGISTER USER (ADMIN ONLY)
@@ -89,17 +49,26 @@ export class AuthService {
   }
 
   // ============================
-  // 🔐 LOGIN (SIN NIT)
+  // 🔐 LOGIN
   // ============================
-  async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
+  async login(slug: string, email: string, password: string) {
+    // 1. Buscar restaurante por slug
+    const restaurant = await this.prisma.restaurant.findFirst({
+      where: { slug },
+    });
+
+    if (!restaurant) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    // 2. Buscar usuario dentro del tenant
+    const user = await this.prisma.user.findFirst({
+      where: { email, restaurantId: restaurant.id },
     });
 
     if (!user || !user.isActive) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
+    // 3. Verificar contraseña
     const isValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!isValid) {

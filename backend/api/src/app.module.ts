@@ -15,6 +15,7 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
 import { RestaurantModule } from './modules/restaurant/restaurant.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { MenuModule } from './modules/menu/menu.module';
+import { PlatformModule } from './modules/platform/platform.module';
 
 const configOptions: ConfigModuleOptions = {
   isGlobal: true,
@@ -39,6 +40,7 @@ const configOptions: ConfigModuleOptions = {
     SalesModule,
     ReportsModule,
     MenuModule,
+    PlatformModule,
   ],
   controllers: [HealthController],
 })

@@ -4,7 +4,6 @@ import { AuthService } from './auth.service';
 
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RegisterRestaurantDto } from './dto/register-restaurant.dto';
 
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -18,21 +17,12 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   // ============================
-  // 🏢 REGISTER RESTAURANT
-  // ============================
-  @Public()
-  @Post('register-restaurant')
-  registerRestaurant(@Body() dto: RegisterRestaurantDto) {
-    return this.authService.registerRestaurant(dto);
-  }
-
-  // ============================
   // 🔐 LOGIN (SIN NIT)
   // ============================
   @Public()
   @Post('login')
   login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.email, dto.password);
+    return this.authService.login(dto.slug, dto.email, dto.password);
   }
 
   // ============================
