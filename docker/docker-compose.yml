@@ -3,9 +3,7 @@ version: "3.9"
 services:
   db:
     image: postgres:15
-
     container_name: nanaburguer_db
-
     restart: always
 
     environment:
@@ -28,18 +26,15 @@ services:
   api:
     build:
       context: ./backend/api
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
 
     container_name: nanaburguer_api
-
     restart: always
 
     environment:
       NODE_ENV: production
       PORT: 3000
-
       DATABASE_URL: postgresql://nanaburguer:nanaburguer@db:5432/nanaburguer_dev?schema=public
-
       JWT_SECRET: super-secret-key
 
     ports:
@@ -55,15 +50,13 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.prod
 
     container_name: nanaburguer_frontend
-
     restart: always
 
     environment:
       NODE_ENV: production
-
       NEXT_PUBLIC_API_URL: http://3.88.141.175:3000
 
     ports:
