@@ -5,6 +5,82 @@ import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async dashboard(restaurantId: string) {
+    const now = new Date();
+
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 7);
+
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      salesToday,
+      salesWeek,
+      salesMonth,
+      totalOrders,
+      activeTables,
+      deliveriesToday,
+      paymentMethods,
+      topProducts,
+    ] = await Promise.all([
+      this.revenueByRange(restaurantId, todayStart, now),
+
+      this.revenueByRange(restaurantId, weekStart, now),
+
+      this.revenueByRange(restaurantId, monthStart, now),
+
+      this.prisma.order.count({
+        where: {
+          restaurantId,
+        },
+      }),
+
+      this.prisma.tableEntity.count({
+        where: {
+          restaurantId,
+          isActive: true,
+        },
+      }),
+
+      this.prisma.delivery.count({
+        where: {
+          restaurantId,
+          createdAt: {
+            gte: todayStart,
+          },
+        },
+      }),
+
+      this.salesByPaymentMethod(restaurantId),
+
+      this.topProducts(restaurantId),
+    ]);
+
+    return {
+      salesToday: salesToday.total,
+
+      salesWeek: salesWeek.total,
+
+      salesMonth: salesMonth.total,
+
+      totalOrders,
+
+      activeTables,
+
+      deliveriesToday,
+
+      topProduct: topProducts.length > 0 ? topProducts[0] : null,
+
+      paymentMethods,
+    };
+  }
+
   // ============================
   // RESUMEN GENERAL
   // ============================

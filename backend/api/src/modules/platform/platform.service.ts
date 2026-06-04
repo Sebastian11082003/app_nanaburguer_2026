@@ -62,9 +62,29 @@ export class PlatformService {
     };
   }
   async createRestaurant(dto: CreateRestaurantDto) {
-    const existingRestaurant = await this.prisma.restaurant.findUnique({
+    const restaurantEmail = dto.restaurantEmail.trim().toLowerCase();
+
+    const adminEmail = dto.adminEmail.trim().toLowerCase();
+
+    if (restaurantEmail === adminEmail) {
+      throw new BadRequestException(
+        'Restaurant email and admin email must be different',
+      );
+    }
+
+    const existingRestaurant = await this.prisma.restaurant.findFirst({
       where: {
-        nit: dto.nit,
+        OR: [
+          {
+            nit: dto.nit,
+          },
+          {
+            slug: dto.slug,
+          },
+          {
+            email: restaurantEmail,
+          },
+        ],
       },
     });
 
@@ -72,29 +92,54 @@ export class PlatformService {
       throw new BadRequestException('Restaurant already exists');
     }
 
-    const passwordHash = await bcrypt.hash(dto.adminPassword, 10);
+    const existingAdmin = await this.prisma.user.findFirst({
+      where: {
+        email: adminEmail,
+      },
+    });
 
-    const restaurant = await this.prisma.restaurant.create({
-      data: {
-        name: dto.name,
-        slug: dto.slug,
-        nit: dto.nit,
-        phone: dto.phone,
-        address: dto.address,
+    if (existingAdmin) {
+      throw new BadRequestException('Admin email already exists');
+    }
 
-        users: {
-          create: {
-            email: dto.adminEmail,
-            fullName: dto.adminName,
-            passwordHash,
-            role: UserRole.ADMIN,
-          },
+    const restaurantPasswordHash = await bcrypt.hash(
+      dto.restaurantPassword,
+      10,
+    );
+
+    const adminPasswordHash = await bcrypt.hash(dto.adminPassword, 10);
+
+    const restaurant = await this.prisma.$transaction(async (tx) => {
+      const createdRestaurant = await tx.restaurant.create({
+        data: {
+          name: dto.name,
+          slug: dto.slug,
+          nit: dto.nit,
+
+          email: restaurantEmail,
+          restaurantPasswordHash,
+
+          phone: dto.phone,
+          address: dto.address,
+
+          logoUrl: dto.logoUrl,
+          primaryColor: dto.primaryColor,
         },
-      },
+      });
 
-      include: {
-        users: true,
-      },
+      await tx.user.create({
+        data: {
+          fullName: dto.adminName,
+          email: adminEmail,
+          passwordHash: adminPasswordHash,
+
+          role: UserRole.ADMIN,
+
+          restaurantId: createdRestaurant.id,
+        },
+      });
+
+      return createdRestaurant;
     });
 
     return restaurant;

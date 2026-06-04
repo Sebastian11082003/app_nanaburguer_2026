@@ -30,6 +30,9 @@ export interface CreateRestaurantDto {
 
   address: string;
 
+  restaurantEmail: string;
+  restaurantPassword: string;
+
   adminName: string;
 
   adminEmail: string;

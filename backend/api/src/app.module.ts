@@ -16,6 +16,7 @@ import { RestaurantModule } from './modules/restaurant/restaurant.module';
 import { SalesModule } from './modules/sales/sales.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { PlatformModule } from './modules/platform/platform.module';
+import { RestaurantAuthModule } from './modules/restaurant-auth/restaurant-auth.module';
 
 const configOptions: ConfigModuleOptions = {
   isGlobal: true,
@@ -41,6 +42,7 @@ const configOptions: ConfigModuleOptions = {
     ReportsModule,
     MenuModule,
     PlatformModule,
+    RestaurantAuthModule,
   ],
   controllers: [HealthController],
 })

@@ -1,21 +1,17 @@
 export const restaurantAdminNavigation = [
+  // =========================
+  // DASHBOARD
+  // =========================
+
   {
     label: "Dashboard",
     href: "/restaurant/admin",
     icon: "📊",
   },
 
-  {
-    label: "Órdenes",
-    href: "/restaurant/admin/orders",
-    icon: "🧾",
-  },
-
-  {
-    label: "Menú",
-    href: "/restaurant/admin/menu",
-    icon: "🍔",
-  },
+  // =========================
+  // OPERACIÓN
+  // =========================
 
   {
     label: "Mesas",
@@ -24,10 +20,44 @@ export const restaurantAdminNavigation = [
   },
 
   {
+    label: "Órdenes",
+    href: "/restaurant/admin/orders",
+    icon: "🧾",
+  },
+
+  // =========================
+  // MENÚ
+  // =========================
+
+  {
+    label: "Menú",
+    href: "/restaurant/admin/menu",
+    icon: "🍔",
+  },
+
+  {
+    label: "Categorías",
+    href: "/restaurant/admin/menu/categories",
+  },
+
+  {
+    label: "Productos",
+    href: "/restaurant/admin/menu/items",
+  },
+
+  // =========================
+  // PERSONAL
+  // =========================
+
+  {
     label: "Usuarios",
     href: "/restaurant/admin/users",
     icon: "👥",
   },
+
+  // =========================
+  // FINANZAS
+  // =========================
 
   {
     label: "Facturas",
@@ -40,6 +70,10 @@ export const restaurantAdminNavigation = [
     href: "/restaurant/admin/reports",
     icon: "📈",
   },
+
+  // =========================
+  // SISTEMA
+  // =========================
 
   {
     label: "Configuración",

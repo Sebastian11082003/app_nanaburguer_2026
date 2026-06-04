@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function LandingPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-black px-4 text-white">
@@ -8,8 +10,8 @@ export default function LandingPage() {
       </p>
 
       <div className="mt-10 flex w-full max-w-sm flex-col gap-4">
-        <a
-          href="/auth/login"
+        <Link
+          href="/restaurant/login"
           className="
             rounded-2xl
             bg-white
@@ -24,9 +26,9 @@ export default function LandingPage() {
           "
         >
           Ingresar Restaurante
-        </a>
+        </Link>
 
-        <a
+        <Link
           href="/platform/login"
           className="
             rounded-2xl
@@ -44,7 +46,7 @@ export default function LandingPage() {
           "
         >
           Panel SaaS
-        </a>
+        </Link>
       </div>
     </main>
   );

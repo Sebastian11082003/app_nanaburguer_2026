@@ -1,12 +1,9 @@
-import { api } from "../lib/axios";
+import { api } from "@/src/lib/api";
 
 import { LoginResponse } from "../types/auth";
 
 interface LoginDto {
-  slug: string;
-
   email: string;
-
   password: string;
 }
 

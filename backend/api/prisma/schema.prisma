@@ -78,10 +78,10 @@ enum TipType {
 //////////////////////
 
 model PlatformAdmin {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  fullName     String   @map ("full_name")
-  passwordHash String   @map("password_hash")
+  id           String @id @default(uuid())
+  email        String @unique
+  fullName     String @map("full_name")
+  passwordHash String @map("password_hash")
 
   isActive Boolean @default(true)
 
@@ -92,28 +92,42 @@ model PlatformAdmin {
 }
 
 model Restaurant {
-  id           String   @id @default(uuid())
-  name         String
-  slug         String   @unique
-  nit          String @unique
-  email        String?
+  id String @id @default(uuid())
+
+  name String
+  slug String @unique
+  nit  String @unique
+
+  email String?
+
+  restaurantPasswordHash String? @map("restaurant_password_hash")
+
   phone        String?
   address      String?
   logoUrl      String?
   primaryColor String?
-  factusApiKey String?  @map("factus_api_key")
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now()) @map("created_at")
 
-  users         User[]
-  categories    Category[]
-  menuItems     MenuItem[]
-  tables        TableEntity[]
-  orders        Order[]
-  sales         Sale[]
-  invoices      Invoice[]
-  payments      Payment[]
-  deliveries    Delivery[]
+  factusApiKey String? @map("factus_api_key")
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users User[]
+
+  categories Category[]
+  menuItems  MenuItem[]
+
+  tables TableEntity[]
+
+  orders Order[]
+
+  sales    Sale[]
+  invoices Invoice[]
+  payments Payment[]
+
+  deliveries Delivery[]
+
   cashMovements CashMovement[]
 
   @@map("restaurant")
@@ -140,10 +154,11 @@ model User {
   createdOrders Order[]              @relation("orders_created")
   updatedOrders Order[]              @relation("orders_updated")
   statusChanges OrderStatusHistory[]
-  deliveries  Delivery[]           @relation("DeliveryUser")
+  deliveries    Delivery[]           @relation("DeliveryUser")
 
   payments      Payment[]
   cashMovements CashMovement[]
+
   @@unique([email, restaurantId])
   @@index([restaurantId])
 }
@@ -236,8 +251,8 @@ model Order {
   createdBy User @relation("orders_created", fields: [createdById], references: [id])
   updatedBy User @relation("orders_updated", fields: [updatedById], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   closedAt  DateTime?
 
   items    OrderItem[]
@@ -314,10 +329,10 @@ model Payment {
 
   method      PaymentMethod
   amountCents Int
-  currency    String @default("COP")
+  currency    String        @default("COP")
 
   createdById String
-  createdBy   User @relation(fields: [createdById], references: [id])
+  createdBy   User   @relation(fields: [createdById], references: [id])
 
   sale       Sale       @relation(fields: [saleId], references: [id])
   restaurant Restaurant @relation(fields: [restaurantId], references: [id])
@@ -339,7 +354,7 @@ model Invoice {
   paymentId    String @unique
   restaurantId String
 
-  number String @unique
+  number String        @unique
   cufe   String?
   status InvoiceStatus
 
@@ -366,18 +381,18 @@ model Delivery {
   orderId String @unique
   order   Order  @relation(fields: [orderId], references: [id])
 
-  customerName String
-  phone        String
-  address      String?
-  neighborhood String?
-  deliveryFeeCents Int @default(0)
-  deliveryUserId String?
+  customerName     String
+  phone            String
+  address          String?
+  neighborhood     String?
+  deliveryFeeCents Int     @default(0)
+  deliveryUserId   String?
 
-  deliveryUser   User? @relation("DeliveryUser", fields: [deliveryUserId], references: [id])
-  takenAt       DateTime @default(now()) // cuando se toma el pedido
-  printedAt     DateTime? // cuando se imprime la orden para el delivery  
-  dispatchedAt   DateTime? // cuando se asigna a un repartidor  
-  deliveredAt    DateTime? // cuando se marca como entregado  
+  deliveryUser User?     @relation("DeliveryUser", fields: [deliveryUserId], references: [id])
+  takenAt      DateTime  @default(now()) // cuando se toma el pedido
+  printedAt    DateTime? // cuando se imprime la orden para el delivery  
+  dispatchedAt DateTime? // cuando se asigna a un repartidor  
+  deliveredAt  DateTime? // cuando se marca como entregado  
 
   notes   String?
   printed Boolean @default(false)
@@ -409,7 +424,7 @@ model CashMovement {
   createdAt DateTime @default(now())
 
   createdById String
-  createdBy   User @relation(fields: [createdById], references: [id])
+  createdBy   User   @relation(fields: [createdById], references: [id])
 
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])

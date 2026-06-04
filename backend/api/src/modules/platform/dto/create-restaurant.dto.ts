@@ -30,6 +30,15 @@ export class CreateRestaurantDto {
   @IsString()
   primaryColor?: string;
 
+  // RESTAURANT LOGIN
+
+  @IsEmail()
+  restaurantEmail!: string;
+
+  @IsString()
+  @MinLength(6)
+  restaurantPassword!: string;
+
   // ADMIN
 
   @IsString()

@@ -20,8 +20,9 @@ export class AuthService {
   ) {}
 
   // ============================
-  // 👤 REGISTER USER (ADMIN ONLY)
+  // 👤 REGISTER USER
   // ============================
+
   async register(dto: RegisterDto, restaurantId: string) {
     const existingUser = await this.prisma.user.findFirst({
       where: {
@@ -49,30 +50,57 @@ export class AuthService {
   }
 
   // ============================
-  // 🔐 LOGIN
+  // 🔐 LOGIN POR ROL
   // ============================
-  async login(slug: string, email: string, password: string) {
-    // 1. Buscar restaurante por slug
+
+  async login(
+    slug: string,
+    email: string,
+    password: string,
+    expectedRole: UserRole,
+  ) {
+    console.log('============== LOGIN ==============');
+    console.log('SLUG:', slug);
+    console.log('EMAIL:', email);
+    console.log('PASSWORD:', password);
+    console.log('ROLE:', expectedRole);
     const restaurant = await this.prisma.restaurant.findFirst({
-      where: { slug },
+      where: {
+        slug,
+      },
     });
+
+    console.log('RESTAURANT:', restaurant);
 
     if (!restaurant) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Restaurant not found');
     }
-    // 2. Buscar usuario dentro del tenant
+
     const user = await this.prisma.user.findFirst({
-      where: { email, restaurantId: restaurant.id },
+      where: {
+        email,
+        restaurantId: restaurant.id,
+        isActive: true,
+      },
     });
 
-    if (!user || !user.isActive) {
+    console.log('USER:', user);
+
+    if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    // 3. Verificar contraseña
-    const isValid = await bcrypt.compare(password, user.passwordHash);
 
-    if (!isValid) {
+    const validPassword = await bcrypt.compare(password, user.passwordHash);
+
+    console.log('PASSWORD VALID:', validPassword);
+    console.log('USER ROLE:', user.role);
+
+    if (!validPassword) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.role !== expectedRole) {
+      throw new UnauthorizedException('Role not allowed');
     }
 
     return this.buildAuthResponse(user);
@@ -81,6 +109,7 @@ export class AuthService {
   // ============================
   // 🎟 JWT BUILDER
   // ============================
+
   private async buildAuthResponse(user: {
     id: string;
     email: string;
@@ -92,11 +121,12 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
-      restaurantId: user.restaurantId, // 🔥 CLAVE MULTI-TENANT
+      restaurantId: user.restaurantId,
     };
 
     return {
       accessToken: await this.jwt.signAsync(payload),
+
       user: {
         id: user.id,
         fullName: user.fullName,
