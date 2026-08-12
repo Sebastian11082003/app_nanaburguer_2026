@@ -60,9 +60,9 @@ export class DeliveryController {
   dispatch(
     @Param('id') id: string,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { id: string } },
+    @Req() req: { user: { userId: string } },
   ) {
-    return this.service.dispatch(id, restaurantId, req.user.id);
+    return this.service.dispatch(id, restaurantId, req.user.userId);
   }
 
   // ============================

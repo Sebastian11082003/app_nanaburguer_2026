@@ -11,5 +11,7 @@ export interface RestaurantLoginResponse {
     id: string;
     name: string;
     slug: string;
+    /** Per-tenant logo, set by the restaurant itself. `null` until they upload one. */
+    logoUrl: string | null;
   };
 }

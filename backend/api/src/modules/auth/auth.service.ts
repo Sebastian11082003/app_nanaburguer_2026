@@ -11,12 +11,14 @@ import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 
 import { RegisterDto } from './dto/register.dto';
+import { RolesService } from '../roles/roles.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly rolesService: RolesService,
   ) {}
 
   // ============================
@@ -24,6 +26,8 @@ export class AuthService {
   // ============================
 
   async register(dto: RegisterDto, restaurantId: string) {
+    await this.rolesService.ensureDefaults(restaurantId);
+
     const existingUser = await this.prisma.user.findFirst({
       where: {
         email: dto.email,
@@ -35,6 +39,11 @@ export class AuthService {
       throw new BadRequestException('Email already registered');
     }
 
+    const station = dto.role ?? UserRole.WAITER;
+    const systemRole = await this.prisma.role.findFirst({
+      where: { restaurantId, systemKey: station },
+    });
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     return this.prisma.user.create({
@@ -42,7 +51,8 @@ export class AuthService {
         fullName: dto.fullName,
         email: dto.email,
         passwordHash,
-        role: dto.role ?? UserRole.WAITER,
+        role: station,
+        roleId: systemRole?.id,
         isActive: true,
         restaurantId,
       },
@@ -59,18 +69,11 @@ export class AuthService {
     password: string,
     expectedRole: UserRole,
   ) {
-    console.log('============== LOGIN ==============');
-    console.log('SLUG:', slug);
-    console.log('EMAIL:', email);
-    console.log('PASSWORD:', password);
-    console.log('ROLE:', expectedRole);
     const restaurant = await this.prisma.restaurant.findFirst({
       where: {
         slug,
       },
     });
-
-    console.log('RESTAURANT:', restaurant);
 
     if (!restaurant) {
       throw new UnauthorizedException('Restaurant not found');
@@ -84,16 +87,11 @@ export class AuthService {
       },
     });
 
-    console.log('USER:', user);
-
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     const validPassword = await bcrypt.compare(password, user.passwordHash);
-
-    console.log('PASSWORD VALID:', validPassword);
-    console.log('USER ROLE:', user.role);
 
     if (!validPassword) {
       throw new UnauthorizedException('Invalid credentials');
@@ -116,12 +114,20 @@ export class AuthService {
     role: UserRole;
     restaurantId: string;
     fullName: string;
+    roleId?: string | null;
   }) {
+    const permissions = await this.rolesService.getPermissionCodesForUser(
+      user.id,
+      user.restaurantId,
+    );
+
     const payload = {
       sub: user.id,
       email: user.email,
       role: user.role,
       restaurantId: user.restaurantId,
+      roleId: user.roleId ?? null,
+      permissions,
     };
 
     return {
@@ -132,6 +138,8 @@ export class AuthService {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        roleId: user.roleId ?? null,
+        permissions,
       },
     };
   }

@@ -1,5 +1,8 @@
-// src/app/public/pricing/page.tsx
-
 export default function PricingPage() {
-  return <div>Pricing Page</div>;
+  return (
+    <main>
+      <h1>Pricing</h1>
+      <p>Page under construction.</p>
+    </main>
+  );
 }

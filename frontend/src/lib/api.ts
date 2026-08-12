@@ -1,16 +1,21 @@
 import axios from "axios";
 
+import { useAuthStore } from "@/src/store/auth.store";
+
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
 api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
+  const storeToken = useAuthStore.getState().accessToken;
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  const localToken =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  const token = storeToken || localToken;
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
   return config;

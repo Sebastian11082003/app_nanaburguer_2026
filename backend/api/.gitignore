@@ -56,3 +56,10 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /generated/prisma
+
+# User-uploaded assets (restaurant logos, etc). Served statically by main.ts,
+# but the files themselves are runtime data, not source — don't commit them.
+/uploads/*
+!/uploads/logos
+/uploads/logos/*
+!/uploads/logos/.gitkeep

@@ -33,9 +33,14 @@ export class PaymentsController {
     @Param('saleId') saleId: string,
     @Body() dto: CreatePaymentDto,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { id: string } },
+    @Req() req: { user: { userId: string } },
   ) {
-    return this.paymentsService.create(saleId, dto, restaurantId, req.user.id);
+    return this.paymentsService.create(
+      saleId,
+      dto,
+      restaurantId,
+      req.user.userId,
+    );
   }
 
   @Get(':saleId/payments')

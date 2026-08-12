@@ -16,12 +16,19 @@ import { CreateRestaurantDto } from './dto/create-restaurant.dto';
 
 import { UserRole } from '@prisma/client';
 
+import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
+import { RolesService } from '../roles/roles.service';
+
 @Injectable()
 export class PlatformService {
   constructor(
     private prisma: PrismaService,
 
     private jwtService: JwtService,
+
+    private paymentMethodsService: PaymentMethodsService,
+
+    private rolesService: RolesService,
   ) {}
 
   async login(dto: PlatformLoginDto) {
@@ -127,6 +134,20 @@ export class PlatformService {
         },
       });
 
+      await this.paymentMethodsService.seedForRestaurant(
+        createdRestaurant.id,
+        tx,
+      );
+
+      await this.rolesService.seedForRestaurant(createdRestaurant.id, tx);
+
+      const adminRole = await tx.role.findFirst({
+        where: {
+          restaurantId: createdRestaurant.id,
+          systemKey: UserRole.ADMIN,
+        },
+      });
+
       await tx.user.create({
         data: {
           fullName: dto.adminName,
@@ -134,6 +155,7 @@ export class PlatformService {
           passwordHash: adminPasswordHash,
 
           role: UserRole.ADMIN,
+          roleId: adminRole?.id,
 
           restaurantId: createdRestaurant.id,
         },

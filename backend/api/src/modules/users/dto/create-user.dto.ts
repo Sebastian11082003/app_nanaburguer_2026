@@ -1,4 +1,12 @@
-import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MinLength,
+  ValidateIf,
+} from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class CreateUserDto {
@@ -12,6 +20,13 @@ export class CreateUserDto {
   @IsString()
   fullName!: string;
 
+  /** Preferred: assign a Role row (system or custom). */
+  @IsOptional()
+  @IsUUID()
+  roleId?: string;
+
+  /** Legacy fallback when roleId is omitted. */
+  @ValidateIf((o: CreateUserDto) => !o.roleId)
   @IsEnum(UserRole)
-  role!: UserRole;
+  role?: UserRole;
 }

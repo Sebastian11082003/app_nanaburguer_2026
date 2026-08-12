@@ -8,6 +8,7 @@ import { UsersModule } from './modules/users/users.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { TablesModule } from './modules/tables/tables.module';
 import { PaymentsModule } from './modules/payment/payments.module';
+import { PaymentMethodsModule } from './modules/payment-methods/payment-methods.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { CashModule } from './modules/cashMovement/cash.module';
@@ -17,6 +18,7 @@ import { SalesModule } from './modules/sales/sales.module';
 import { MenuModule } from './modules/menu/menu.module';
 import { PlatformModule } from './modules/platform/platform.module';
 import { RestaurantAuthModule } from './modules/restaurant-auth/restaurant-auth.module';
+import { RolesModule } from './modules/roles/roles.module';
 
 const configOptions: ConfigModuleOptions = {
   isGlobal: true,
@@ -33,6 +35,7 @@ const configOptions: ConfigModuleOptions = {
     OrdersModule,
     TablesModule,
     PaymentsModule,
+    PaymentMethodsModule,
     InvoicesModule,
     ReportsModule,
     RestaurantModule,
@@ -43,6 +46,7 @@ const configOptions: ConfigModuleOptions = {
     MenuModule,
     PlatformModule,
     RestaurantAuthModule,
+    RolesModule,
   ],
   controllers: [HealthController],
 })

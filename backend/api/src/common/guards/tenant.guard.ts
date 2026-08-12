@@ -9,7 +9,7 @@ import { Request } from 'express';
 
 interface RequestWithUser extends Request {
   user?: {
-    id: string;
+    userId: string;
     role: string;
     restaurantId: string;
   };
@@ -29,12 +29,10 @@ export class TenantGuard implements CanActivate {
     if (isPublic) return true;
 
     const request = context.switchToHttp().getRequest<RequestWithUser>();
-    console.log('TENANT GUARD USER:', request.user);
     if (!request.user || !request.user.restaurantId) {
       throw new UnauthorizedException('Tenant not found');
     }
 
-    // 🔥 CLAVE: setear tenant para el decorator
     request.restaurantId = request.user.restaurantId;
 
     return true;

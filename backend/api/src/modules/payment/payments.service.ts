@@ -16,6 +16,8 @@ import {
   Payment, // ✅ IMPORT CORRECTO
 } from '@prisma/client';
 
+import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
+
 type SaleWithRelations = Prisma.SaleGetPayload<{
   include: {
     restaurant: {
@@ -24,6 +26,7 @@ type SaleWithRelations = Prisma.SaleGetPayload<{
         nit: true;
         phone: true;
         address: true; // CLAVE
+        logoUrl: true; // shown on the printed receipt, like a masthead
       };
     };
     payment: true;
@@ -43,7 +46,10 @@ type SaleWithRelations = Prisma.SaleGetPayload<{
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly paymentMethodsService: PaymentMethodsService,
+  ) {}
 
   async create(
     saleId: string,
@@ -78,6 +84,12 @@ export class PaymentsService {
       if (sale.order.status !== OrderStatus.CLOSED) {
         throw new BadRequestException('Order must be CLOSED');
       }
+
+      const methodConfig = await this.paymentMethodsService.assertActive(
+        restaurantId,
+        dto.method,
+        tx,
+      );
 
       // 🔥 TIP LOGIC (CLARA)
       const suggestedTip = Math.round(sale.totalCents * 0.05);
@@ -141,6 +153,7 @@ export class PaymentsService {
         dto,
         changeCents,
         userId,
+        methodConfig.label,
       );
 
       return {
@@ -162,6 +175,7 @@ export class PaymentsService {
     dto: CreatePaymentDto,
     changeCents: number,
     userId: string,
+    methodLabel: string,
   ) {
     const { restaurant, order } = sale;
 
@@ -191,6 +205,7 @@ export class PaymentsService {
             nit: restaurant.nit,
             phone: restaurant.phone,
             address: restaurant.address,
+            logoUrl: restaurant.logoUrl,
           },
 
           invoice: {
@@ -225,12 +240,14 @@ export class PaymentsService {
 
           totals: {
             subtotal: order.subtotalCents,
+            discount: order.discountCents ?? 0,
             tip: payment.tipCents ?? 0,
             total: payment.amountCents,
           },
 
           payment: {
             method: payment.method,
+            methodLabel,
             received: dto.receivedCents ?? null,
             change: changeCents,
             paidAt: payment.paidAt,

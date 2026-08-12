@@ -22,9 +22,9 @@ export class CashController {
   create(
     @Body() dto: CreateCashMovementDto,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { id: string } },
+    @Req() req: { user: { userId: string } },
   ) {
-    return this.service.create(dto, restaurantId, req.user.id);
+    return this.service.create(dto, restaurantId, req.user.userId);
   }
 
   @Get()

@@ -130,23 +130,111 @@ model Restaurant {
 
   cashMovements CashMovement[]
 
+  paymentMethods RestaurantPaymentMethod[]
+
+  roles Role[]
+
   @@map("restaurant")
 }
 
 //////////////////////
-// USERS
+// PAYMENT METHODS (per tenant)
 //////////////////////
+
+/// Enable/disable + rename the built-in PaymentMethod codes per restaurant.
+/// Business rules (e.g. cash change / cash drawer) still key off `method`.
+model RestaurantPaymentMethod {
+  id           String @id @default(uuid())
+  restaurantId String
+
+  method    PaymentMethod
+  label     String
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([restaurantId, method])
+  @@index([restaurantId, isActive])
+  @@map("restaurant_payment_method")
+}
+
+//////////////////////
+// USERS + ROLES
+//////////////////////
+
+/// Global permission catalog (shared across tenants).
+model Permission {
+  id          String @id @default(uuid())
+  code        String @unique
+  name        String
+  description String?
+  groupName   String @map("group_name")
+
+  roles RolePermission[]
+
+  @@map("permission")
+}
+
+/// Tenant role: 5 system templates + custom roles with a permission matrix.
+model Role {
+  id           String @id @default(uuid())
+  restaurantId String
+
+  name        String
+  description String?
+
+  /// Set only for the five seeded templates (one per station).
+  systemKey UserRole?
+  isSystem  Boolean  @default(false)
+
+  /// Which login hub / app shell this role uses (ADMIN, WAITER, …).
+  stationKey UserRole
+
+  isActive Boolean @default(true)
+
+  restaurant  Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  permissions RolePermission[]
+  users       User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([restaurantId, name])
+  @@unique([restaurantId, systemKey])
+  @@index([restaurantId, isActive])
+  @@map("role")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permission")
+}
 
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
   fullName     String   @map("full_name")
   passwordHash String   @map("password_hash")
+  /// Station key used for role-login endpoints (kept in sync with Role.stationKey).
   role         UserRole
   isActive     Boolean  @default(true) @map("is_active")
 
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  /// Assigned role row (system template or custom). Null = legacy users until backfilled.
+  roleId       String? @map("role_id")
+  assignedRole Role?   @relation(fields: [roleId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -161,6 +249,7 @@ model User {
 
   @@unique([email, restaurantId])
   @@index([restaurantId])
+  @@index([roleId])
 }
 
 //////////////////////
@@ -241,9 +330,10 @@ model Order {
   tableId String?
   table   TableEntity? @relation(fields: [tableId], references: [id])
 
-  subtotalCents Int
-  taxCents      Int
-  totalCents    Int
+  subtotalCents  Int
+  taxCents       Int
+  discountCents  Int @default(0)
+  totalCents     Int
 
   createdById String
   updatedById String
@@ -275,6 +365,8 @@ model OrderItem {
   unitPriceCents Int
   lineTotalCents Int
   notes          String?
+  /// When true, lineTotalCents is forced to 0 (kitchen still prepares it).
+  isComplimentary Boolean @default(false)
 
   order    Order    @relation(fields: [orderId], references: [id])
   menuItem MenuItem @relation(fields: [menuItemId], references: [id])

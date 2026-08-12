@@ -55,6 +55,12 @@ export const restaurantAdminNavigation = [
     icon: "👥",
   },
 
+  {
+    label: "Roles",
+    href: "/restaurant/admin/roles",
+    icon: "🔐",
+  },
+
   // =========================
   // FINANZAS
   // =========================

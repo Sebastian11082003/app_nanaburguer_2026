@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -17,6 +18,8 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { FindOrdersDto } from './dto/find-orders.dto';
 import { AddItemDto } from './dto/add-item.dto';
+import { UpdateItemDto } from './dto/update-item.dto';
+import { SetDiscountDto } from './dto/set-discount.dto';
 import { TransferTableDto } from './dto/transfer-table.dto';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -37,9 +40,9 @@ export class OrdersController {
   create(
     @Body() dto: CreateOrderDto,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { id: string } },
+    @Req() req: { user: { userId: string } },
   ) {
-    return this.ordersService.create(dto, restaurantId, req.user.id);
+    return this.ordersService.create(dto, restaurantId, req.user.userId);
   }
 
   // 🟢 AGREGAR ITEMS
@@ -53,20 +56,49 @@ export class OrdersController {
     return this.ordersService.addItem(id, dto, restaurantId);
   }
 
+  // 🟢 EDITAR ITEM (cantidad/notas, solo mientras se arma el pedido)
+  @Patch(':id/items/:itemId')
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
+  updateItem(
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
+    @Body() dto: UpdateItemDto,
+    @Tenant() restaurantId: string,
+  ) {
+    return this.ordersService.updateItem(id, itemId, dto, restaurantId);
+  }
+
+  // 🟢 QUITAR ITEM (solo mientras se está armando el pedido)
+  @Delete(':id/items/:itemId')
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
+  removeItem(
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
+    @Tenant() restaurantId: string,
+  ) {
+    return this.ordersService.removeItem(id, itemId, restaurantId);
+  }
+
   // 🟢 CAMBIAR ESTADO (cocina)
   @Patch(':id/status')
-  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.CASHIER,
+    UserRole.WAITER,
+    UserRole.KITCHEN,
+    UserRole.DELIVERY,
+  )
   updateStatus(
     @Param('id') id: string,
     @Body('status') status: OrderStatus,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { id: string } },
+    @Req() req: { user: { userId: string } },
   ) {
     return this.ordersService.updateStatus(
       id,
       status,
       restaurantId,
-      req.user.id,
+      req.user.userId,
     );
   }
 
@@ -81,15 +113,30 @@ export class OrdersController {
     return this.ordersService.transferTable(id, dto, restaurantId);
   }
 
+  // 🟢 DESCUENTO A NIVEL ORDEN
+  @Patch(':id/discount')
+  @Roles(UserRole.ADMIN, UserRole.CASHIER)
+  setDiscount(
+    @Param('id') id: string,
+    @Body() dto: SetDiscountDto,
+    @Tenant() restaurantId: string,
+  ) {
+    return this.ordersService.setDiscount(
+      id,
+      dto.discountCents,
+      restaurantId,
+    );
+  }
+
   // 🟢 CERRAR ORDEN (caja)
   @Patch(':id/close')
   @Roles(UserRole.ADMIN, UserRole.CASHIER)
   closeOrder(
     @Param('id') id: string,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { id: string } },
+    @Req() req: { user: { userId: string } },
   ) {
-    return this.ordersService.closeOrder(id, restaurantId, req.user.id);
+    return this.ordersService.closeOrder(id, restaurantId, req.user.userId);
   }
 
   // 🟢 LISTAR

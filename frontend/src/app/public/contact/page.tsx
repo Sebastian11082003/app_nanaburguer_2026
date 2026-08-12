@@ -1,5 +1,8 @@
-// src/app/public/contact/page.tsx
-
 export default function ContactPage() {
-  return <div>Contact Page</div>;
+  return (
+    <main>
+      <h1>Contact</h1>
+      <p>Page under construction.</p>
+    </main>
+  );
 }

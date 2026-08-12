@@ -9,10 +9,14 @@ import { PlatformService } from './platform.service';
 import { PlatformJwtStrategy } from './strategies/platform-jwt.strategy';
 
 import { PrismaModule } from 'src/infrastructure/prisma/prisma.module';
+import { PaymentMethodsModule } from '../payment-methods/payment-methods.module';
+import { RolesModule } from '../roles/roles.module';
 
 @Module({
   imports: [
     PrismaModule,
+    PaymentMethodsModule,
+    RolesModule,
 
     JwtModule.register({
       secret: process.env.JWT_SECRET,

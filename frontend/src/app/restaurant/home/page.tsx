@@ -1,121 +1,72 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
+import { BrandMark } from "@/src/components/brand/brand-mark";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
 
 export default function RestaurantHomePage() {
   const { restaurant } = useRestaurantStore();
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      {/* HERO */}
-      <section className="border-b border-zinc-800">
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <div className="flex flex-col items-center text-center">
-            <Image
-              src="/logo/nana-logo.jpeg"
-              alt="NanaBurger"
-              width={140}
-              height={140}
-              className="rounded-3xl border border-zinc-700 bg-white p-3"
-            />
+    <main className="brand-atmosphere brand-noise relative min-h-screen overflow-hidden text-paper">
+      <div className="brand-grid absolute inset-0" />
+      <div className="animate-glow pointer-events-none absolute right-0 top-20 h-80 w-80 rounded-full bg-flame/20 blur-3xl" />
 
-            <h1 className="mt-8 text-5xl font-black">
-              Bienvenido a {restaurant?.name ?? "NanaBurger"}
-            </h1>
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-16">
+        <section className="animate-rise text-center">
+          <BrandMark
+            size={120}
+            className="mx-auto"
+            name={restaurant?.name ?? "Restaurante"}
+            logoUrl={restaurant?.logoUrl}
+          />
+          <p className="mt-8 text-xs font-semibold uppercase tracking-[0.28em] text-flame">
+            Bienvenido
+          </p>
+          <h1 className="mt-3 font-display text-5xl md:text-6xl">
+            {restaurant?.name ?? "Restaurante"}
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-muted">
+            Centro del local. Desde aquí abres el portal de roles para operar
+            salón, cocina, caja o delivery.
+          </p>
+        </section>
 
-            <p className="mt-4 max-w-2xl text-zinc-400">
-              Centro de administración del restaurante. Desde aquí podrás
-              acceder a los diferentes módulos operativos del sistema.
+        <section className="animate-rise-delay-1 mt-12 grid gap-4 md:grid-cols-3">
+          <div className="panel-surface p-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted">
+              Restaurante
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* INFO */}
-      <section className="mx-auto max-w-7xl px-6 py-12">
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <h3 className="text-sm text-zinc-500">Restaurante</h3>
-
-            <p className="mt-3 text-2xl font-bold">
+            <p className="mt-3 font-display text-2xl">
               {restaurant?.name ?? "Sin información"}
             </p>
           </div>
-
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <h3 className="text-sm text-zinc-500">Slug</h3>
-
-            <p className="mt-3 text-2xl font-bold">{restaurant?.slug ?? "-"}</p>
+          <div className="panel-surface p-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted">Slug</p>
+            <p className="mt-3 font-display text-2xl">
+              {restaurant?.slug ?? "—"}
+            </p>
           </div>
-
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <h3 className="text-sm text-zinc-500">Estado</h3>
-
-            <p className="mt-3 text-2xl font-bold text-green-500">Activo</p>
+          <div className="panel-surface p-6">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted">
+              Estado
+            </p>
+            <p className="mt-3 font-display text-2xl text-success">Activo</p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* RESUMEN */}
-      <section className="mx-auto max-w-7xl px-6 pb-12">
-        <h2 className="mb-6 text-3xl font-black">Resumen General</h2>
-
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <p className="text-zinc-500">Usuarios</p>
-
-            <h3 className="mt-2 text-4xl font-black">0</h3>
-          </div>
-
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <p className="text-zinc-500">Productos</p>
-
-            <h3 className="mt-2 text-4xl font-black">0</h3>
-          </div>
-
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <p className="text-zinc-500">Categorías</p>
-
-            <h3 className="mt-2 text-4xl font-black">0</h3>
-          </div>
-
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-            <p className="text-zinc-500">Mesas</p>
-
-            <h3 className="mt-2 text-4xl font-black">0</h3>
-          </div>
-        </div>
-      </section>
-
-      {/* ACCIONES */}
-      <section className="mx-auto max-w-7xl px-6 pb-20">
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-10 text-center">
-          <h2 className="text-4xl font-black">Portal Operativo</h2>
-
-          <p className="mt-4 text-zinc-400">
-            Selecciona el módulo operativo al que deseas ingresar.
+        <section className="animate-rise-delay-2 mt-10 panel-surface p-10 text-center">
+          <p className="font-script text-3xl text-flame">Listos para servir</p>
+          <h2 className="mt-2 font-display text-4xl">Portal operativo</h2>
+          <p className="mx-auto mt-3 max-w-lg text-muted">
+            Selecciona el módulo según tu rol.
           </p>
-
-          <Link
-            href="/restaurant/roles"
-            className="
-              mt-8
-              inline-flex
-              rounded-2xl
-              bg-white
-              px-8
-              py-4
-              font-bold
-              text-black
-            "
-          >
-            Ir al Portal de Roles →
+          <Link href="/restaurant/roles" className="btn-primary mt-8">
+            Ir al portal de roles →
           </Link>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

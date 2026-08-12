@@ -2,22 +2,32 @@
 
 import { useState } from "react";
 
+import { AuthShell } from "@/src/components/brand/auth-shell";
+import { BrandMark } from "@/src/components/brand/brand-mark";
+import { getErrorMessage } from "@/src/lib/get-error-message";
+import { useRestaurantStore } from "@/src/store/restaurant.store";
+
 interface RoleLoginFormProps {
   title: string;
   description: string;
   onSubmit: (email: string, password: string) => Promise<void>;
 }
 
+/**
+ * Shared shell for every role login (admin/waiter/cashier/kitchen/
+ * delivery). These screens are reached AFTER `/restaurant/login`, so the
+ * tenant is already known — show that tenant's own logo/name instead of
+ * the generic platform mark.
+ */
 export function RoleLoginForm({
   title,
   description,
   onSubmit,
 }: RoleLoginFormProps) {
+  const restaurant = useRestaurantStore((state) => state.restaurant);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
@@ -26,53 +36,53 @@ export function RoleLoginForm({
     try {
       setLoading(true);
       setError("");
-
       await onSubmit(email, password);
-    } catch (error: any) {
-      setError(error?.response?.data?.message ?? "Error al iniciar sesión");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Error al iniciar sesión"));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-black px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-950 p-8"
-      >
-        <h1 className="text-4xl font-black text-white">{title}</h1>
+    <AuthShell
+      title={title}
+      description={description}
+      footerHref="/restaurant/roles"
+      footerLabel="Volver a roles"
+      brand={
+        <BrandMark
+          size={88}
+          name={restaurant?.name ?? "Restaurante"}
+          logoUrl={restaurant?.logoUrl}
+        />
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="email"
+          placeholder="Correo"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="field-input"
+          required
+        />
 
-        <p className="mt-2 text-zinc-400">{description}</p>
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="field-input"
+          required
+        />
 
-        <div className="mt-8 space-y-4">
-          <input
-            type="email"
-            placeholder="Correo"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-white"
-          />
+        {error && <p className="text-sm text-danger">{error}</p>}
 
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-white"
-          />
-        </div>
-
-        {error && <p className="mt-4 text-red-500">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="mt-8 w-full rounded-xl bg-white py-3 font-bold text-black"
-        >
+        <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
-    </main>
+    </AuthShell>
   );
 }

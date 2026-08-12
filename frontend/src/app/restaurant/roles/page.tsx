@@ -1,103 +1,92 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 
-import { ThemeToggle } from "@/src/components/shared/theme-toggle";
+import { BrandMark } from "@/src/components/brand/brand-mark";
+import { useRestaurantStore } from "@/src/store/restaurant.store";
 
 const roles = [
   {
     name: "Administrador",
-    description: "Gestión completa del restaurante",
-    icon: "👑",
+    description: "Menú, usuarios, mesas y visión completa del local",
     href: "/restaurant/admin/login",
-    color: "from-yellow-500/20 to-yellow-700/10 border-yellow-500/20",
+    label: "Admin",
   },
-
   {
     name: "Cajero",
-    description: "Ventas y facturación",
-    icon: "💳",
+    description: "Cierre de ventas y cobro de órdenes listas",
     href: "/restaurant/cashier/login",
-    color: "from-emerald-500/20 to-emerald-700/10 border-emerald-500/20",
+    label: "Caja",
   },
-
   {
     name: "Mesero",
-    description: "Órdenes y mesas",
-    icon: "🍽️",
+    description: "Mesas, toma de órdenes y envío a cocina",
     href: "/restaurant/waiter/login",
-    color: "from-blue-500/20 to-blue-700/10 border-blue-500/20",
+    label: "Salón",
   },
-
   {
     name: "Cocina",
-    description: "Preparación de pedidos",
-    icon: "👨‍🍳",
+    description: "Cola de preparación y estados del ticket",
     href: "/restaurant/kitchen/login",
-    color: "from-red-500/20 to-red-700/10 border-red-500/20",
+    label: "KDS",
   },
-
   {
     name: "Delivery",
-    description: "Gestión de domicilios",
-    icon: "🛵",
+    description: "Pedidos a domicilio y pickup",
     href: "/restaurant/delivery/login",
-    color: "from-purple-500/20 to-purple-700/10 border-purple-500/20",
+    label: "Domi",
   },
 ];
 
 export default function RestaurantRolesPage() {
+  const restaurant = useRestaurantStore((state) => state.restaurant);
+
   return (
-    <>
-      <ThemeToggle />
+    <main className="brand-atmosphere brand-noise relative min-h-screen overflow-hidden px-6 py-14 text-paper">
+      <div className="brand-grid absolute inset-0" />
+      <div className="animate-glow pointer-events-none absolute left-1/2 top-0 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-flame/20 blur-3xl" />
 
-      <main className="min-h-screen bg-black text-white">
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <div className="mb-12 text-center">
-            <Image
-              src="/logo/nana-logo.jpeg"
-              alt="NanaBurger"
-              width={120}
-              height={120}
-              className="mx-auto rounded-3xl border border-zinc-700 bg-white p-2"
-            />
-
-            <h1 className="mt-6 text-5xl font-black">Portal de Roles</h1>
-
-            <p className="mt-4 text-zinc-400">
-              Selecciona el módulo operativo al que deseas ingresar
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {roles.map((role) => (
-              <Link
-                key={role.name}
-                href={role.href}
-                className={`
-                  group
-                  rounded-[32px]
-                  border
-                  bg-gradient-to-br
-                  ${role.color}
-                  p-8
-                  transition-all
-                  hover:-translate-y-1
-                `}
-              >
-                <div className="mb-6 text-5xl">{role.icon}</div>
-
-                <h2 className="text-3xl font-black">{role.name}</h2>
-
-                <p className="mt-2 text-zinc-300">{role.description}</p>
-
-                <div className="mt-8">Ingresar →</div>
-              </Link>
-            ))}
-          </div>
+      <div className="relative z-10 mx-auto max-w-6xl">
+        <div className="animate-rise mb-14 text-center">
+          <BrandMark
+            size={110}
+            className="mx-auto"
+            name={restaurant?.name ?? "Restaurante"}
+            logoUrl={restaurant?.logoUrl}
+          />
+          <p className="mt-8 text-xs font-semibold uppercase tracking-[0.28em] text-flame">
+            Portal operativo
+          </p>
+          <h1 className="mt-3 font-display text-5xl md:text-6xl">Elige tu rol</h1>
+          <p className="mx-auto mt-4 max-w-xl text-muted">
+            Cada estación del restaurante entra por su propio acceso. Misma
+            marca, distinto flujo.
+          </p>
         </div>
-      </main>
-    </>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {roles.map((role, index) => (
+            <Link
+              key={role.name}
+              href={role.href}
+              className={`panel-surface group p-7 transition duration-200 hover:-translate-y-1 hover:border-flame/40 ${
+                index === 0 ? "animate-rise" : ""
+              } ${index === 1 ? "animate-rise-delay-1" : ""} ${
+                index >= 2 ? "animate-rise-delay-2" : ""
+              }`}
+            >
+              <span className="inline-flex rounded-full border border-white/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-muted">
+                {role.label}
+              </span>
+              <h2 className="mt-5 font-display text-3xl">{role.name}</h2>
+              <p className="mt-2 text-muted">{role.description}</p>
+              <p className="mt-8 text-sm font-semibold text-flame transition group-hover:translate-x-1">
+                Ingresar →
+              </p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }

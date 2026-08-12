@@ -1,7 +1,36 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+
+import { RoleHub } from "@/src/components/ops/role-hub";
+import { useAuthStore } from "@/src/store/auth.store";
+
 export default function CashierPage() {
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
   return (
-    <div>
-      <h1 className="text-4xl font-black">Panel Cajero</h1>
-    </div>
+    <RoleHub
+      eyebrow="Estación caja"
+      title="Cajero"
+      subtitle={`${user?.fullName ?? "Cajero"} — cierra ventas y registra el cobro.`}
+      onLogout={() => {
+        logout();
+        router.push("/restaurant/roles");
+      }}
+      links={[
+        {
+          href: "/restaurant/cashier/payments",
+          title: "Cobrar órdenes",
+          description: "READY → cerrar venta → pago",
+        },
+        {
+          href: "/restaurant/cashier/orders",
+          title: "Órdenes",
+          description: "Vista general para caja",
+        },
+      ]}
+    />
   );
 }
