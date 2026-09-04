@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Auditoría MVP vs producción (v0.4.10)
+
+- Contrato vs código en `docs/mvp-production-readiness.md`.
+- Inventario: no existe y no está en el MVP.
+- Para piloto en VPS: cierre de turno, volume de logos, poll de cocina, DNS/secretos.
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.
@@ -399,8 +405,18 @@ repitan literalmente lo que la línea de código ya dice. Ver
 
 ## Próxima Fase
 
-- Impresora térmica USB (print-agent ESC/POS real) — diferido: el resto del vertical operativo ya no muestra “En construcción”.
-- Ampliar `@Permissions` al resto de controllers (users/roles/reports/cash ya cubiertos).
-- Tests de roles/permisos + e2e.
-- HTTPS + dominio + secretos reales en un VPS (overlay Caddy + gate de defaults listos; hace falta DNS y máquina).
-- Huecos SDD del mapa (glosario, testing-strategy, runbook): solo cuando un cambio de código los obligue, no como migración de árbol.
+Auditoría de contrato vs código: [docs/mvp-production-readiness.md](../docs/mvp-production-readiness.md).
+
+Para un piloto real (Nana operando un día en VPS), en este orden:
+
+1. Cierre de caja de turno (HU-025: hoy solo hay movimientos manuales).
+2. Volume de `uploads/` + backup/restore de Postgres.
+3. Poll corto en cocina (el KDS no se refresca solo).
+4. Operador: VPS + DNS + secretos + HTTPS overlay.
+5. Impresora térmica — sigue diferida hasta que el usuario la pida.
+
+Inventario, Factus, WhatsApp y menú público **siguen fuera del MVP**.
+
+- Ampliar `@Permissions` solo en controllers que el siguiente incremento toque.
+- Tests de roles/permisos + e2e cuando se toque auth/caja.
+- Huecos SDD del mapa (glosario, testing-strategy): solo cuando un cambio de código los obligue.
