@@ -25,15 +25,15 @@ export function CashMovementsPanel() {
   const [reference, setReference] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setLoading(true);
+      if (!opts?.silent) setLoading(true);
       setError("");
       setRows(await cashService.getAll());
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudieron cargar los movimientos"));
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, []);
 
@@ -61,17 +61,18 @@ export function CashMovementsPanel() {
       setSaving(true);
       setError("");
       setMessage("");
-      await cashService.create({
+      const created = await cashService.create({
         type,
         concept: concept.trim(),
         amountCents,
         reference: reference.trim() || undefined,
       });
+      setRows((prev) => [created, ...prev]);
       setMessage("Movimiento registrado");
       setConcept("");
       setPesos("");
       setReference("");
-      await load();
+      await load({ silent: true });
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo registrar el movimiento"));
     } finally {

@@ -153,7 +153,7 @@
 
 - Dashboard y reportes admin leen `GET /reports/*` (ya existía). Caja admin/cajero lee `GET/POST /cash`.
 - `/reports` ahora exige ADMIN/CASHIER + `REPORTS_VIEW` (antes RolesGuard era no-op).
-- `salesByDay` serializa Date/BigInt para JSON.
+- `salesByDay` agrupa con Prisma (`Sale`), no SQL crudo sobre `sale` (tabla real `"Sale"`).
 
 ## v0.4.7
 

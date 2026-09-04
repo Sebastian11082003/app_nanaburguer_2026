@@ -155,27 +155,21 @@ export class ReportsService {
   // VENTAS POR DÍA
   // ============================
   async salesByDay(restaurantId: string) {
-    const result = await this.prisma.$queryRaw<
-      { date: Date | string; total: bigint | number }[]
-    >`
-      SELECT
-        DATE("createdAt") as date,
-        SUM("totalCents") as total
-      FROM sale
-      WHERE "restaurantId" = ${restaurantId}
-      GROUP BY DATE("createdAt")
-      ORDER BY date ASC
-    `;
+    // Group in process. Raw SQL used FROM sale (unquoted) which does not
+    // match the Prisma table "Sale" and 500s on Postgres.
+    const sales = await this.prisma.sale.findMany({
+      where: { restaurantId },
+      select: { createdAt: true, totalCents: true },
+      orderBy: { createdAt: 'asc' },
+    });
 
-    // Postgres SUM is bigint; DATE() may arrive as Date. JSON cannot
-    // serialize BigInt, so this is the contract the UI consumes.
-    return result.map((row) => ({
-      date:
-        row.date instanceof Date
-          ? row.date.toISOString().slice(0, 10)
-          : String(row.date).slice(0, 10),
-      total: Number(row.total ?? 0),
-    }));
+    const byDay = new Map<string, number>();
+    for (const sale of sales) {
+      const date = sale.createdAt.toISOString().slice(0, 10);
+      byDay.set(date, (byDay.get(date) ?? 0) + sale.totalCents);
+    }
+
+    return [...byDay.entries()].map(([date, total]) => ({ date, total }));
   }
 
   // ============================

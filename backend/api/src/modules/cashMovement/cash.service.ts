@@ -20,6 +20,9 @@ export class CashService {
         restaurantId,
         createdById: userId,
       },
+      include: {
+        createdBy: { select: { id: true, fullName: true } },
+      },
     });
   }
 
