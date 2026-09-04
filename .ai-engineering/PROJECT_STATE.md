@@ -411,7 +411,7 @@ Para un piloto real (Nana operando un día en VPS), en este orden:
 
 1. Cierre de caja de turno (HU-025: hoy solo hay movimientos manuales).
 2. Volume de `uploads/` + backup/restore de Postgres.
-3. Poll corto en cocina (el KDS no se refresca solo).
+3. Poll corto en cocina + líneas del pedido en el tablero.
 4. Operador: VPS + DNS + secretos + HTTPS overlay.
 5. Impresora térmica — sigue diferida hasta que el usuario la pida.
 

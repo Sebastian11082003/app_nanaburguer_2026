@@ -69,8 +69,8 @@ Si Nana Burger necesita saber “quedan 12 panes”, eso es **módulo nuevo**, n
 | Menú | Categorías, productos, precio, disponible | Sin foto, sin costo, sin impuesto por ítem |
 | Mesas | CRUD, ocupación, transferir | — |
 | Mesero | Tomar/continuar, enviar cocina, comanda browser | Cocina no se actualiza sola (carga al entrar, sin poll) |
-| Cocina | Cola → preparando → listo | Sin poll; visión dice “solo ver”, el código sí cambia estado (correcto operativamente) |
-| Caja | Cobrar READY, POS pickup, despacho delivery, movimientos INCOME/EXPENSE | No hay **cierre de turno** (ver §4) |
+| Cocina | Cola → preparando → listo | Sin poll; el tablero muestra **cantidad de ítems**, no las líneas (la comanda del mesero sí las tiene) |
+| Caja | Cobrar READY, POS pickup, despacho delivery, movimientos INCOME/EXPENSE | Pago **CASH** sí escribe `CashMovement` (`SALE_PAYMENT`). CARD/TRANSFER no. No hay **cierre de turno** (ver §4) |
 | Delivery | Alta con cliente/dirección, despachar, entregar | Pickup **sin hora estimada** (BR-017 / HU-014) |
 | Pagos | CASH/CARD/TRANSFER/OTHER configurables; cambio en efectivo; propina opcional | El 5% es **propina sugerida**, no recargo de servicio (BR-020 / HU-017) |
 | Factura POS | Snapshot + imprimir + “aceptar” (simula DIAN) | No es factura fiscal |
@@ -91,7 +91,7 @@ Estos sí cuentan como “hace falta implementar” para un MVP fiel al contrato
 
 Criterio: totales del día, totales por medio de pago, resumen de cierre, **histórico de cierres**.
 
-Hoy: `CashMovement` es un libro manual (ingresos/egresos). Las ventas **no** generan movimiento automático. No hay `CashSession` / `CashClosing`. El “cuadre por medio de pago” vive en reportes **históricos de toda la vida**, no del turno.
+Hoy: el libro mezcla egresos/ingresos manuales + **ingresos automáticos solo si el cobro fue CASH**. Tarjeta y transferencia no entran a `CashMovement`. No hay `CashSession` / `CashClosing` (apertura, arqueo, snapshot por turno). El “cuadre por medio de pago” de reportes es **histórico de toda la vida**, no del turno.
 
 Sin esto, el cajero de Nana no puede hacer el arqueo de fin de jornada que el propio alcance lista.
 
@@ -118,7 +118,9 @@ Sin backup + volume de uploads, un piloto en VPS es frágil el primer día que s
 
 ### P1 — operación de cocina en un turno real
 
-`KitchenBoard` carga al montar. No hay poll ni websocket. El cocinero tiene que recargar la página para ver pedidos nuevos. El alcance lista “notificaciones en tiempo real” como **fuera**; un poll de 5–10 s **sí** es razonable para el MVP (no es WhatsApp ni push).
+`KitchenBoard` carga al montar. No hay poll ni websocket. El cocinero tiene que recargar la página para ver pedidos nuevos. Cada tarjeta muestra `#orden · N items`, no “2× Hamburguesa”. La comanda imprimible sí tiene las líneas.
+
+El alcance lista “notificaciones en tiempo real” como **fuera**; un poll de 5–10 s **y** pintar `order.items` **sí** son razonables para el MVP (no es WhatsApp ni push).
 
 ### P1 — seguridad que el baseline exige y el código no tiene
 
@@ -160,6 +162,7 @@ AWS (`deployment-aws.md`) **no** es requisito del MVP. El runbook lo dice.
 - Multi-sede / subdominio por tenant.
 - Suite e2e automatizada (48 tests Jest unitarios; QA es 🟡).
 - Paridad Loggro (resoluciones, NIT fiscal, zonas de impresión, objetivos, etc.).
+- Landing pública `/public/*` (“under construction”) y nav de plataforma a `/platform/reports|billing|settings` (404). No bloquean el piloto de un tenant.
 
 ---
 
@@ -169,7 +172,7 @@ Si el objetivo es **Nana Burger operando un día real en un VPS**:
 
 1. **Cierre de caja de turno** (sesión: apertura → ventas del turno por medio → egresos → snapshot de cierre). Eso cierra HU-025 de verdad.
 2. **Volume de uploads + backup/restore** en el runbook. Sin esto no se sube a VPS.
-3. **Poll de cocina** (intervalo corto). Desbloquea el KDS en un turno real sin websockets.
+3. **Poll de cocina + líneas del pedido en el tablero.** Desbloquea el KDS en un turno real sin websockets.
 4. Operador: VPS + DNS + secretos + HTTPS.
 5. Recién ahí, si el usuario lo pide: impresora térmica.
 
