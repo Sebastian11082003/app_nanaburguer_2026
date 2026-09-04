@@ -29,7 +29,7 @@ export class DeliveryController {
   // 🔎 LIST ALL
   // ============================
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.CASHIER)
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.DELIVERY)
   findAll(@Tenant() restaurantId: string) {
     return this.service.findAll(restaurantId);
   }
@@ -38,7 +38,7 @@ export class DeliveryController {
   // 🔎 FIND ONE
   // ============================
   @Get(':id')
-  @Roles(UserRole.ADMIN, UserRole.CASHIER)
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.DELIVERY)
   findOne(@Param('id') id: string, @Tenant() restaurantId: string) {
     return this.service.findOne(id, restaurantId);
   }

@@ -11,6 +11,7 @@ import { RolesService } from '../roles/roles.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FindUsersDto } from './dto/find-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { STATION_STAFF, stationStaffEmail } from './station-staff';
 
 /** Never serialize passwordHash. Same shape for create/list/get/patch. */
 const USER_PUBLIC_SELECT = {
@@ -151,5 +152,70 @@ export class UsersService {
       },
       select: USER_PUBLIC_SELECT,
     });
+  }
+
+  /**
+   * Creates the four station logins that a new tenant otherwise lacks
+   * (only ADMIN is created at signup). Skips a station if that role
+   * already has a user so this is safe to re-run.
+   */
+  async provisionStationStaff(restaurantId: string, password: string) {
+    await this.rolesService.ensureDefaults(restaurantId);
+
+    const restaurant = await this.prisma.restaurant.findFirst({
+      where: { id: restaurantId },
+      select: { slug: true },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException('Restaurant not found');
+    }
+
+    const existing = await this.prisma.user.findMany({
+      where: { restaurantId },
+      select: { role: true },
+    });
+    const present = new Set(existing.map((row) => row.role));
+    const passwordHash = await bcrypt.hash(password, 10);
+    const created: Array<
+      Awaited<ReturnType<UsersService['create']>>
+    > = [];
+    const skipped: UserRole[] = [];
+
+    for (const station of STATION_STAFF) {
+      if (present.has(station.role)) {
+        skipped.push(station.role);
+        continue;
+      }
+
+      const systemRole = await this.prisma.role.findFirst({
+        where: { restaurantId, systemKey: station.role },
+      });
+      const email = stationStaffEmail(station.prefix, restaurant.slug);
+
+      const taken = await this.prisma.user.findFirst({
+        where: { email },
+        select: { id: true },
+      });
+      if (taken) {
+        throw new BadRequestException(`Email already exists: ${email}`);
+      }
+
+      created.push(
+        await this.prisma.user.create({
+          data: {
+            email,
+            passwordHash,
+            fullName: station.fullName,
+            role: station.role,
+            roleId: systemRole?.id,
+            restaurantId,
+          },
+          select: USER_PUBLIC_SELECT,
+        }),
+      );
+    }
+
+    return { created, skipped };
   }
 }

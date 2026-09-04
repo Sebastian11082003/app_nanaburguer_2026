@@ -15,6 +15,7 @@ import { UserRole } from '@prisma/client';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FindUsersDto } from './dto/find-users.dto';
+import { ProvisionStationsDto } from './dto/provision-stations.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -36,6 +37,16 @@ export class UsersController {
   @Permissions('USERS_MANAGE')
   create(@Body() dto: CreateUserDto, @Tenant() restaurantId: string) {
     return this.usersService.create(dto, restaurantId);
+  }
+
+  @Post('station-staff')
+  @Roles(UserRole.ADMIN)
+  @Permissions('USERS_MANAGE')
+  provisionStationStaff(
+    @Body() dto: ProvisionStationsDto,
+    @Tenant() restaurantId: string,
+  ) {
+    return this.usersService.provisionStationStaff(restaurantId, dto.password);
   }
 
   @Get()

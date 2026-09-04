@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Personal de estación (v0.4.15)
+
+- Al crear un tenant se crean cajero/mesero/cocina/domicilio (`rol@slug.test`, misma clave que el admin).
+- Admin puede completar estaciones faltantes (`POST /users/station-staff`).
+- `GET /deliveries` permite DELIVERY. Pickup también escribe fila Delivery.
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.

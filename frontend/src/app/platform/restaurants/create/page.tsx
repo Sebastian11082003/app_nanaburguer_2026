@@ -63,7 +63,11 @@ export default function CreateRestaurantPage() {
       <div className="mx-auto max-w-4xl">
         <h1 className="text-5xl font-black">Crear Restaurante</h1>
 
-        <p className="mt-2 text-zinc-400">Registrar nuevo tenant SaaS</p>
+        <p className="mt-2 text-zinc-400">
+          Registrar nuevo tenant SaaS. Además del admin se crean cajero,
+          mesero, cocina y domicilio (`rol@slug.test`) con la misma clave
+          del admin.
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-10 space-y-8">
           {/* ========================= */}

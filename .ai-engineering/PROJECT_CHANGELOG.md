@@ -149,6 +149,11 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.15
+
+- Personal de estación al crear restaurante + botón para tenants que solo tienen admin.
+- Delivery puede listar `/deliveries`. Pickup genera registro Delivery.
+
 ## v0.4.9
 
 - Cierre de huecos operativos: detalle de usuario (activar/rol/password), 86 de producto, POS mostrador, despacho de domicilios en el hub de caja.

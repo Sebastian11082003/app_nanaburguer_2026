@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
+import { StationStaffPanel } from "@/src/components/users/station-staff-panel";
 import { usersService, RestaurantUser } from "@/src/services/users.service";
 
 export default function UsersPage() {
@@ -47,6 +48,10 @@ export default function UsersPage() {
       </div>
 
       {error && <p className="text-red-500">{error}</p>}
+
+      {!loading && (
+        <StationStaffPanel users={users} onCreated={load} />
+      )}
 
       {loading ? (
         <p>Cargando...</p>

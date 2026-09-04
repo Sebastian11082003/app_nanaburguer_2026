@@ -20,7 +20,7 @@ Nada de lo listado aquí se movió en este incremento. Los documentos nuevos sí
 | 09-microservices | mapeado (monolito) | [architecture/module-boundaries.md](architecture/module-boundaries.md) — un módulo de catálogo, no microservicios. |
 | 10-devops | mapeado | [10-devops/local-setup.md](10-devops/local-setup.md), [architecture/deployment-aws.md](architecture/deployment-aws.md), `docker/` |
 | 11-quality | parcial | 48 tests Jest en backend. Reportes/caja ahora tienen UI sobre el API existente. No hay `testing-strategy.md`. |
-| 12-ux-ui | parcial | Navegación en `frontend/src/config/restaurant-navigation.ts` (incluye Caja y Restaurante). Sin pantallas “En construcción”. |
+| 12-ux-ui | parcial | Navegación admin + hubs por estación. Alta de mesero/caja/cocina/domicilio al crear tenant. |
 | 13-operations | parcial | Runbook MVP + HTTPS/Caddy + secretos de arranque en [10-devops/local-setup.md](10-devops/local-setup.md). Sin AWS. |
 | 14-training | parcial | Setup en [README.md](../README.md). No hay onboarding técnico aparte. |
 | 15-project-control | mapeado | `.ai-engineering/PROJECT_STATE.md`, `PROJECT_DECISIONS.md`, `PROJECT_CHANGELOG.md` |

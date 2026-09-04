@@ -7,14 +7,17 @@ import { StatCard } from "@/src/components/reports/stat-card";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { paymentMethodLabel } from "@/src/lib/payment-method-label";
+import { StationStaffPanel } from "@/src/components/users/station-staff-panel";
 import {
   DashboardSnapshot,
   reportsService,
 } from "@/src/services/reports.service";
+import { RestaurantUser, usersService } from "@/src/services/users.service";
 
 /** Admin home: live snapshot from GET /reports/dashboard. */
 export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardSnapshot | null>(null);
+  const [users, setUsers] = useState<RestaurantUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -22,7 +25,12 @@ export default function AdminDashboardPage() {
     async function load() {
       try {
         setLoading(true);
-        setData(await reportsService.dashboard());
+        const [snapshot, staff] = await Promise.all([
+          reportsService.dashboard(),
+          usersService.getAll().catch(() => [] as RestaurantUser[]),
+        ]);
+        setData(snapshot);
+        setUsers(staff);
       } catch (err: unknown) {
         setError(getErrorMessage(err, "No se pudo cargar el dashboard"));
       } finally {
@@ -47,6 +55,11 @@ export default function AdminDashboardPage() {
         <p>Cargando...</p>
       ) : data ? (
         <>
+          <StationStaffPanel
+            users={users}
+            onCreated={async () => setUsers(await usersService.getAll())}
+          />
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               label="Ventas hoy"
