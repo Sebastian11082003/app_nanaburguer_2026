@@ -28,4 +28,12 @@ export const menuService = {
     const { data } = await api.post("/menu/items", payload);
     return data;
   },
+
+  async updateItem(
+    id: string,
+    payload: { isAvailable?: boolean; name?: string; priceCents?: number },
+  ): Promise<MenuItem> {
+    const { data } = await api.patch(`/menu/items/${id}`, payload);
+    return data;
+  },
 };

@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Huecos operativos (v0.4.9)
+
+- Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.
+- Productos: toggle disponible. Caja: POS pickup y link a despacho de domicilios.
+- Plataforma: conteo de restaurantes. Stubs redirigidos. `passwordHash` fuera de `/users`.
+
 ### Dashboard, reportes y caja (v0.4.8)
 
 - Admin home y `/reports` (ventas/productos/domicilios) dejan de ser stub: consumen el `ReportsService` existente.
@@ -393,7 +399,7 @@ repitan literalmente lo que la línea de código ya dice. Ver
 
 ## Próxima Fase
 
-- Impresora térmica USB (print-agent ESC/POS real) — diferido a petición.
+- Impresora térmica USB (print-agent ESC/POS real) — diferido: el resto del vertical operativo ya no muestra “En construcción”.
 - Ampliar `@Permissions` al resto de controllers (users/roles/reports/cash ya cubiertos).
 - Tests de roles/permisos + e2e.
 - HTTPS + dominio + secretos reales en un VPS (overlay Caddy + gate de defaults listos; hace falta DNS y máquina).

@@ -42,4 +42,17 @@ export const usersService = {
     const { data } = await api.get(`/users/${id}`);
     return data;
   },
+
+  async update(
+    id: string,
+    payload: {
+      fullName?: string;
+      isActive?: boolean;
+      roleId?: string;
+      password?: string;
+    },
+  ): Promise<RestaurantUser> {
+    const { data } = await api.patch(`/users/${id}`, payload);
+    return data;
+  },
 };

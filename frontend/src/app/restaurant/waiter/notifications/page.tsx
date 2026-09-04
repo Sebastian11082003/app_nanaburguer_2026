@@ -1,7 +1,6 @@
-export default function Page() {
-  return (
-    <main>
-      <h1>En construcción</h1>
-    </main>
-  );
+import { redirect } from "next/navigation";
+
+/** No hay backend de notificaciones; el mesero opera desde mesas/órdenes. */
+export default function WaiterNotificationsRedirectPage() {
+  redirect("/restaurant/waiter");
 }

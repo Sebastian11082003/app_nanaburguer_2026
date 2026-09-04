@@ -170,9 +170,37 @@ export default function MenuItemsPage() {
               </div>
               <div className="text-right">
                 <p className="font-bold">{formatCents(item.priceCents)}</p>
-                <p className="text-sm text-zinc-500">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={async () => {
+                    try {
+                      setBusy(true);
+                      setError("");
+                      setMessage("");
+                      await menuService.updateItem(item.id, {
+                        isAvailable: !item.isAvailable,
+                      });
+                      setMessage(
+                        item.isAvailable
+                          ? `${item.name} fuera de menú`
+                          : `${item.name} disponible`,
+                      );
+                      await load();
+                    } catch (err: unknown) {
+                      setError(
+                        getErrorMessage(err, "No se pudo actualizar"),
+                      );
+                    } finally {
+                      setBusy(false);
+                    }
+                  }}
+                  className={`mt-1 text-sm ${
+                    item.isAvailable ? "text-emerald-400" : "text-zinc-500"
+                  }`}
+                >
                   {item.isAvailable ? "Disponible" : "No disponible"}
-                </p>
+                </button>
               </div>
             </div>
           ))}
