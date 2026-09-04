@@ -51,7 +51,7 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 - `docker compose -f docker-compose.yml up --build` levanta db + API + frontend.
 - Seed de platform admin al arrancar. CORS y URL pública por variables.
-- Runbook en `docs/10-devops/local-setup.md`. AWS/HTTPS sigue fuera de alcance.
+- Runbook en `docs/10-devops/local-setup.md`. AWS sigue fuera; HTTPS es overlay Caddy.
 
 ### Adopción SDD / living-docs (v0.4.4)
 
