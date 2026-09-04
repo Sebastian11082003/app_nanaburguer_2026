@@ -1,4 +1,5 @@
 import { api } from "@/src/lib/api";
+import { ReportRange } from "@/src/lib/report-range";
 
 export type PaymentMethodBreakdown = {
   method: string;
@@ -29,13 +30,24 @@ export type ReportsSummary = {
   totalOrders: number;
 };
 
+export type ChannelPayments = { cash: number; card: number; transfer: number };
+
 export type DeliveryReportsSummary = {
   totalDeliveries: number;
+  totalPickups: number;
   totalRevenue: number;
-  payments: { cash: number; card: number; transfer: number };
+  pickupRevenue: number;
+  payments: ChannelPayments;
+  pickupPayments: ChannelPayments;
 };
 
 export type SalesByDay = { date: string; total: number };
+
+export type OrdersByStatus = { status: string; count: number };
+
+function rangeParams(range?: ReportRange) {
+  return range ? { from: range.from, to: range.to } : undefined;
+}
 
 /** Thin wrapper around `/reports` (ADMIN/CASHIER + REPORTS_VIEW). */
 export const reportsService = {
@@ -44,28 +56,47 @@ export const reportsService = {
     return data;
   },
 
-  async summary(): Promise<ReportsSummary> {
-    const { data } = await api.get("/reports/summary");
+  async summary(range?: ReportRange): Promise<ReportsSummary> {
+    const { data } = await api.get("/reports/summary", {
+      params: rangeParams(range),
+    });
     return data;
   },
 
-  async salesByDay(): Promise<SalesByDay[]> {
-    const { data } = await api.get("/reports/sales-by-day");
+  async salesByDay(range?: ReportRange): Promise<SalesByDay[]> {
+    const { data } = await api.get("/reports/sales-by-day", {
+      params: rangeParams(range),
+    });
     return data;
   },
 
-  async paymentMethods(): Promise<PaymentMethodBreakdown[]> {
-    const { data } = await api.get("/reports/payment-methods");
+  async paymentMethods(
+    range?: ReportRange,
+  ): Promise<PaymentMethodBreakdown[]> {
+    const { data } = await api.get("/reports/payment-methods", {
+      params: rangeParams(range),
+    });
     return data;
   },
 
-  async topProducts(): Promise<TopProduct[]> {
-    const { data } = await api.get("/reports/top-products");
+  async topProducts(range?: ReportRange): Promise<TopProduct[]> {
+    const { data } = await api.get("/reports/top-products", {
+      params: rangeParams(range),
+    });
     return data;
   },
 
-  async deliverySummary(): Promise<DeliveryReportsSummary> {
-    const { data } = await api.get("/reports/delivery/summary");
+  async deliverySummary(range?: ReportRange): Promise<DeliveryReportsSummary> {
+    const { data } = await api.get("/reports/delivery/summary", {
+      params: rangeParams(range),
+    });
+    return data;
+  },
+
+  async ordersByStatus(range?: ReportRange): Promise<OrdersByStatus[]> {
+    const { data } = await api.get("/reports/orders-by-status", {
+      params: rangeParams(range),
+    });
     return data;
   },
 };
