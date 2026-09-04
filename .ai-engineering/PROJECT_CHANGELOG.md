@@ -149,6 +149,11 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.6
+
+- Overlay HTTPS: `docker-compose.https.yml` + Caddy (Let's Encrypt). El compose local de puertos 80/3000 no cambia.
+- Runbook: sección VPS en `docs/10-devops/local-setup.md`.
+
 ## v0.4.4
 
 - Adopción SDD sin reescribir: `docs/sdd-mapping.md` inventaría 00–15 sobre las rutas actuales.

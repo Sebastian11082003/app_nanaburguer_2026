@@ -22,9 +22,9 @@
 
 🟡 QA (pruebas manuales/API OK; falta suite automatizada)
 
-🟡 Deployment (compose MVP en un host; sin AWS/HTTPS)
+🟡 Deployment (compose MVP local + overlay HTTPS/Caddy documentado)
 
-⬜ Producción
+⬜ Producción (hace falta un VPS y DNS reales; no se provisionan desde aquí)
 
 ---
 
@@ -41,6 +41,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 ---
 
 ## Último avance
+
+### HTTPS overlay (v0.4.6)
+
+- Caddy delante de API y frontend. DNS `app.` + `api.`, puertos 80/443.
+- `docker compose -f docker-compose.yml` sigue siendo el MVP local.
 
 ### Despliegue MVP (v0.4.5)
 
@@ -379,5 +384,5 @@ repitan literalmente lo que la línea de código ya dice. Ver
 - Impresora térmica USB (print-agent ESC/POS real) — diferido a petición.
 - Ampliar `@Permissions` al resto de controllers.
 - Tests de roles/permisos + e2e.
-- HTTPS + dominio + secretos reales en un VPS (el compose local ya corre el MVP).
+- HTTPS + dominio + secretos reales en un VPS (overlay Caddy listo; hace falta DNS y máquina).
 - Huecos SDD del mapa (glosario, testing-strategy, runbook): solo cuando un cambio de código los obligue, no como migración de árbol.

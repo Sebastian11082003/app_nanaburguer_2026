@@ -4,7 +4,7 @@ Cómo levantar RestoOS / NanaBurguer con el código que ya existe. No sustituye 
 
 ## Qué queda fuera
 
-- RDS, ALB, HTTPS, dominio.
+- RDS, ALB, AWS gestionado.
 - Factus, WhatsApp, impresora térmica.
 - Pedidos públicos online.
 
@@ -47,6 +47,34 @@ JWT_SECRET=<valor largo propio>
 ```
 
 El navegador llama a la API en el puerto 3000. Abre 80 y 3000 en el host.
+
+## HTTPS en un VPS (Caddy)
+
+No reemplaza el comando local. Es un overlay: Caddy escucha 80/443, API y frontend dejan de publicarse en el host. Certificados: Let's Encrypt automático.
+
+Requisitos:
+
+- Un VPS con Docker Compose v2.24+ (por `!reset` de ports).
+- Dos nombres DNS (`app.` y `api.` del mismo dominio) con A/AAAA hacia el VPS.
+- Puertos 80 y 443 abiertos.
+
+```bash
+cp docker/.env.https.example docker/.env
+# edita JWT_SECRET, POSTGRES_PASSWORD, hosts y CORS
+cd docker
+docker compose -f docker-compose.yml -f docker-compose.https.yml up --build -d
+```
+
+`NEXT_PUBLIC_API_URL` se hornea en el build. Si cambias el dominio, `--build` otra vez.
+
+Comprobar:
+
+```bash
+curl -sS https://api.TU_DOMINIO/health
+# {"ok":true}
+```
+
+App: `https://app.TU_DOMINIO/platform/login`.
 
 ## Desarrollo (API y Next en watch)
 
