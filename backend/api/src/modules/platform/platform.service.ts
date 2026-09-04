@@ -19,6 +19,20 @@ import { UserRole } from '@prisma/client';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import { RolesService } from '../roles/roles.service';
 
+const SAFE_RESTAURANT_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  nit: true,
+  email: true,
+  phone: true,
+  address: true,
+  logoUrl: true,
+  primaryColor: true,
+  isActive: true,
+  createdAt: true,
+} as const;
+
 @Injectable()
 export class PlatformService {
   constructor(
@@ -164,7 +178,10 @@ export class PlatformService {
       return createdRestaurant;
     });
 
-    return restaurant;
+    return this.prisma.restaurant.findUniqueOrThrow({
+      where: { id: restaurant.id },
+      select: SAFE_RESTAURANT_SELECT,
+    });
   }
 
   async getRestaurants() {
@@ -172,9 +189,17 @@ export class PlatformService {
       orderBy: {
         createdAt: 'desc',
       },
-
-      include: {
-        users: true,
+      select: {
+        ...SAFE_RESTAURANT_SELECT,
+        users: {
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            role: true,
+            isActive: true,
+          },
+        },
       },
     });
   }

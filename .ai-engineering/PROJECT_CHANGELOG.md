@@ -146,6 +146,7 @@
 
 - Compose de MVP desplegable: sin IP de AWS muerta; `NEXT_PUBLIC_API_URL` en build; CORS por env.
 - API en Docker: `prisma migrate deploy` + seed idempotente al arrancar.
+- Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
 ## v0.4.4
