@@ -10,6 +10,7 @@
         "docs/ADR/**",
         "docs/functional/**",
         "docs/sdd-mapping.md",
+        "docs/mvp-production-readiness.md",
         ".ai-engineering/PROJECT_STATE.md",
         ".ai-engineering/PROJECT_CHANGELOG.md"
       ]
@@ -19,6 +20,7 @@
       "docs": [
         "docs/architecture/**",
         "docs/sdd-mapping.md",
+        "docs/mvp-production-readiness.md",
         ".ai-engineering/PROJECT_STATE.md",
         ".ai-engineering/PROJECT_CHANGELOG.md"
       ]
@@ -47,6 +49,7 @@
         "docs/architecture/deployment-aws.md",
         "docs/10-devops/**",
         "docs/sdd-mapping.md",
+        "docs/mvp-production-readiness.md",
         ".ai-engineering/PROJECT_STATE.md",
         ".ai-engineering/PROJECT_CHANGELOG.md"
       ]
