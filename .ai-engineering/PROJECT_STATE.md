@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Dashboard, reportes y caja (v0.4.8)
+
+- Admin home y `/reports` (ventas/productos/domicilios) dejan de ser stub: consumen el `ReportsService` existente.
+- Caja (`/restaurant/admin/cash` y `/restaurant/cashier/cash`) registra INCOME/EXPENSE.
+- `/reports` cerrado a ADMIN/CASHIER + `REPORTS_VIEW`. `/cash` añade `CASH_MANAGE`.
+
 ### Arranque sin secretos de example (v0.4.7)
 
 - `ALLOW_INSECURE_DEFAULTS`: el compose local lo deja en `true`; el overlay HTTPS en `false`.
@@ -388,7 +394,7 @@ repitan literalmente lo que la línea de código ya dice. Ver
 ## Próxima Fase
 
 - Impresora térmica USB (print-agent ESC/POS real) — diferido a petición.
-- Ampliar `@Permissions` al resto de controllers.
+- Ampliar `@Permissions` al resto de controllers (users/roles/reports/cash ya cubiertos).
 - Tests de roles/permisos + e2e.
 - HTTPS + dominio + secretos reales en un VPS (overlay Caddy + gate de defaults listos; hace falta DNS y máquina).
 - Huecos SDD del mapa (glosario, testing-strategy, runbook): solo cuando un cambio de código los obligue, no como migración de árbol.

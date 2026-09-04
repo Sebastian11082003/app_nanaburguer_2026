@@ -4,12 +4,13 @@ import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
 
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 
 @Module({
   imports: [PrismaModule],
   controllers: [ReportsController],
-  providers: [ReportsService, RolesGuard, TenantGuard],
+  providers: [ReportsService, RolesGuard, PermissionsGuard, TenantGuard],
 })
 export class ReportsModule {}

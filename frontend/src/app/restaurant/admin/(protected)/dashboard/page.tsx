@@ -1,7 +1,6 @@
-export default function Page() {
-  return (
-    <main>
-      <h1>En construcción</h1>
-    </main>
-  );
+import { redirect } from "next/navigation";
+
+/** Old bookmark; the live dashboard lives at the admin root. */
+export default function DashboardRedirectPage() {
+  redirect("/restaurant/admin");
 }
