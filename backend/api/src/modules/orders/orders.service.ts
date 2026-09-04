@@ -191,14 +191,19 @@ export class OrdersService {
         include: OrdersService.ORDER_INCLUDE,
       });
 
-      // 5. CREAR DELIVERY
-      if (dto.type === OrderType.DELIVERY) {
+      // 5. CREAR DELIVERY / PICKUP
+      // Pickup also gets a Delivery row so the delivery station can
+      // list it on /deliveries/active (that API reads Delivery, not Order).
+      if (
+        dto.type === OrderType.DELIVERY ||
+        dto.type === OrderType.PICKUP
+      ) {
         await tx.delivery.create({
           data: {
             orderId: order.id,
 
-            customerName: dto.customerName!,
-            phone: dto.customerPhone!,
+            customerName: dto.customerName ?? 'Pickup',
+            phone: dto.customerPhone || 's/n',
             address: dto.deliveryAddress,
             neighborhood: dto.neighborhood,
 

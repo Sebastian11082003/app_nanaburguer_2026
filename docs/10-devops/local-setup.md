@@ -26,7 +26,19 @@ Servicios:
 | http://localhost:3000/health | API |
 | http://localhost:3000/api | Swagger |
 
-Credencial seed (solo local): `admin@nanaburger.com` / `123456`. Entrar por `/platform/login`, crear un restaurante, luego `/restaurant/login`.
+Credencial seed (solo local): `admin@nanaburger.com` / `123456`. Entrar por `/platform/login`, crear un restaurante.
+
+Tras crear el tenant, las estaciones ya existen. En `/restaurant/roles` (o directo a `/restaurant/waiter/login`, etc.) entra con el slug y:
+
+| Rol | Correo |
+|---|---|
+| Admin | el `adminEmail` que escribiste (suele ser `admin@slug.test`) |
+| Cajero | `cashier@slug.test` |
+| Mesero | `waiter@slug.test` |
+| Cocina | `kitchen@slug.test` |
+| Delivery | `delivery@slug.test` |
+
+La clave de esas cuatro estaciones es la misma que la del administrador. `/restaurant/login` sigue siendo el acceso del local (correo/clave del restaurante), no el de un rol.
 
 La API aplica `prisma migrate deploy` y el seed al arrancar. El seed es idempotente.
 

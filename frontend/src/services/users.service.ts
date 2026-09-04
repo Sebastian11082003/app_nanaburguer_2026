@@ -38,6 +38,14 @@ export const usersService = {
     return data;
   },
 
+  async provisionStationStaff(password: string): Promise<{
+    created: RestaurantUser[];
+    skipped: UserRole[];
+  }> {
+    const { data } = await api.post("/users/station-staff", { password });
+    return data;
+  },
+
   async getById(id: string): Promise<RestaurantUser> {
     const { data } = await api.get(`/users/${id}`);
     return data;

@@ -4,14 +4,21 @@ import { useRestaurantStore } from "@/src/store/restaurant.store";
 interface UserLoginDto {
   email: string;
   password: string;
+  slug?: string;
 }
 
 function buildPayload(data: UserLoginDto) {
-  const slug = useRestaurantStore.getState().restaurant?.slug;
+  const slug =
+    data.slug?.trim() || useRestaurantStore.getState().restaurant?.slug;
+
+  if (!slug) {
+    throw new Error("Indica el slug del restaurante");
+  }
 
   return {
     slug,
-    ...data,
+    email: data.email,
+    password: data.password,
   };
 }
 
