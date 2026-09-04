@@ -83,7 +83,7 @@ export function KitchenBoard({
       <div>
         <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
         <p className="text-zinc-400">{description}</p>
-        <p className="mt-1 text-xs text-zinc-600">
+        <p className="mt-1 text-sm text-zinc-500">
           Se actualiza solo cada {KITCHEN_POLL_MS / 1000}s
         </p>
       </div>
