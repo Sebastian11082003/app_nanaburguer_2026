@@ -27,6 +27,9 @@ export class CashService {
     return this.prisma.cashMovement.findMany({
       where: { restaurantId },
       orderBy: { createdAt: 'desc' },
+      include: {
+        createdBy: { select: { id: true, fullName: true } },
+      },
     });
   }
 }

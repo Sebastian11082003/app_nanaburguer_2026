@@ -72,6 +72,12 @@ export const restaurantAdminNavigation = [
   },
 
   {
+    label: "Caja",
+    href: "/restaurant/admin/cash",
+    icon: "💵",
+  },
+
+  {
     label: "Reportes",
     href: "/restaurant/admin/reports",
     icon: "📈",

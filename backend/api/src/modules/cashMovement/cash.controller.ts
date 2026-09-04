@@ -6,19 +6,22 @@ import { CreateCashMovementDto } from './dto/create-cash-movement.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 
 import { Tenant } from '../../common/decorators/tenant.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Permissions } from '../../common/decorators/permissions.decorator';
 
 import { UserRole } from '@prisma/client';
 
 @Controller('cash')
-@UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard, TenantGuard)
+@Roles(UserRole.ADMIN, UserRole.CASHIER)
+@Permissions('CASH_MANAGE')
 export class CashController {
   constructor(private readonly service: CashService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.CASHIER)
   create(
     @Body() dto: CreateCashMovementDto,
     @Tenant() restaurantId: string,
@@ -28,7 +31,6 @@ export class CashController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.CASHIER)
   findAll(@Tenant() restaurantId: string) {
     return this.service.findAll(restaurantId);
   }

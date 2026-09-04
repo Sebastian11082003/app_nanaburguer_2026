@@ -149,6 +149,12 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.8
+
+- Dashboard y reportes admin leen `GET /reports/*` (ya existía). Caja admin/cajero lee `GET/POST /cash`.
+- `/reports` ahora exige ADMIN/CASHIER + `REPORTS_VIEW` (antes RolesGuard era no-op).
+- `salesByDay` serializa Date/BigInt para JSON.
+
 ## v0.4.7
 
 - Arranque público: la API rechaza `JWT_SECRET` de los `.env*.example` salvo `ALLOW_INSECURE_DEFAULTS=true` (solo local).

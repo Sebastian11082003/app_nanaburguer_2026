@@ -156,9 +156,9 @@ export class ReportsService {
   // ============================
   async salesByDay(restaurantId: string) {
     const result = await this.prisma.$queryRaw<
-      { date: string; total: number }[]
+      { date: Date | string; total: bigint | number }[]
     >`
-      SELECT 
+      SELECT
         DATE("createdAt") as date,
         SUM("totalCents") as total
       FROM sale
@@ -167,7 +167,15 @@ export class ReportsService {
       ORDER BY date ASC
     `;
 
-    return result;
+    // Postgres SUM is bigint; DATE() may arrive as Date. JSON cannot
+    // serialize BigInt, so this is the contract the UI consumes.
+    return result.map((row) => ({
+      date:
+        row.date instanceof Date
+          ? row.date.toISOString().slice(0, 10)
+          : String(row.date).slice(0, 10),
+      total: Number(row.total ?? 0),
+    }));
   }
 
   // ============================

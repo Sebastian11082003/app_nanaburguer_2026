@@ -30,6 +30,11 @@ export default function CashierPage() {
           title: "Órdenes",
           description: "Vista general para caja",
         },
+        {
+          href: "/restaurant/cashier/cash",
+          title: "Caja",
+          description: "Ingresos y egresos manuales",
+        },
       ]}
     />
   );
