@@ -26,9 +26,19 @@ export default function CashierPage() {
           description: "READY → cerrar venta → pago",
         },
         {
+          href: "/restaurant/cashier/pos",
+          title: "POS mostrador",
+          description: "Pickup sin mesa, cobrar o mandar a cocina",
+        },
+        {
           href: "/restaurant/cashier/orders",
           title: "Órdenes",
           description: "Vista general para caja",
+        },
+        {
+          href: "/restaurant/cashier/delivery",
+          title: "Despachar domicilios",
+          description: "Pedidos pending → en camino",
         },
         {
           href: "/restaurant/cashier/cash",

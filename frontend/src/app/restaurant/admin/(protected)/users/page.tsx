@@ -53,9 +53,10 @@ export default function UsersPage() {
       ) : (
         <div className="space-y-2">
           {users.map((user) => (
-            <div
+            <Link
               key={user.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 px-5 py-4"
+              href={`/restaurant/admin/users/${user.id}`}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 px-5 py-4 transition hover:border-white/40"
             >
               <div>
                 <p className="font-bold">{user.fullName}</p>
@@ -69,7 +70,7 @@ export default function UsersPage() {
                   Login {user.role} · {user.isActive ? "Activo" : "Inactivo"}
                 </p>
               </div>
-            </div>
+            </Link>
           ))}
           {users.length === 0 && (
             <p className="text-zinc-400">No hay usuarios registrados</p>

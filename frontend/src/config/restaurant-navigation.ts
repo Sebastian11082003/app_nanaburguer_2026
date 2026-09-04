@@ -92,4 +92,10 @@ export const restaurantAdminNavigation = [
     href: "/restaurant/admin/settings",
     icon: "⚙️",
   },
+
+  {
+    label: "Restaurante",
+    href: "/restaurant/admin/restaurant",
+    icon: "🏠",
+  },
 ];

@@ -10,6 +10,21 @@ import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { RolesService } from '../roles/roles.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FindUsersDto } from './dto/find-users.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+
+/** Never serialize passwordHash. Same shape for create/list/get/patch. */
+const USER_PUBLIC_SELECT = {
+  id: true,
+  email: true,
+  fullName: true,
+  role: true,
+  roleId: true,
+  isActive: true,
+  createdAt: true,
+  assignedRole: {
+    select: { id: true, name: true, stationKey: true, isSystem: true },
+  },
+} as const;
 
 @Injectable()
 export class UsersService {
@@ -60,11 +75,7 @@ export class UsersService {
         roleId,
         restaurantId,
       },
-      include: {
-        assignedRole: {
-          select: { id: true, name: true, stationKey: true, isSystem: true },
-        },
-      },
+      select: USER_PUBLIC_SELECT,
     });
   }
 
@@ -74,11 +85,7 @@ export class UsersService {
         restaurantId,
         ...(query.role && { role: query.role }),
       },
-      include: {
-        assignedRole: {
-          select: { id: true, name: true, stationKey: true, isSystem: true },
-        },
-      },
+      select: USER_PUBLIC_SELECT,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -86,11 +93,7 @@ export class UsersService {
   async findOne(id: string, restaurantId: string) {
     const user = await this.prisma.user.findFirst({
       where: { id, restaurantId },
-      include: {
-        assignedRole: {
-          select: { id: true, name: true, stationKey: true, isSystem: true },
-        },
-      },
+      select: USER_PUBLIC_SELECT,
     });
 
     if (!user) {
@@ -98,5 +101,55 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  /**
+   * Admin edits identity/role/active flag. Actor cannot deactivate
+   * themselves — that would lock the only admin out of the panel.
+   */
+  async update(
+    id: string,
+    dto: UpdateUserDto,
+    restaurantId: string,
+    actorId: string,
+  ) {
+    const existing = await this.prisma.user.findFirst({
+      where: { id, restaurantId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (dto.isActive === false && id === actorId) {
+      throw new BadRequestException('Cannot deactivate your own user');
+    }
+
+    let station = existing.role;
+    let roleId = existing.roleId;
+
+    if (dto.roleId) {
+      const assigned = await this.prisma.role.findFirst({
+        where: { id: dto.roleId, restaurantId, isActive: true },
+      });
+      if (!assigned) {
+        throw new BadRequestException('Role not found');
+      }
+      station = assigned.stationKey;
+      roleId = assigned.id;
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(dto.fullName !== undefined ? { fullName: dto.fullName } : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+        ...(dto.roleId ? { roleId, role: station } : {}),
+        ...(dto.password
+          ? { passwordHash: await bcrypt.hash(dto.password, 10) }
+          : {}),
+      },
+      select: USER_PUBLIC_SELECT,
+    });
   }
 }

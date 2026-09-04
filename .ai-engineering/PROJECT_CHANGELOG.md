@@ -149,6 +149,13 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.9
+
+- Cierre de huecos operativos: detalle de usuario (activar/rol/password), 86 de producto, POS mostrador, despacho de domicilios en el hub de caja.
+- Listados de usuario ya no serializan `passwordHash`.
+- Rutas “En construcción” redirigen a la pantalla que ya opera.
+- Dashboard de plataforma cuenta tenants reales.
+
 ## v0.4.8
 
 - Dashboard y reportes admin leen `GET /reports/*` (ya existía). Caja admin/cajero lee `GET/POST /cash`.
