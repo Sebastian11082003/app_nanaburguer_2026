@@ -36,7 +36,7 @@ export const usersService = {
   async create(payload: CreateUserPayload): Promise<RestaurantUser> {
     const { data } = await api.post("/users", payload);
     return data;
-  }
+  },
 
   async provisionStationStaff(password: string): Promise<{
     created: RestaurantUser[];
