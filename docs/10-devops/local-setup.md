@@ -97,6 +97,26 @@ docker compose -f docker-compose.dev.yml up --build
 
 Frontend en http://localhost:3001, API en http://localhost:3000.
 
+## Logos y backups
+
+Los logos se guardan en el disco de la API (`/app/uploads`). El compose de MVP monta el volume `api_uploads`: recrear el contenedor **no** los borra. El compose de desarrollo monta el código (`../backend/api`), así que ahí los archivos viven en el repo local.
+
+Postgres ya tenía `postgres_data`. Eso no es un backup: si se pierde el disco del host, se pierde todo.
+
+Desde `docker/`:
+
+```bash
+chmod +x backup.sh restore.sh
+./backup.sh
+# imprime docker/backups/<UTC>/
+
+./restore.sh docker/backups/<UTC>
+```
+
+`backup.sh` hace `pg_dump` + `tar` de `/app/uploads`. `restore.sh` **reemplaza** la base y los logos. Si el stack usa el overlay HTTPS, `HTTPS_OVERLAY=1 ./backup.sh`.
+
+Guarda una copia de `docker/backups/` fuera del VPS (otro disco, no el mismo volume). No hay cron: es un comando de operador.
+
 ## Comprobar
 
 ```bash
