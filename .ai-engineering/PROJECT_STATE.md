@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Cierre de caja de turno (v0.4.11)
+
+- Un turno OPEN por tenant: abrir con fondo, preview en vivo (ventas por medio), cerrar con snapshot histórico.
+- Efectivo esperado = fondo + ventas CASH + ingresos manuales − egresos. SALE_PAYMENT no se cuenta dos veces.
+- UI admin/cajero: `/restaurant/admin/cash` y `/restaurant/cashier/cash`.
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.
@@ -349,7 +355,7 @@ Suite Jest unitaria (mocks de Prisma, sin depender de BD real):
 - `roles.guard.spec.ts`: rutas sin restricción, sin usuario, rol no
   permitido, rol permitido.
 
-**Resultado:** 5 suites Jest (env de arranque + auth/órdenes/guards). `nest build` sigue OK.
+**Resultado:** 6 suites Jest (env + auth/órdenes/guards + caja). `nest build` sigue OK.
 
 ---
 
@@ -399,8 +405,8 @@ repitan literalmente lo que la línea de código ya dice. Ver
 
 ## Próxima Fase
 
-- Impresora térmica USB (print-agent ESC/POS real) — diferido: el resto del vertical operativo ya no muestra “En construcción”.
-- Ampliar `@Permissions` al resto de controllers (users/roles/reports/cash ya cubiertos).
-- Tests de roles/permisos + e2e.
-- HTTPS + dominio + secretos reales en un VPS (overlay Caddy + gate de defaults listos; hace falta DNS y máquina).
-- Huecos SDD del mapa (glosario, testing-strategy, runbook): solo cuando un cambio de código los obligue, no como migración de árbol.
+- Volume de `uploads/` + backup/restore (antes de un VPS real).
+- Poll de cocina + líneas del pedido en el tablero.
+- Impresora térmica USB — diferida hasta que el usuario la pida.
+- Ampliar `@Permissions` solo en controllers que el siguiente incremento toque.
+- Operador: VPS + DNS + secretos + HTTPS overlay.

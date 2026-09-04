@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { CashMovementsPanel } from "@/src/components/cash/cash-movements-panel";
+import { CashShiftPanel } from "@/src/components/cash/cash-shift-panel";
 
 export default function CashierCashPage() {
   return (
@@ -11,14 +11,15 @@ export default function CashierCashPage() {
         <div>
           <h1 className="text-4xl font-black">Caja</h1>
           <p className="text-zinc-400">
-            Ingresos y egresos manuales. El cobro de órdenes está en Cobrar.
+            Abrí el turno, registrá movimientos y cerrá el cuadre. El cobro
+            de órdenes sigue en Cobrar.
           </p>
         </div>
         <Link href="/restaurant/cashier" className="text-zinc-400 hover:text-white">
           ← Volver
         </Link>
       </div>
-      <CashMovementsPanel />
+      <CashShiftPanel />
     </main>
   );
 }

@@ -43,7 +43,7 @@ export default function CashierPage() {
         {
           href: "/restaurant/cashier/cash",
           title: "Caja",
-          description: "Ingresos y egresos manuales",
+          description: "Abrir turno, movimientos y cierre",
         },
       ]}
     />

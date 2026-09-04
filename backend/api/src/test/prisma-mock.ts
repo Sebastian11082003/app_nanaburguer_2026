@@ -14,6 +14,7 @@ function createDelegateMock() {
     update: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
+    groupBy: jest.fn(),
   };
 }
 
@@ -33,6 +34,7 @@ export function createPrismaMock(): PrismaMock {
     role: createDelegateMock(),
     platformAdmin: createDelegateMock(),
     cashMovement: createDelegateMock(),
+    cashSession: createDelegateMock(),
   };
 
   // `$transaction(cb)` just runs the callback with the same mock,
