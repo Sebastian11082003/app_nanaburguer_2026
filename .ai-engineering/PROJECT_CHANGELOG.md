@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.14
+
+- Reportes: filtro de fechas UTC + órdenes por estado + split domicilio/pickup.
+
 ## v0.4.9
 
 - Cierre de huecos operativos: detalle de usuario (activar/rol/password), 86 de producto, POS mostrador, despacho de domicilios en el hub de caja.

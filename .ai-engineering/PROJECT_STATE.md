@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Reportes con rango y por estado (v0.4.14)
+
+- `from`/`to` (días UTC) en summary, ventas, productos, medios de pago y canales.
+- `GET /reports/orders-by-status` (HU-023). Domicilio y pickup separados.
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.
