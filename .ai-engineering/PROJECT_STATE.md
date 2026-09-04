@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Uploads + backup (v0.4.13)
+
+- Volume `api_uploads` en el compose MVP: los logos sobreviven un recreate del contenedor API.
+- `docker/backup.sh` / `restore.sh` + sección en `docs/10-devops/local-setup.md`.
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.
