@@ -21,7 +21,7 @@ Nada de lo listado aquí se movió en este incremento. Los documentos nuevos sí
 | 10-devops | mapeado | [10-devops/local-setup.md](10-devops/local-setup.md), [architecture/deployment-aws.md](architecture/deployment-aws.md), `docker/` |
 | 11-quality | parcial | 41 tests Jest en backend. No hay `testing-strategy.md`. |
 | 12-ux-ui | parcial | Navegación en `frontend/src/config/restaurant-navigation.ts`. No hay `navigation-map.md` ni design-system doc; tokens en CSS. |
-| 13-operations | parcial | Runbook MVP en [10-devops/local-setup.md](10-devops/local-setup.md). Sin HTTPS ni AWS. |
+| 13-operations | parcial | Runbook MVP + HTTPS/Caddy en [10-devops/local-setup.md](10-devops/local-setup.md). Sin AWS. |
 | 14-training | parcial | Setup en [README.md](../README.md). No hay onboarding técnico aparte. |
 | 15-project-control | mapeado | `.ai-engineering/PROJECT_STATE.md`, `PROJECT_DECISIONS.md`, `PROJECT_CHANGELOG.md` |
 | 99-archive | no aplica aún | No se ha deprecado documentación. |

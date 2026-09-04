@@ -1,0 +1,46 @@
+# Overlay: Caddy terminates HTTP/HTTPS. API and frontend stay off the host network.
+# Usage (from docker/):
+#   docker compose -f docker-compose.yml -f docker-compose.https.yml --env-file .env up --build
+#
+# Needs Compose v2.24+ (`!reset` on ports). DNS A/AAAA for both hosts must
+# point at this machine before the first start so Caddy can get certificates.
+
+services:
+  api:
+    ports: !reset []
+    environment:
+      CORS_ORIGINS: ${CORS_ORIGINS}
+
+  frontend:
+    ports: !reset []
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: nanaburguer_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      FRONTEND_HOST: ${FRONTEND_HOST}
+      API_HOST: ${API_HOST}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    networks:
+      - nanaburguer_net
+
+volumes:
+  caddy_data:
+  caddy_config:
