@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Estaciones de primera clase (v0.4.16)
+
+- Login de mesero/cocina/caja/domicilio/admin con slug propio (no exige login restaurante previo).
+- Middleware y `StationGate` cubren las cinco estaciones. Rol equivocado vuelve a su hub.
+- Portal de roles y alta de tenant muestran los correos `rol@slug.test`.
+
 ### Personal de estación (v0.4.15)
 
 - Al crear un tenant se crean cajero/mesero/cocina/domicilio (`rol@slug.test`, misma clave que el admin).

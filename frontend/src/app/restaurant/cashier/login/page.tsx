@@ -10,8 +10,12 @@ export default function CashierLoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
 
-  async function handleLogin(email: string, password: string) {
-    const response = await userAuthService.cashierLogin({ email, password });
+  async function handleLogin(email: string, password: string, slug: string) {
+    const response = await userAuthService.cashierLogin({
+      email,
+      password,
+      slug,
+    });
 
     if (response.user.role !== "CASHIER") {
       throw new Error("Este usuario no es cajero");
@@ -25,6 +29,7 @@ export default function CashierLoginPage() {
     <RoleLoginForm
       title="Login Cajero"
       description="Acceso a caja y pagos"
+      emailPrefix="cashier"
       onSubmit={handleLogin}
     />
   );

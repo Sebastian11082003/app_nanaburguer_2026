@@ -149,6 +149,12 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.16
+
+- Login independiente por estación (slug + correo). Hint `rol@slug.test`.
+- Middleware y guard de cliente en mesero/cocina/caja/domicilio. Admin no es el único workspace protegido.
+- Tras crear un tenant, la plataforma lista los logins de las cinco estaciones.
+
 ## v0.4.15
 
 - Personal de estación al crear restaurante + botón para tenants que solo tienen admin.

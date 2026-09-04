@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { platformService } from "@/src/services/platform.service";
+import { PlatformRestaurant } from "@/src/types/platform";
 
 export default function CreateRestaurantPage() {
-  const router = useRouter();
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [created, setCreated] = useState<PlatformRestaurant | null>(null);
 
   const [form, setForm] = useState({
     // Restaurante
@@ -46,9 +46,8 @@ export default function CreateRestaurantPage() {
       setLoading(true);
       setError("");
 
-      await platformService.createRestaurant(form);
-
-      router.push("/platform/restaurants");
+      const restaurant = await platformService.createRestaurant(form);
+      setCreated(restaurant);
     } catch (error: any) {
       console.error(error);
 
@@ -56,6 +55,50 @@ export default function CreateRestaurantPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (created) {
+    const stationLogins =
+      created.stationLogins ??
+      created.users
+        ?.filter((user) => user.role !== "ADMIN")
+        .map((user) => ({ role: user.role, email: user.email })) ??
+      [];
+
+    return (
+      <main className="min-h-screen bg-black p-10 text-white">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <h1 className="text-5xl font-black">Restaurante creado</h1>
+          <p className="text-zinc-400">
+            {created.name} · slug {created.slug}. Las cinco estaciones ya
+            tienen usuario. La clave de cajero/mesero/cocina/domicilio es la
+            misma que la del administrador.
+          </p>
+          <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
+            <h2 className="text-2xl font-bold">Logins de estación</h2>
+            <ul className="mt-4 space-y-2 text-sm">
+              <li>
+                Admin · {form.adminEmail}
+              </li>
+              {stationLogins.map((login) => (
+                <li key={login.email}>
+                  {login.role} · {login.email}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-sm text-zinc-400">
+              Portal: /restaurant/roles — cada rol entra con slug + su correo.
+            </p>
+          </div>
+          <Link
+            href="/platform/restaurants"
+            className="inline-block rounded-2xl bg-white px-8 py-4 font-bold text-black"
+          >
+            Ver restaurantes
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   return (

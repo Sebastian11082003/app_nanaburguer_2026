@@ -89,6 +89,7 @@ export default function PlatformRestaurantsPage() {
                   <TableHead>Teléfono</TableHead>
 
                   <TableHead>Estado</TableHead>
+                  <TableHead>Estaciones</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -105,6 +106,13 @@ export default function PlatformRestaurantsPage() {
 
                     <TableCell>
                       {restaurant.isActive ? "Activo" : "Inactivo"}
+                    </TableCell>
+                    <TableCell className="max-w-sm text-xs text-zinc-400">
+                      {restaurant.users?.length
+                        ? restaurant.users
+                            .map((user) => `${user.role}: ${user.email}`)
+                            .join(" · ")
+                        : "—"}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -19,6 +19,8 @@ interface State {
   restaurant: Restaurant | null;
   accessToken: string | null;
   setRestaurantAuth: (token: string, restaurant: Restaurant) => void;
+  /** Slug/branding without a restaurant JWT — station logins use this. */
+  setTenantPreview: (restaurant: Restaurant) => void;
   logout: () => void;
 }
 
@@ -33,6 +35,16 @@ export const useRestaurantStore = create<State>()(
           accessToken,
           restaurant,
         }),
+
+      setTenantPreview: (restaurant) =>
+        set((state) => ({
+          restaurant: {
+            id: restaurant.id || state.restaurant?.id || "",
+            name: restaurant.name,
+            slug: restaurant.slug,
+            logoUrl: restaurant.logoUrl,
+          },
+        })),
 
       logout: () =>
         set({

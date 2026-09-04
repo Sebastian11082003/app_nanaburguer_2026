@@ -12,10 +12,11 @@ export default function AdminLoginPage() {
 
   const { setAuth } = useAuthStore();
 
-  async function handleLogin(email: string, password: string) {
+  async function handleLogin(email: string, password: string, slug: string) {
     const response = await userAuthService.adminLogin({
       email,
       password,
+      slug,
     });
 
     if (response.user.role !== "ADMIN") {
@@ -31,6 +32,7 @@ export default function AdminLoginPage() {
     <RoleLoginForm
       title="Login Administrador"
       description="Acceso al panel administrativo"
+      emailPrefix="admin"
       onSubmit={handleLogin}
     />
   );
