@@ -1,5 +1,8 @@
 version: "3.9"
 
+# Local / single-host MVP. Not AWS.
+# Copy .env.example to .env before a public bind.
+
 services:
   db:
     image: postgres:15
@@ -8,7 +11,7 @@ services:
 
     environment:
       POSTGRES_USER: nanaburguer
-      POSTGRES_PASSWORD: nanaburguer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nanaburguer}
       POSTGRES_DB: nanaburguer_dev
 
     volumes:
@@ -34,8 +37,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgresql://nanaburguer:nanaburguer@db:5432/nanaburguer_dev?schema=public
-      JWT_SECRET: super-secret-key
+      DATABASE_URL: postgresql://nanaburguer:${POSTGRES_PASSWORD:-nanaburguer}@db:5432/nanaburguer_dev?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-me-local-mvp-only}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://127.0.0.1}
 
     ports:
       - "3000:3000"
@@ -44,6 +48,18 @@ services:
       db:
         condition: service_healthy
 
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
     networks:
       - nanaburguer_net
 
@@ -51,19 +67,22 @@ services:
     build:
       context: ../frontend
       dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
 
     container_name: nanaburguer_frontend
     restart: always
 
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://3.88.141.175:3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
 
     ports:
       - "80:3000"
 
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
     networks:
       - nanaburguer_net

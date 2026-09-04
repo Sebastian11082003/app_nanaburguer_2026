@@ -45,6 +45,7 @@
       ],
       "docs": [
         "docs/architecture/deployment-aws.md",
+        "docs/10-devops/**",
         "docs/sdd-mapping.md",
         ".ai-engineering/PROJECT_STATE.md",
         ".ai-engineering/PROJECT_CHANGELOG.md"

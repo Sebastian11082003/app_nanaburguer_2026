@@ -142,6 +142,12 @@
 - Admin: /restaurant/admin/roles + alta de usuarios por roleId.
 - PermissionsGuard en endpoints sensibles (users, roles).
 
+## v0.4.5
+
+- Compose de MVP desplegable: sin IP de AWS muerta; `NEXT_PUBLIC_API_URL` en build; CORS por env.
+- API en Docker: `prisma migrate deploy` + seed idempotente al arrancar.
+- Runbook: `docs/10-devops/local-setup.md`.
+
 ## v0.4.4
 
 - Adopción SDD sin reescribir: `docs/sdd-mapping.md` inventaría 00–15 sobre las rutas actuales.

@@ -22,7 +22,7 @@
 
 🟡 QA (pruebas manuales/API OK; falta suite automatizada)
 
-⬜ Deployment
+🟡 Deployment (compose MVP en un host; sin AWS/HTTPS)
 
 ⬜ Producción
 
@@ -41,6 +41,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 ---
 
 ## Último avance
+
+### Despliegue MVP (v0.4.5)
+
+- `docker compose -f docker-compose.yml up --build` levanta db + API + frontend.
+- Seed de platform admin al arrancar. CORS y URL pública por variables.
+- Runbook en `docs/10-devops/local-setup.md`. AWS/HTTPS sigue fuera de alcance.
 
 ### Adopción SDD / living-docs (v0.4.4)
 
@@ -373,5 +379,5 @@ repitan literalmente lo que la línea de código ya dice. Ver
 - Impresora térmica USB (print-agent ESC/POS real) — diferido a petición.
 - Ampliar `@Permissions` al resto de controllers.
 - Tests de roles/permisos + e2e.
-- Preparar despliegue (staging).
+- HTTPS + dominio + secretos reales en un VPS (el compose local ya corre el MVP).
 - Huecos SDD del mapa (glosario, testing-strategy, runbook): solo cuando un cambio de código los obligue, no como migración de árbol.
