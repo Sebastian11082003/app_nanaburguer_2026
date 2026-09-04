@@ -10,7 +10,7 @@ import {
   MobileNavTrigger,
 } from "@/src/components/layaout/mobile-nav-drawer";
 import { restaurantAdminNavigation } from "@/src/config/restaurant-navigation";
-import { useStoreHydration } from "@/src/hooks/use-store-hydration";
+import { useAuthHydrated } from "@/src/hooks/use-store-hydration";
 import { STATION_BY_ROLE } from "@/src/lib/stations";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
@@ -56,7 +56,7 @@ export default function RestaurantAdminLayout({
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
-  const hydrated = useStoreHydration(useAuthStore.persist);
+  const hydrated = useAuthHydrated();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {

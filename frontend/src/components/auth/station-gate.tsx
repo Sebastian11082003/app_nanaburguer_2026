@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 
-import { useStoreHydration } from "@/src/hooks/use-store-hydration";
+import { useAuthHydrated } from "@/src/hooks/use-store-hydration";
 import { isStationLoginPath, STATION_BY_ROLE } from "@/src/lib/stations";
 import { useAuthStore } from "@/src/store/auth.store";
 import { UserRole } from "@/src/types/auth";
@@ -22,7 +22,7 @@ export function StationGate({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const hydrated = useStoreHydration(useAuthStore.persist);
+  const hydrated = useAuthHydrated();
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const station = STATION_BY_ROLE[role];
