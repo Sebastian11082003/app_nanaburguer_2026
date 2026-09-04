@@ -4,8 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
+import { orderLineLabel } from "@/src/lib/order-line-label";
 import { ordersService } from "@/src/services/orders.service";
 import { Order, OrderStatus } from "@/src/types/order";
+
+/** Short enough for a real shift; not a websocket. Pause while the tab is hidden. */
+const KITCHEN_POLL_MS = 8000;
 
 interface Props {
   title: string;
@@ -27,21 +31,36 @@ export function KitchenBoard({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
-      const data = await ordersService.getAll({ status });
-      setOrders(data);
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudieron cargar las órdenes"));
-    } finally {
-      setLoading(false);
-    }
-  }, [status]);
+  const load = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      try {
+        if (!opts?.silent) {
+          setLoading(true);
+          setError("");
+        }
+        const data = await ordersService.getAll({ status });
+        setOrders(data);
+        if (opts?.silent) setError("");
+      } catch (err: unknown) {
+        if (!opts?.silent) {
+          setError(getErrorMessage(err, "No se pudieron cargar las órdenes"));
+        }
+      } finally {
+        if (!opts?.silent) setLoading(false);
+      }
+    },
+    [status],
+  );
 
   useEffect(() => {
-    load();
+    void load();
+
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      void load({ silent: true });
+    }, KITCHEN_POLL_MS);
+
+    return () => window.clearInterval(id);
   }, [load]);
 
   async function advance(orderId: string) {
@@ -51,7 +70,7 @@ export function KitchenBoard({
       setBusyId(orderId);
       setError("");
       await ordersService.updateStatus(orderId, nextStatus);
-      await load();
+      await load({ silent: true });
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo actualizar el estado"));
     } finally {
@@ -64,6 +83,9 @@ export function KitchenBoard({
       <div>
         <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
         <p className="text-zinc-400">{description}</p>
+        <p className="mt-1 text-sm text-zinc-500">
+          Se actualiza solo cada {KITCHEN_POLL_MS / 1000}s
+        </p>
       </div>
 
       {error && <p className="text-red-500">{error}</p>}
@@ -98,6 +120,20 @@ export function KitchenBoard({
                   </button>
                 )}
               </div>
+
+              <ul className="mt-3 space-y-1 text-sm">
+                {(order.items ?? []).map((item) => (
+                  <li key={item.id} className="text-zinc-200">
+                    {orderLineLabel(item)}
+                    {item.isComplimentary ? (
+                      <span className="text-zinc-500"> · cortesía</span>
+                    ) : null}
+                    {item.notes ? (
+                      <span className="text-zinc-500"> · {item.notes}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
 
