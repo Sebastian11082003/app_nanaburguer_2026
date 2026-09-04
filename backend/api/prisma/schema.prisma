@@ -67,6 +67,11 @@ enum CashType {
   EXPENSE
 }
 
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+
 enum TipType {
   NONE
   PERCENTAGE
@@ -129,6 +134,7 @@ model Restaurant {
   deliveries Delivery[]
 
   cashMovements CashMovement[]
+  cashSessions  CashSession[]
 
   paymentMethods RestaurantPaymentMethod[]
 
@@ -246,6 +252,8 @@ model User {
 
   payments      Payment[]
   cashMovements CashMovement[]
+  openedCashSessions CashSession[] @relation("cash_sessions_opened")
+  closedCashSessions CashSession[] @relation("cash_sessions_closed")
 
   @@unique([email, restaurantId])
   @@index([restaurantId])
@@ -523,4 +531,44 @@ model CashMovement {
 
   @@index([restaurantId])
   @@index([createdAt])
+}
+
+/// One open drawer per tenant. Close freezes sales-by-method + expected cash
+/// so HU-025 has a historical closing, not a live recalculation.
+model CashSession {
+  id           String @id @default(uuid())
+  restaurantId String
+
+  status CashSessionStatus @default(OPEN)
+
+  openedById String
+  closedById String?
+
+  openedAt DateTime  @default(now())
+  closedAt DateTime?
+
+  openingCents Int  @default(0)
+  countedCents Int?
+  notes        String?
+
+  salesTotalCents    Int?
+  cashSalesCents     Int?
+  cardSalesCents     Int?
+  transferSalesCents Int?
+  otherSalesCents    Int?
+  manualIncomeCents  Int?
+  expenseCents       Int?
+  expectedCashCents  Int?
+  differenceCents    Int?
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  openedBy   User       @relation("cash_sessions_opened", fields: [openedById], references: [id])
+  closedBy   User?      @relation("cash_sessions_closed", fields: [closedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([restaurantId, status])
+  @@index([restaurantId, openedAt])
+  @@map("cash_session")
 }

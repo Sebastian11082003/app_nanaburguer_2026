@@ -16,6 +16,7 @@ import {
   Payment, // ✅ IMPORT CORRECTO
 } from '@prisma/client';
 
+import { SALE_PAYMENT_CONCEPT } from '../cashMovement/cash.constants';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 
 type SaleWithRelations = Prisma.SaleGetPayload<{
@@ -135,7 +136,7 @@ export class PaymentsService {
         await tx.cashMovement.create({
           data: {
             type: CashType.INCOME,
-            concept: 'SALE_PAYMENT',
+            concept: SALE_PAYMENT_CONCEPT,
             reference: sale.id,
             amountCents: dto.amountCents,
             createdById: userId,

@@ -149,6 +149,12 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.11
+
+- Cierre de caja de turno: `CashSession` (abrir / preview / cerrar con snapshot).
+- HU-025: totales del período, por medio de pago, e histórico de cierres.
+- Ventas CASH siguen en el libro; el preview las toma de `Payment` para no duplicar `SALE_PAYMENT`.
+
 ## v0.4.9
 
 - Cierre de huecos operativos: detalle de usuario (activar/rol/password), 86 de producto, POS mostrador, despacho de domicilios en el hub de caja.
