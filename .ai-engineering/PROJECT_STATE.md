@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Adopción SDD / living-docs (v0.4.4)
+
+- Inventario en `docs/sdd-mapping.md`. Las claves 00–15 apuntan a docs que ya existían.
+- CI de documentación viva instalado contra esas rutas. Rama de integración: `dev`.
+- No se reescribió ni se movió arquitectura, HUs ni ADRs.
+
 ### Backend (v0.3.1)
 
 - Fix JWT `userId`, logs sensibles, rol KITCHEN.
@@ -368,3 +374,4 @@ repitan literalmente lo que la línea de código ya dice. Ver
 - Ampliar `@Permissions` al resto de controllers.
 - Tests de roles/permisos + e2e.
 - Preparar despliegue (staging).
+- Huecos SDD del mapa (glosario, testing-strategy, runbook): solo cuando un cambio de código los obligue, no como migración de árbol.

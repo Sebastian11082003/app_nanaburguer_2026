@@ -141,3 +141,9 @@
 - 5 plantillas de sistema por tenant; JWT incluye permissions.
 - Admin: /restaurant/admin/roles + alta de usuarios por roleId.
 - PermissionsGuard en endpoints sensibles (users, roles).
+
+## v0.4.4
+
+- Adopción SDD sin reescribir: `docs/sdd-mapping.md` inventaría 00–15 sobre las rutas actuales.
+- Job **Documentación viva** (`.github/workflows/living-docs.yml`) mapeado a `docs/` y `.ai-engineering/`, no a carpetas 00–15 inexistentes.
+- No se movió documentación histórica.

@@ -1,0 +1,68 @@
+{
+  "$comment": "Mapa de RestoOS / NanaBurguer. Rutas reales del repo, no el árbol 00–15. Ver docs/sdd-mapping.md.",
+  "docsRoot": "docs",
+  "requireDocsRootChange": false,
+  "surfaces": {
+    "backend": {
+      "code": ["backend/**"],
+      "docs": [
+        "docs/architecture/**",
+        "docs/ADR/**",
+        "docs/functional/**",
+        "docs/sdd-mapping.md",
+        ".ai-engineering/PROJECT_STATE.md",
+        ".ai-engineering/PROJECT_CHANGELOG.md"
+      ]
+    },
+    "frontend": {
+      "code": ["frontend/**"],
+      "docs": [
+        "docs/architecture/**",
+        "docs/sdd-mapping.md",
+        ".ai-engineering/PROJECT_STATE.md",
+        ".ai-engineering/PROJECT_CHANGELOG.md"
+      ]
+    },
+    "database": {
+      "code": [
+        "backend/api/prisma/**",
+        "**/*.prisma"
+      ],
+      "docs": [
+        "docs/architecture/er-diagram.md",
+        "docs/architecture/domain-model.md",
+        "docs/sdd-mapping.md",
+        ".ai-engineering/PROJECT_STATE.md"
+      ]
+    },
+    "devops": {
+      "code": [
+        ".github/workflows/**",
+        "docker/**",
+        "**/Dockerfile*",
+        "docker-compose*.yml",
+        "docker-compose*.yaml"
+      ],
+      "docs": [
+        "docs/architecture/deployment-aws.md",
+        "docs/sdd-mapping.md",
+        ".ai-engineering/PROJECT_STATE.md",
+        ".ai-engineering/PROJECT_CHANGELOG.md"
+      ]
+    }
+  },
+  "ignore": [
+    "**/*.lock",
+    "**/package-lock.json",
+    "**/.DS_Store",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.jpeg",
+    "**/*.gif",
+    "**/*.webp",
+    "**/*.ico"
+  ]
+}
