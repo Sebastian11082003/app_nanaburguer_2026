@@ -1,22 +1,29 @@
 import type { NextConfig } from "next";
 
-function uploadRemotePattern() {
+type RemotePattern = NonNullable<
+  NonNullable<NextConfig["images"]>["remotePatterns"]
+>[number];
+
+function uploadRemotePattern(): RemotePattern {
   const raw = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
   try {
     const url = new URL(raw);
     const protocol = url.protocol === "https:" ? "https" : "http";
-    return {
+    const pattern: RemotePattern = {
       protocol,
       hostname: url.hostname,
-      ...(url.port ? { port: url.port } : {}),
-      pathname: "/uploads/**" as const,
+      pathname: "/uploads/**",
     };
+    if (url.port) {
+      pattern.port = url.port;
+    }
+    return pattern;
   } catch {
     return {
-      protocol: "http" as const,
+      protocol: "http",
       hostname: "localhost",
       port: "3000",
-      pathname: "/uploads/**" as const,
+      pathname: "/uploads/**",
     };
   }
 }
