@@ -30,20 +30,29 @@ Credencial seed (solo local): `admin@nanaburger.com` / `123456`. Entrar por `/pl
 
 La API aplica `prisma migrate deploy` y el seed al arrancar. El seed es idempotente.
 
+El compose local pone `ALLOW_INSECURE_DEFAULTS=true`: JWT y password de seed documentados (`admin@nanaburger.com` / `123456`) están permitidos. En un host público eso debe ser `false`.
+
 ## Variables
 
-Ver [docker/.env.example](../../docker/.env.example).
+Ver [docker/.env.example](../../docker/.env.example) (local) y [docker/.env.https.example](../../docker/.env.https.example) (VPS).
 
 - `NEXT_PUBLIC_API_URL` se hornea en el **build** del frontend. Si cambias la URL pública, rebuild: `docker compose -f docker-compose.yml up --build`.
 - `CORS_ORIGINS` es la lista de orígenes del navegador (coma-separada). Tiene que incluir el origen del frontend, no el de la API.
-- `JWT_SECRET` debe tener al menos 16 caracteres. El default es solo para local.
+- `JWT_SECRET` debe tener al menos 16 caracteres. Los valores de los `.env*.example` están en una lista denegada: la API no arranca en producción si los dejas.
+- `ALLOW_INSECURE_DEFAULTS=true` solo en local. El overlay HTTPS lo fuerza a `false`.
+- `SEED_ON_BOOT` (default `true`): crea el platform admin si no existe. Password desde `PLATFORM_ADMIN_PASSWORD`. El seed no pisa un admin que ya esté.
+- `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD`: credencial del primer arranque. En VPS no uses `123456`.
 
-En un VPS, ejemplo:
+En un VPS por HTTP (sin Caddy), ejemplo:
 
 ```env
 NEXT_PUBLIC_API_URL=http://TU_IP:3000
 CORS_ORIGINS=http://TU_IP
-JWT_SECRET=<valor largo propio>
+JWT_SECRET=<valor largo propio, no el del example>
+ALLOW_INSECURE_DEFAULTS=false
+SEED_ON_BOOT=true
+PLATFORM_ADMIN_EMAIL=tu@correo
+PLATFORM_ADMIN_PASSWORD=<password propio, mínimo 8>
 ```
 
 El navegador llama a la API en el puerto 3000. Abre 80 y 3000 en el host.
@@ -60,10 +69,13 @@ Requisitos:
 
 ```bash
 cp docker/.env.https.example docker/.env
-# edita JWT_SECRET, POSTGRES_PASSWORD, hosts y CORS
+# edita JWT_SECRET, POSTGRES_PASSWORD, PLATFORM_ADMIN_*, hosts y CORS
+# no dejes los placeholders del example
 cd docker
 docker compose -f docker-compose.yml -f docker-compose.https.yml up --build -d
 ```
+
+Si copias el example y arrancas sin editar, la API sale: JWT o password de seed coinciden con valores documentados.
 
 `NEXT_PUBLIC_API_URL` se hornea en el build. Si cambias el dominio, `--build` otra vez.
 
