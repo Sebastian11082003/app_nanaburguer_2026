@@ -18,7 +18,7 @@ export function useActivePaymentMethods() {
     try {
       setLoading(true);
       setError("");
-      setMethods(await paymentMethodsService.list(true));
+      setMethods(await paymentMethodsService.getAll(true));
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudieron cargar los métodos de pago"));
       setMethods([]);

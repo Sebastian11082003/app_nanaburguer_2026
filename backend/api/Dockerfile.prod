@@ -9,10 +9,7 @@ RUN npm ci
 COPY . .
 
 RUN npx prisma generate
-
 RUN npm run build
-
-# ----------------------------
 
 FROM node:20-alpine
 
@@ -24,9 +21,12 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
-RUN npx prisma generate
+RUN npx prisma generate \
+  && mkdir -p /app/uploads/logos \
+  && chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 3000
 
-CMD ["node", "dist/main"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
