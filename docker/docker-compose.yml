@@ -38,6 +38,11 @@ services:
       DATABASE_URL: postgresql://nanaburguer:${POSTGRES_PASSWORD:-nanaburguer}@db:5432/nanaburguer_dev?schema=public
       JWT_SECRET: ${JWT_SECRET:-change-me-local-mvp-only}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://127.0.0.1}
+      # Local MVP: documented JWT/seed are allowed. HTTPS overlay sets this false.
+      ALLOW_INSECURE_DEFAULTS: ${ALLOW_INSECURE_DEFAULTS:-true}
+      SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
+      PLATFORM_ADMIN_EMAIL: ${PLATFORM_ADMIN_EMAIL:-admin@nanaburger.com}
+      PLATFORM_ADMIN_PASSWORD: ${PLATFORM_ADMIN_PASSWORD:-123456}
 
     ports:
       - "3000:3000"

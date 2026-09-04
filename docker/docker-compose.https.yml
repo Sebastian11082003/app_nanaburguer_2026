@@ -10,6 +10,10 @@ services:
     ports: !reset []
     environment:
       CORS_ORIGINS: ${CORS_ORIGINS}
+      ALLOW_INSECURE_DEFAULTS: ${ALLOW_INSECURE_DEFAULTS:-false}
+      SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
+      PLATFORM_ADMIN_EMAIL: ${PLATFORM_ADMIN_EMAIL}
+      PLATFORM_ADMIN_PASSWORD: ${PLATFORM_ADMIN_PASSWORD}
 
   frontend:
     ports: !reset []

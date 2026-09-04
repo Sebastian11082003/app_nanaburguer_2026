@@ -149,6 +149,12 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.7
+
+- Arranque público: la API rechaza `JWT_SECRET` de los `.env*.example` salvo `ALLOW_INSECURE_DEFAULTS=true` (solo local).
+- Seed: email/password por env; no planta `123456` en un VPS. `SEED_ON_BOOT` puede apagar el seed.
+- Tests: AuthService mockea `RolesService`; totales de orden incluyen `discountCents`.
+
 ## v0.4.6
 
 - Overlay HTTPS: `docker-compose.https.yml` + Caddy (Let's Encrypt). El compose local de puertos 80/3000 no cambia.

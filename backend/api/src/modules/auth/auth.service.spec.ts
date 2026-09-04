@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 
 import { AuthService } from './auth.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { RolesService } from '../roles/roles.service';
 import { createPrismaMock, PrismaMock } from '../../test/prisma-mock';
 
 jest.mock('bcrypt');
@@ -15,6 +16,13 @@ describe('AuthService', () => {
   let prisma: PrismaMock;
   const jwtSign = jest.fn().mockResolvedValue('signed-jwt-token');
 
+  const rolesService = {
+    ensureDefaults: jest.fn().mockResolvedValue(undefined),
+    getPermissionCodesForUser: jest
+      .fn()
+      .mockResolvedValue(['USERS_MANAGE']),
+  };
+
   beforeEach(async () => {
     prisma = createPrismaMock();
 
@@ -23,6 +31,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: { signAsync: jwtSign } },
+        { provide: RolesService, useValue: rolesService },
       ],
     }).compile();
 
@@ -105,12 +114,16 @@ describe('AuthService', () => {
         fullName: 'Admin',
         email: 'admin@nana.com',
         role: UserRole.ADMIN,
+        roleId: null,
+        permissions: ['USERS_MANAGE'],
       });
       expect(jwtSign).toHaveBeenCalledWith({
         sub: 'user-1',
         email: 'admin@nana.com',
         role: UserRole.ADMIN,
         restaurantId: 'restaurant-1',
+        roleId: null,
+        permissions: ['USERS_MANAGE'],
       });
     });
 

@@ -255,6 +255,7 @@ describe('OrdersService', () => {
       expect(updateArgs.data).toEqual({
         subtotalCents: 30000,
         taxCents: 0,
+        discountCents: 0,
         totalCents: 30000,
       });
       expect(result).toEqual({ id: 'order-1', totalCents: 30000 });

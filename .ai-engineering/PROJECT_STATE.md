@@ -22,7 +22,7 @@
 
 🟡 QA (pruebas manuales/API OK; falta suite automatizada)
 
-🟡 Deployment (compose MVP local + overlay HTTPS/Caddy documentado)
+🟡 Deployment (compose MVP local + overlay HTTPS/Caddy; secretos de example bloqueados en arranque público)
 
 ⬜ Producción (hace falta un VPS y DNS reales; no se provisionan desde aquí)
 
@@ -41,6 +41,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 ---
 
 ## Último avance
+
+### Arranque sin secretos de example (v0.4.7)
+
+- `ALLOW_INSECURE_DEFAULTS`: el compose local lo deja en `true`; el overlay HTTPS en `false`.
+- Nest rechaza `JWT_SECRET` copiado de `.env.example` / `.env.https.example` si el flag es false (el Docker MVP usa `NODE_ENV=production`).
+- Seed lee `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD` y se niega a crear `123456` sin el flag. `SEED_ON_BOOT=false` salta el seed.
 
 ### HTTPS overlay (v0.4.6)
 
@@ -331,7 +337,7 @@ Suite Jest unitaria (mocks de Prisma, sin depender de BD real):
 - `roles.guard.spec.ts`: rutas sin restricción, sin usuario, rol no
   permitido, rol permitido.
 
-**Resultado:** 4 suites / 41 tests — 100% passing. `nest build` sigue OK.
+**Resultado:** 5 suites Jest (env de arranque + auth/órdenes/guards). `nest build` sigue OK.
 
 ---
 
@@ -384,5 +390,5 @@ repitan literalmente lo que la línea de código ya dice. Ver
 - Impresora térmica USB (print-agent ESC/POS real) — diferido a petición.
 - Ampliar `@Permissions` al resto de controllers.
 - Tests de roles/permisos + e2e.
-- HTTPS + dominio + secretos reales en un VPS (overlay Caddy listo; hace falta DNS y máquina).
+- HTTPS + dominio + secretos reales en un VPS (overlay Caddy + gate de defaults listos; hace falta DNS y máquina).
 - Huecos SDD del mapa (glosario, testing-strategy, runbook): solo cuando un cambio de código los obligue, no como migración de árbol.

@@ -30,6 +30,7 @@ export function createPrismaMock(): PrismaMock {
     invoice: createDelegateMock(),
     user: createDelegateMock(),
     restaurant: createDelegateMock(),
+    role: createDelegateMock(),
     platformAdmin: createDelegateMock(),
     cashMovement: createDelegateMock(),
   };
