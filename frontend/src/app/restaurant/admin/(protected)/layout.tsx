@@ -11,6 +11,7 @@ import {
 } from "@/src/components/layaout/mobile-nav-drawer";
 import { restaurantAdminNavigation } from "@/src/config/restaurant-navigation";
 import { useAuthStore } from "@/src/store/auth.store";
+import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
 
 /**
@@ -20,7 +21,7 @@ import { useRestaurantStore } from "@/src/store/restaurant.store";
  * hardcoded one — reading from `useRestaurantStore`.
  */
 function AdminBrand() {
-  const restaurant = useRestaurantStore((state) => state.restaurant);
+  const { restaurant } = useHydratedRestaurant();
 
   return (
     <div className="flex items-center gap-3">

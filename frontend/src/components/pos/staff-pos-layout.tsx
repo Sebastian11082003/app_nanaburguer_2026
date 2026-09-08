@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PosShell } from "@/src/components/pos/pos-shell";
+import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 import { useAuthStore } from "@/src/store/auth.store";
 import { UserRole } from "@/src/types/auth";
 
@@ -29,6 +30,7 @@ export function StaffPosLayout({
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const role = useAuthStore((s) => s.user?.role);
+  const { ready: tenantReady } = useHydratedRestaurant();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export function StaffPosLayout({
     }
   }, [router, isAuthenticated, role, station]);
 
-  if (!ready) {
+  if (!ready || !tenantReady) {
     return <main className="p-8 text-muted">Cargando...</main>;
   }
 

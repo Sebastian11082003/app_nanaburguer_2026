@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { BrandMark } from "@/src/components/brand/brand-mark";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 
 interface HubLink {
@@ -33,15 +34,23 @@ export function RoleHub({
       <div className="relative z-10 mx-auto max-w-4xl space-y-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="animate-rise">
+            {restaurant && (
+              <div className="mb-4 flex items-center gap-3">
+                <BrandMark
+                  size={56}
+                  name={restaurant.name}
+                  logoUrl={restaurant.logoUrl}
+                />
+                <div>
+                  <p className="font-display text-lg">{restaurant.name}</p>
+                  <p className="font-mono text-xs text-flame">{restaurant.slug}</p>
+                </div>
+              </div>
+            )}
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-flame">
               {eyebrow}
             </p>
             <h1 className="mt-3 font-display text-4xl sm:text-5xl">{title}</h1>
-            {restaurant && (
-              <p className="mt-2 font-mono text-sm text-flame">
-                {restaurant.name} · {restaurant.slug}
-              </p>
-            )}
             <p className="mt-3 max-w-xl text-muted">{subtitle}</p>
           </div>
           {onLogout && (

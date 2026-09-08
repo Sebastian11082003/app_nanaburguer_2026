@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { BrandMark } from "@/src/components/brand/brand-mark";
+import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { ordersService } from "@/src/services/orders.service";
@@ -22,6 +24,7 @@ export function KitchenBoard({
   nextStatus,
   nextLabel,
 }: Props) {
+  const { restaurant } = useHydratedRestaurant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -61,9 +64,24 @@ export function KitchenBoard({
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 overflow-x-hidden p-4 sm:p-8">
-      <div>
-        <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
-        <p className="text-zinc-400">{description}</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
+          <p className="text-zinc-400">{description}</p>
+        </div>
+        {restaurant && (
+          <div className="flex items-center gap-3">
+            <BrandMark
+              size={44}
+              name={restaurant.name}
+              logoUrl={restaurant.logoUrl}
+            />
+            <div>
+              <p className="text-sm font-semibold">{restaurant.name}</p>
+              <p className="font-mono text-xs text-flame">{restaurant.slug}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {error && <p className="text-red-500">{error}</p>}
