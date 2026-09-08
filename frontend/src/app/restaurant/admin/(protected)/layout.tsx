@@ -12,7 +12,6 @@ import {
 import { restaurantAdminNavigation } from "@/src/config/restaurant-navigation";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
-import { useRestaurantStore } from "@/src/store/restaurant.store";
 
 /**
  * Logo + name block for the admin sidebar/drawer. This is inside a

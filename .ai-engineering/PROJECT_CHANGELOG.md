@@ -153,6 +153,7 @@
 
 - El chrome del tenant pinta el logotipo (`logoUrl`), no el monograma. Branding se refresca por slug.
 - Cerrar sesión de personal conserva el local; “Cambiar local” lo suelta.
+- Hub de cocina, KDS y admin pintan el logotipo del tenant.
 
 ## v0.4.20
 
