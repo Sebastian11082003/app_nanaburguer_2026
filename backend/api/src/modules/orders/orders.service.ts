@@ -69,7 +69,7 @@ export class OrdersService {
     discountCents = 0,
     type?: OrderType,
   ) {
-    const subtotal = items
+    const subtotal = (items ?? [])
       .filter((item) => !item.canceledAt)
       .reduce((acc, i) => acc + i.lineTotalCents, 0);
     const discount = Math.min(Math.max(discountCents, 0), subtotal);
@@ -83,6 +83,29 @@ export class OrdersService {
       discountCents: discount,
       totalCents: net + serviceFee,
     };
+  }
+
+  /** Backfills the 5% fee on open dine-in tickets created before HU-017. */
+  private needsServiceFeeSync(order: {
+    type: OrderType;
+    status: OrderStatus;
+    taxCents: number;
+    items: { lineTotalCents: number; canceledAt?: Date | null }[];
+    discountCents: number;
+  }) {
+    if (order.type !== OrderType.DINE_IN) return null;
+    if (
+      order.status === OrderStatus.CLOSED ||
+      order.status === OrderStatus.CANCELED
+    ) {
+      return null;
+    }
+    const totals = this.calculateTotals(
+      order.items,
+      order.discountCents,
+      order.type,
+    );
+    return totals.taxCents !== order.taxCents ? totals : null;
   }
 
   // ================================
@@ -686,6 +709,18 @@ export class OrdersService {
         throw new BadRequestException('Already closed');
       }
 
+      const items =
+        (await tx.orderItem.findMany({ where: { orderId } })) ?? [];
+      const totals =
+        items.length > 0
+          ? this.calculateTotals(items, order.discountCents, order.type)
+          : {
+              subtotalCents: order.subtotalCents ?? 0,
+              taxCents: order.taxCents ?? 0,
+              discountCents: order.discountCents ?? 0,
+              totalCents: order.totalCents,
+            };
+
       // CERRAR ORDEN
       const updated = await tx.order.update({
         where: {
@@ -693,6 +728,7 @@ export class OrdersService {
         },
 
         data: {
+          ...totals,
           status: OrderStatus.CLOSED,
           closedAt: new Date(),
 
@@ -722,7 +758,7 @@ export class OrdersService {
               },
             },
 
-            totalCents: order.totalCents,
+            totalCents: totals.totalCents,
           },
         });
       }
@@ -783,6 +819,15 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    return order;
+    const sync = this.needsServiceFeeSync(order);
+    if (!sync) {
+      return order;
+    }
+
+    return this.prisma.order.update({
+      where: { id: order.id },
+      data: sync,
+      include: OrdersService.ORDER_INCLUDE,
+    });
   }
 }
