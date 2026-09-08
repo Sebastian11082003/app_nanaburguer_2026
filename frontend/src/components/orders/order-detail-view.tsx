@@ -86,7 +86,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
     (role === "admin" || hasPermission(currentUser, "ORDERS_CANCEL"));
   const canResumeFromTable =
     !!order &&
-    (role === "waiter" || role === "admin") &&
+    (role === "waiter" || role === "admin" || role === "cashier") &&
     !isClosed &&
     !isCanceled &&
     order.table?.id;
@@ -130,7 +130,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
   }
 
   if (loading) {
-    return <main className="p-8">Cargando orden...</main>;
+    return <main className="p-4 sm:p-8">Cargando orden...</main>;
   }
 
   if (!order) {
@@ -145,7 +145,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
+    <div className="mx-auto max-w-3xl space-y-6 overflow-x-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-black sm:text-4xl">
@@ -157,7 +157,10 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
             {order.status}
           </p>
         </div>
-        <Link href={backHref} className="text-sm text-zinc-400 hover:text-white">
+        <Link
+          href={backHref}
+          className="inline-flex min-h-11 items-center text-sm text-zinc-400 hover:text-white"
+        >
           ← Volver
         </Link>
       </div>
@@ -245,7 +248,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
             type="button"
             disabled={busy || order.totalCents <= 0}
             onClick={() => setPayOpen(true)}
-            className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-black disabled:opacity-50"
+            className="min-h-11 w-full rounded-xl bg-white px-5 py-3 text-sm font-bold text-black disabled:opacity-50 sm:w-auto"
           >
             Cerrar y cobrar
           </button>
@@ -259,7 +262,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
                 `/restaurant/waiter/create-order?tableId=${order.table?.id}`,
               )
             }
-            className="rounded-xl border border-zinc-600 px-5 py-3 text-sm font-bold transition hover:bg-zinc-900"
+            className="min-h-11 w-full rounded-xl border border-zinc-600 px-5 py-3 text-sm font-bold transition hover:bg-zinc-900 sm:w-auto"
           >
             Continuar orden
           </button>
@@ -270,7 +273,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
             type="button"
             disabled={busy}
             onClick={handleCancel}
-            className="rounded-xl border border-red-500/40 px-5 py-3 text-sm font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+            className="min-h-11 w-full rounded-xl border border-red-500/40 px-5 py-3 text-sm font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50 sm:w-auto"
           >
             Cancelar orden
           </button>

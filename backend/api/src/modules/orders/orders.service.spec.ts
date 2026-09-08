@@ -357,6 +357,46 @@ describe('OrdersService', () => {
       expect(updateArgs.data.updatedBy.connect.id).toBe('user-1');
       expect(result.status).toBe(OrderStatus.SENT_TO_KITCHEN);
     });
+
+    it('lets a waiter cancel an empty CREATED ticket', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CREATED,
+        items: [],
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CANCELED,
+      });
+
+      await service.updateStatus(
+        'order-1',
+        OrderStatus.CANCELED,
+        'restaurant-1',
+        'user-1',
+        'WAITER',
+      );
+
+      expect(prisma.order.update).toHaveBeenCalled();
+    });
+
+    it('rejects a waiter canceling a ticket that already has products', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CREATED,
+        items: [{ canceledAt: null }],
+      });
+
+      await expect(
+        service.updateStatus(
+          'order-1',
+          OrderStatus.CANCELED,
+          'restaurant-1',
+          'user-1',
+          'WAITER',
+        ),
+      ).rejects.toThrow('Solo un ticket vacío se puede liberar sin ser admin');
+    });
   });
 
   describe('transferTable', () => {

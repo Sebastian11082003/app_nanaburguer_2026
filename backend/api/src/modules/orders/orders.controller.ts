@@ -109,13 +109,14 @@ export class OrdersController {
     @Param('id') id: string,
     @Body('status') status: OrderStatus,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { userId: string } },
+    @Req() req: { user: { userId: string; role: UserRole } },
   ) {
     return this.ordersService.updateStatus(
       id,
       status,
       restaurantId,
       req.user.userId,
+      req.user.role,
     );
   }
 

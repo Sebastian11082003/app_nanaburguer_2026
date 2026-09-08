@@ -1,12 +1,13 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 
-import { OrderStatus, OrderType, PaymentMethod, Prisma } from '@prisma/client';
+import { OrderStatus, OrderType, PaymentMethod, Prisma, UserRole } from '@prisma/client';
 
 import { ACTIVE_ORDER_STATUSES } from '../../common/constants/order-status.constants';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -568,25 +569,41 @@ export class OrdersService {
   // ================================
   /**
    * Moves an order to a new lifecycle status (e.g. SENT_TO_KITCHEN →
-   * IN_PREPARATION → READY). Who is allowed to call this per status is
-   * enforced at the controller level via `@Roles`, not here — this method
-   * only guarantees the order exists and belongs to the tenant.
+   * IN_PREPARATION → READY). `@Roles` on the controller is who may call
+   * the endpoint. Cancel is extra-gated here: only ADMIN may void a
+   * ticket that already has products. Waiter/cashier can only release
+   * an empty CREATED ticket so a table is not stuck red at $0.
    */
   async updateStatus(
     orderId: string,
     status: OrderStatus,
     restaurantId: string,
     userId: string,
+    role?: UserRole | string,
   ) {
     const order = await this.prisma.order.findFirst({
       where: {
         id: orderId,
         restaurantId,
       },
+      include: {
+        items: {
+          select: { canceledAt: true },
+        },
+      },
     });
 
     if (!order) {
       throw new NotFoundException('Order not found');
+    }
+
+    if (status === OrderStatus.CANCELED && role && role !== UserRole.ADMIN) {
+      const hasProducts = order.items.some((line) => !line.canceledAt);
+      if (order.status !== OrderStatus.CREATED || hasProducts) {
+        throw new ForbiddenException(
+          'Solo un ticket vacío se puede liberar sin ser admin',
+        );
+      }
     }
 
     return this.prisma.order.update({

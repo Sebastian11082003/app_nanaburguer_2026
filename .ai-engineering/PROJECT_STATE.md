@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Caja retoma mesa; cancelar vacío (v0.4.26)
+
+- Desde Ventas, caja puede Continuar orden en la mesa.
+- El API no deja a mesero/caja anular un ticket con productos; solo admin. Liberar mesa vacía sigue permitido.
+- `/restaurant/waiter/orders` redirige al piso.
+
 ### Liberar mesa vacía (v0.4.25)
 
 - Un ticket CREATED sin productos se libera desde el POS (mesero/caja/admin). Deja de quedar la mesa roja a $0.
