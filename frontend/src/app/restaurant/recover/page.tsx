@@ -14,14 +14,13 @@ export default function RecoverPasswordPage() {
   const [done, setDone] = useState(false);
   const [resetUrl, setResetUrl] = useState("");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const email = String(data.get("email") ?? "").trim();
+  async function sendReset(form: HTMLFormElement) {
+    const data = new FormData(form);
+    const nextEmail = String(data.get("email") ?? "").trim();
     try {
       setLoading(true);
       setError("");
-      const result = await userAuthService.forgotPassword(email);
+      const result = await userAuthService.forgotPassword(nextEmail);
       setDone(true);
       setResetUrl(result.resetUrl ?? "");
     } catch (err: unknown) {
@@ -53,7 +52,13 @@ export default function RecoverPasswordPage() {
           )}
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void sendReset(e.currentTarget);
+          }}
+          className="space-y-4"
+        >
           <input
             type="email"
             name="email"
@@ -65,7 +70,16 @@ export default function RecoverPasswordPage() {
             autoComplete="username"
           />
           {error && <p className="text-sm text-danger">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full">
+          <button
+            type="button"
+            disabled={loading}
+            className="btn-primary w-full"
+            onClick={(e) => {
+              const form = e.currentTarget.form;
+              if (!form || !form.reportValidity()) return;
+              void sendReset(form);
+            }}
+          >
             {loading ? "Enviando..." : "Enviar"}
           </button>
         </form>

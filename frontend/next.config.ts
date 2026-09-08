@@ -29,6 +29,9 @@ function uploadRemotePattern(): RemotePattern {
 }
 
 const nextConfig: NextConfig = {
+  // Next 16 blocks /_next assets when the page origin is 127.0.0.1
+  // and the dev server advertised localhost (or the reverse).
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   images: {
     // Restaurant logos are uploaded to and served by the NestJS API
     // (`/uploads/logos/...`), a different origin from this Next.js app —

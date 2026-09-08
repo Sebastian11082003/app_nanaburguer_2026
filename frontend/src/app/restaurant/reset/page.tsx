@@ -42,6 +42,7 @@ function ResetForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="password"
+          name="password"
           placeholder="Nueva contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -50,7 +51,15 @@ function ResetForm() {
           minLength={6}
         />
         {error && <p className="text-sm text-danger">{error}</p>}
-        <button type="submit" disabled={loading} className="btn-primary w-full">
+        <button
+          type="button"
+          disabled={loading}
+          className="btn-primary w-full"
+          onClick={(e) => {
+            const form = e.currentTarget.form;
+            if (form) form.requestSubmit();
+          }}
+        >
           {loading ? "Guardando..." : "Guardar"}
         </button>
       </form>

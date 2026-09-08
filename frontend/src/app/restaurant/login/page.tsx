@@ -20,15 +20,17 @@ export default function StaffLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const email = String(data.get("email") ?? "").trim();
-    const password = String(data.get("password") ?? "");
+  async function loginWith(form: HTMLFormElement) {
+    const data = new FormData(form);
+    const nextEmail = String(data.get("email") ?? "").trim();
+    const nextPassword = String(data.get("password") ?? "");
     try {
       setLoading(true);
       setError("");
-      const response = await userAuthService.staffLogin({ email, password });
+      const response = await userAuthService.staffLogin({
+        email: nextEmail,
+        password: nextPassword,
+      });
       setAuth(response.accessToken, response.user);
       setTenantPreview(response.restaurant);
       void remember;
@@ -48,7 +50,13 @@ export default function StaffLoginPage() {
       footerHref="/restaurant/local-login"
       footerLabel="Acceso del local (slug del restaurante)"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void loginWith(e.currentTarget);
+        }}
+        className="space-y-4"
+      >
         <input
           type="email"
           name="email"
@@ -78,7 +86,16 @@ export default function StaffLoginPage() {
           Recordar sesión
         </label>
         {error && <p className="text-sm text-danger">{error}</p>}
-        <button type="submit" disabled={loading} className="btn-primary w-full">
+        <button
+          type="button"
+          disabled={loading}
+          className="btn-primary w-full"
+          onClick={(e) => {
+            const form = e.currentTarget.form;
+            if (!form || !form.reportValidity()) return;
+            void loginWith(form);
+          }}
+        >
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
         <p className="text-center text-sm">
