@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Login de personal con el local ya identificado (v0.4.18)
+
+- Tras el login del restaurante, el acceso de personal muestra nombre, logo y slug del local (`nana-neiva`).
+- `/restaurant` entra a personal si ya hay sesión del local; si no, pide el slug primero.
+- Recuperar contraseña reutiliza la misma marca cuando el local ya está en sesión.
+
 ### POS unificado — estaciones y ticket (v0.4.17)
 
 - Caja, mesero y domicilio usan la misma barra del piso. Los hubs de estación redirigen a mesas.

@@ -149,6 +149,11 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.18
+
+- El login único de personal (y recuperar acceso) muestran el slug/nombre del restaurante cuando ya hay sesión del local.
+- `/restaurant` no salta el login del local si aún no hay tenant persistido.
+
 ## v0.4.17
 
 - Barra POS en caja/mesero/domicilio. Hubs redirigen al piso.

@@ -60,7 +60,7 @@ export default function RestaurantLocalLoginPage() {
       setError("");
       const response = await restaurantAuthService.login(form);
       setRestaurantAuth(response.accessToken, response.restaurant);
-      router.push("/restaurant/home");
+      router.push("/restaurant/login");
     } catch (err: unknown) {
       setError(getErrorMessage(err, "Error al iniciar sesión"));
     } finally {
