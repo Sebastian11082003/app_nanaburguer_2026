@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Tipo de producto (DEC-008)
+
+- Clase: ERP vertical gastronómico (SaaS multi-tenant).
+- El beta en `dev` es el núcleo operativo, no un ERP horizontal ni un POS de una sola tienda.
+
 ### Identidad de tenant en el chrome (v0.4.19)
 
 - Login/recover/reset heredan `RestaurantAuthShell`: nombre, logo y slug salen del persist, no de cada página.

@@ -10,7 +10,7 @@ Nada de lo listado aquí se movió en este incremento. Los documentos nuevos sí
 | 01-context | mapeado | [vision_alcance_actores.md](vision_alcance_actores.md), [functional/functional-scope.md](functional/functional-scope.md), `.ai-engineering/PROJECT_CONTEXT.md` |
 | 01-context / glosario | faltante | No hay `glossary.md`. Diferido: los términos viven en el schema Prisma y en las HUs. |
 | 02-domain | mapeado | [functional/bussines-rules.md](functional/bussines-rules.md), [architecture/domain-model.md](architecture/domain-model.md) |
-| 03-product | mapeado | [vision_alcance_actores.md](vision_alcance_actores.md), [README.md](../README.md), `.ai-engineering/PROJECT_MANIFEST.md` |
+| 03-product | mapeado | ERP vertical gastronómico (DEC-008). [vision_alcance_actores.md](vision_alcance_actores.md), [README.md](../README.md), `.ai-engineering/PROJECT_MANIFEST.md` |
 | 04-requirements | mapeado | [functional/user-stories.md](functional/user-stories.md), [functional/storymap.md](functional/storymap.md) |
 | 04-requirements / NFR y trazabilidad | parcial | NFR en visión y security-baseline. No hay matriz formal. |
 | 05-architecture | mapeado | [architecture/](architecture/), [ADR/](ADR/) |

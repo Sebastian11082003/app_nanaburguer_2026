@@ -6,11 +6,11 @@
 
 **Versión:** 1.0.0
 
-**Estado:** MVP
+**Estado:** MVP / beta en `dev`
 
-**Tipo de Proyecto:** Software as a Service (SaaS)
+**Tipo de Proyecto:** ERP vertical gastronómico (SaaS multi-tenant)
 
-**Dominio:** Gestión de Restaurantes
+**Dominio:** Operación de restaurantes (POS, cocina, caja, domicilio, admin)
 
 ---
 

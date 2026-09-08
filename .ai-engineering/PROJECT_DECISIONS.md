@@ -92,3 +92,19 @@ El chrome compartido (`RestaurantAuthShell`, `PosShell`, admin, hubs) lee `resta
 Motivo:
 
 Esto es un ERP profesional, no un login suelto. El operador debe ver en qué tenant está. El dueño no debería tener que cazar huecos de marca en cada pantalla.
+
+---
+
+## DEC-008
+
+Tipo de producto
+
+Clase: **ERP vertical de restaurantes** (SaaS multi-tenant).
+
+Hoy cubre el núcleo operativo: autenticación por tenant, RBAC, mesas/POS, KDS, domicilio/recoger, caja y reportes.
+
+Fuera del MVP (no inventar): inventario, contabilidad, nómina, Factus/DIAN, Rappi, app de cliente, sucursales reales.
+
+Motivo:
+
+Un ERP se reconoce por tenant, roles, trazabilidad y módulos que no se pisan. Un POS suelto no exige eso. La visión es ERP; el incremento actual no debe fingir módulos que aún no existen.

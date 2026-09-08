@@ -6,7 +6,7 @@ Muchos restaurantes pequeños gestionan pedidos manualmente.
 
 ## Solución
 
-Crear un SaaS para administrar la operación completa.
+ERP vertical para restaurantes, entregado como SaaS multi-tenant. El MVP actual es el núcleo operativo (pedidos, cocina, caja, roles). No es un ERP horizontal (contabilidad, nómina, inventario) ni un POS de una sola tienda.
 
 ## Usuarios
 
