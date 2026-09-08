@@ -149,6 +149,11 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.32
+
+- Ticket CREATED vacío: auto-liberar solo en DINE_IN. Domicilio/pickup no se cancelan al cambiar de pestaña.
+- Repartidor puede listar y ver `GET /deliveries` (Pedidos activos).
+
 ## v0.4.31
 
 - Domicilio: lista y retoma tickets abiertos. CREATED ya no ofrece Entregado; abre Continuar.

@@ -49,6 +49,17 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(context)).toBe(true);
   });
 
+  it('grants DELIVERY access when the route includes that role', () => {
+    const guard = makeGuard([
+      UserRole.ADMIN,
+      UserRole.CASHIER,
+      UserRole.DELIVERY,
+    ]);
+    const context = makeContext({ user: { role: UserRole.DELIVERY } });
+
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
   it('denies KITCHEN from cash-only endpoints even with a valid session', () => {
     const guard = makeGuard([UserRole.ADMIN, UserRole.CASHIER]);
     const context = makeContext({ user: { role: UserRole.KITCHEN } });

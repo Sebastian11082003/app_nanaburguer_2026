@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Domicilio no se auto-cancela; repartidor lista la cola (v0.4.32)
+
+- Salir de un CREATED vacío solo libera **mesa**. Pickup/domicilio se quedan para retomar.
+- `GET /deliveries` admite rol DELIVERY (Pedidos activos dejaba 403).
+
 ### Retomar domicilio abierto (v0.4.31)
 
 - Nuevo pedido lista domicilios activos. Pedidos CREATED en activos/caja dicen Continuar (no Entregado).

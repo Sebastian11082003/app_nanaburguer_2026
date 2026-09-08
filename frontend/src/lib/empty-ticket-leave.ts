@@ -2,17 +2,19 @@ import { ordersService } from "@/src/services/orders.service";
 import { Order } from "@/src/types/order";
 
 /**
- * Opening a table (and some pickup/delivery drafts) creates a CREATED
- * ticket immediately so the floor can lock occupancy. Leaving without
- * items used to keep the card red. POS chrome calls
- * `releaseEmptyTicketIfNeeded` before navigating; this module must not
- * cancel on React unmount (Strict Mode would drop a just-opened ticket).
+ * Opening a table creates a CREATED ticket so the floor can lock occupancy.
+ * Leaving without items used to keep the card red. Pickup/delivery drafts
+ * are different: they already carry the customer and must stay listable so
+ * staff can resume them. POS chrome calls `releaseEmptyTicketIfNeeded`
+ * before navigating; this module must not cancel on React unmount (Strict
+ * Mode would drop a just-opened ticket).
  */
 let releaser: (() => Promise<void>) | null = null;
 
 export function isEmptyCreatedTicket(order: Order | null | undefined): boolean {
   return (
     !!order &&
+    order.type === "DINE_IN" &&
     order.status === "CREATED" &&
     (order.items ?? []).every((line) => line.canceledAt)
   );
