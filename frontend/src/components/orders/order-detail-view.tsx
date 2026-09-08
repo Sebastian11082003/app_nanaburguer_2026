@@ -256,9 +256,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
             type="button"
             onClick={() =>
               router.push(
-                role === "admin"
-                  ? `/restaurant/admin/create-order?tableId=${order.table?.id}`
-                  : `/restaurant/waiter/create-order?tableId=${order.table?.id}`,
+                `/restaurant/waiter/create-order?tableId=${order.table?.id}`,
               )
             }
             className="rounded-xl border border-zinc-600 px-5 py-3 text-sm font-bold transition hover:bg-zinc-900"

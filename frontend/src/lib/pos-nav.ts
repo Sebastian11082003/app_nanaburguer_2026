@@ -83,8 +83,8 @@ export function isPosNavActive(item: PosNavItem, pathname: string): boolean {
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
-export function tableOrderHref(role: UserRole | null | undefined): string {
-  if (role === "ADMIN") return "/restaurant/admin/create-order";
+/** Floor tickets stay in the POS shell. Admin tables still use admin/create-order. */
+export function tableOrderHref(_role?: UserRole | null): string {
   return "/restaurant/waiter/create-order";
 }
 

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
+import { orderLineLabel } from "@/src/lib/order-line-label";
 import { ordersService } from "@/src/services/orders.service";
 import { deliveryService } from "@/src/services/delivery.service";
 import { Order } from "@/src/types/order";
@@ -53,36 +54,35 @@ export default function DeliveryOrderDetailPage() {
   }
 
   if (loading) {
-    return <main className="brand-atmosphere min-h-screen p-8 text-paper">Cargando...</main>;
+    return <main className="p-4 text-paper sm:p-8">Cargando...</main>;
   }
 
   if (!order) {
     return (
-      <main className="brand-atmosphere min-h-screen p-8 text-paper">
+      <main className="p-4 text-paper sm:p-8">
         <p className="text-danger">{error || "Pedido no encontrado"}</p>
       </main>
     );
   }
 
   return (
-    <main className="brand-atmosphere min-h-screen px-6 py-10 text-paper">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-flame">
-              Pedido #{order.orderNumber}
-            </p>
-            <h1 className="mt-2 font-display text-4xl">
-              {order.delivery?.customerName ?? "Cliente"}
-            </h1>
-          </div>
-          <Link
-            href="/restaurant/delivery/active"
-            className="text-sm text-muted hover:text-paper"
-          >
-            ← Volver
-          </Link>
+    <main className="mx-auto max-w-3xl space-y-6 overflow-x-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-flame sm:text-xs sm:tracking-[0.24em]">
+            Pedido #{order.orderNumber}
+          </p>
+          <h1 className="mt-2 truncate font-display text-2xl sm:text-4xl">
+            {order.delivery?.customerName ?? "Cliente"}
+          </h1>
         </div>
+        <Link
+          href="/restaurant/delivery/active"
+          className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
+        >
+          ← Volver
+        </Link>
+      </div>
 
         {error && <p className="text-danger">{error}</p>}
         {message && <p className="text-success">{message}</p>}
@@ -122,7 +122,7 @@ export default function DeliveryOrderDetailPage() {
           <ul className="mt-4 space-y-2 text-sm">
             {order.items.map((item) => (
               <li key={item.id} className="flex justify-between">
-                <span>{item.quantity}x item</span>
+                <span>{orderLineLabel(item)}</span>
                 <span>{formatCents(item.lineTotalCents)}</span>
               </li>
             ))}
@@ -146,7 +146,6 @@ export default function DeliveryOrderDetailPage() {
         >
           {busy ? "Actualizando..." : "Marcar como entregado"}
         </button>
-      </div>
     </main>
   );
 }

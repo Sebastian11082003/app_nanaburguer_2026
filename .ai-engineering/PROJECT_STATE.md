@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Ticket de mesa en el POS (v0.4.24)
+
+- Abrir mesa desde el piso (también admin) queda en el chrome POS, no salta al panel.
+- Domicilio muestra el nombre del producto en el resumen, no “x item”.
+
 ### POS: Mesas vs Vender (v0.4.23)
 
 - La barra ya no duplica Dashboard y Vender sobre el mismo piso. Mesas es el tablero; Vender abre el mostrador.

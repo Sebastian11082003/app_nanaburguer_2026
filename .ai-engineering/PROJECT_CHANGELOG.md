@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.24
+
+- Mesa desde el piso abre el ticket en el POS (admin incluido). Domicilio pinta el nombre del producto en la línea.
+
 ## v0.4.23
 
 - Mesas y Vender dejan de ser el mismo enlace. Mostrador es Vender; el mesero vende desde la mesa. Canales Llevar/Domicilios solo si el rol puede abrirlos.

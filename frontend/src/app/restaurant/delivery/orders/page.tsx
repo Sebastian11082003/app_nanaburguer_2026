@@ -5,6 +5,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
+import { orderLineLabel } from "@/src/lib/order-line-label";
 import { menuService } from "@/src/services/menu.service";
 import { ordersService } from "@/src/services/orders.service";
 import { MenuItem } from "@/src/types/menu";
@@ -251,7 +252,7 @@ export default function DeliveryCreateOrderPage() {
           <ul className="mt-6 space-y-3 text-sm">
             {(order?.items ?? []).map((line) => (
               <li key={line.id} className="flex justify-between gap-3">
-                <span>{line.quantity}x item</span>
+                <span>{orderLineLabel(line)}</span>
                 <span>{formatCents(line.lineTotalCents)}</span>
               </li>
             ))}
