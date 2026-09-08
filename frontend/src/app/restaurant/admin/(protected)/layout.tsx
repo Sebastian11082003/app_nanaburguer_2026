@@ -23,17 +23,17 @@ function AdminBrand() {
   const { restaurant } = useHydratedRestaurant();
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex min-w-0 items-center gap-3">
       <BrandMark
         size={44}
         name={restaurant?.name ?? "Restaurante"}
         logoUrl={restaurant?.logoUrl}
       />
-      <div>
-        <p className="font-display text-lg tracking-[0.14em]">
+      <div className="min-w-0">
+        <p className="truncate font-display text-lg tracking-[0.14em]">
           {restaurant?.name ?? "Restaurante"}
         </p>
-        <p className="font-mono text-xs text-flame">
+        <p className="truncate font-mono text-xs text-flame">
           {restaurant?.slug ?? "admin"}
         </p>
       </div>

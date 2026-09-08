@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### POS mobile-first (v0.4.22)
+
+- `/restaurant/*` se diseña primero para teléfono (DEC-009): header sticky, nav con scroll, tap de 44px, cobro/cocina fijos abajo.
+- Login, piso, ticket, mostrador, caja, domicilio y cocina caben en ~390px sin scroll horizontal.
+- Escritorio conserva el resumen al lado; en móvil las acciones primarias no quedan bajo el menú.
+
 ### Logotipo del tenant en el chrome (v0.4.21)
 
 - Después de identificar el local, el mark es el `logoUrl` del restaurante, no la letra inicial.

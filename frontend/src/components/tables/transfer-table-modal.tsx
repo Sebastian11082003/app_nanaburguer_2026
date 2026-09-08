@@ -45,8 +45,8 @@ export function TransferTableModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-950 p-6">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center">
+      <div className="w-full max-w-md rounded-t-2xl border border-white/10 bg-zinc-950 p-5 sm:rounded-2xl sm:p-6">
         <h2 className="font-display text-2xl">Transferir mesa</h2>
         <p className="mt-1 text-sm text-muted">
           Selecciona la mesa destino. Solo se muestran mesas libres.
@@ -58,7 +58,7 @@ export function TransferTableModal({
               key={table.id}
               type="button"
               onClick={() => setSelectedId(table.id)}
-              className={`w-full rounded-xl border px-4 py-3 text-left transition ${
+            className={`min-h-11 w-full rounded-xl border px-4 py-3 text-left transition ${
                 selectedId === table.id
                   ? "border-flame bg-flame/10"
                   : "border-white/10 hover:border-white/30"
@@ -77,7 +77,7 @@ export function TransferTableModal({
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost px-4 py-2 text-sm"
+            className="btn-ghost min-h-11 px-4 py-2 text-sm"
           >
             Cancelar
           </button>
@@ -89,7 +89,7 @@ export function TransferTableModal({
               await onConfirm(selectedId);
               setSelectedId("");
             }}
-            className="btn-primary px-4 py-2 text-sm disabled:opacity-50"
+            className="btn-primary min-h-11 px-4 py-2 text-sm disabled:opacity-50"
           >
             {busy ? "Moviendo..." : "Transferir"}
           </button>

@@ -105,3 +105,4 @@ Consultar:
 - No introducir deuda técnica.
 - Documentar cambios importantes.
 - Mantener compatibilidad entre módulos.
+- `/restaurant/*` es mobile-first (DEC-009).

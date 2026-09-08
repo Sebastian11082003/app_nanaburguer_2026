@@ -129,15 +129,15 @@ export default function DeliveryCreateOrderPage() {
   }
 
   return (
-    <main className="brand-atmosphere relative min-h-screen overflow-x-hidden px-4 py-8 text-paper sm:px-6 sm:py-10">
-      <div className="relative z-10 mx-auto grid max-w-6xl gap-6 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+    <main className="brand-atmosphere relative min-h-screen overflow-x-hidden px-0 py-2 text-paper sm:py-4">
+      <div className="relative z-10 mx-auto grid max-w-6xl gap-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-0">
         <section className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-flame">
                 Delivery
               </p>
-              <h1 className="mt-2 font-display text-3xl sm:text-4xl">Nuevo pedido</h1>
+              <h1 className="mt-2 font-display text-2xl sm:text-4xl">Nuevo pedido</h1>
             </div>
             <Link
               href="/restaurant/app"
@@ -150,7 +150,7 @@ export default function DeliveryCreateOrderPage() {
           {error && <p className="text-danger">{error}</p>}
           {message && <p className="text-success">{message}</p>}
 
-          <form onSubmit={handleStart} className="panel-surface space-y-4 p-6">
+          <form onSubmit={handleStart} className="panel-surface space-y-4 p-4 sm:p-6">
             <div className="flex gap-2">
               {(["DELIVERY", "PICKUP"] as OrderType[]).map((option) => (
                 <button
@@ -240,8 +240,8 @@ export default function DeliveryCreateOrderPage() {
           </div>
         </section>
 
-        <aside className="panel-surface h-fit p-6">
-          <h2 className="font-display text-2xl">Resumen</h2>
+        <aside className="panel-surface h-fit p-4 sm:p-6">
+          <h2 className="font-display text-xl sm:text-2xl">Resumen</h2>
           <p className="mt-2 text-sm text-muted">
             {order
               ? `#${order.orderNumber} · ${order.status}`
@@ -266,11 +266,22 @@ export default function DeliveryCreateOrderPage() {
             type="button"
             disabled={busy || !order || order.status !== "CREATED"}
             onClick={handleSendToKitchen}
-            className="btn-primary mt-6 w-full disabled:opacity-40"
+            className="btn-primary mt-6 hidden w-full disabled:opacity-40 lg:inline-flex"
           >
             Enviar a cocina
           </button>
         </aside>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950/95 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+        <button
+          type="button"
+          disabled={busy || !order || order.status !== "CREATED"}
+          onClick={handleSendToKitchen}
+          className="btn-primary min-h-11 w-full disabled:opacity-40"
+        >
+          Enviar a cocina
+        </button>
       </div>
     </main>
   );

@@ -30,16 +30,18 @@ function ChannelCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[140px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40"
+      className="flex min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40 sm:min-h-[140px]"
     >
       <div
         className={`w-1.5 shrink-0 ${occupied ? "bg-red-500" : "bg-emerald-400"}`}
       />
-      <div className="flex flex-1 flex-col p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted sm:text-xs sm:tracking-[0.16em]">
           {occupied ? "Ocupada" : "Disponible"}
         </p>
-        <h2 className="mt-2 font-display text-xl">{title}</h2>
+        <h2 className="mt-1.5 font-display text-base leading-tight sm:mt-2 sm:text-xl">
+          {title}
+        </h2>
         {occupied && (
           <p className="mt-auto pt-3 text-sm font-semibold text-sky-400 underline">
             {formatCents(totalCents)}
@@ -90,7 +92,7 @@ export function FloorBoard() {
   if (error) return <p className="text-danger">{error}</p>;
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5">
       {tables.map((table) => {
         const occupied = Boolean(table.activeOrder);
         return (
@@ -98,18 +100,18 @@ export function FloorBoard() {
             key={table.id}
             type="button"
             onClick={() => openTable(table)}
-            className="flex min-h-[140px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40"
+            className="flex min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40 sm:min-h-[140px]"
           >
             <div
               className={`w-1.5 shrink-0 ${
                 occupied ? "bg-red-500" : "bg-emerald-400"
               }`}
             />
-            <div className="flex flex-1 flex-col p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+            <div className="flex flex-1 flex-col p-3 sm:p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted sm:text-xs sm:tracking-[0.16em]">
                 {occupied ? "Ocupada" : "Disponible"}
               </p>
-              <h2 className="mt-2 font-display text-xl">
+              <h2 className="mt-1.5 font-display text-base leading-tight sm:mt-2 sm:text-xl">
                 Mesa {table.label}
               </h2>
               {occupied && (

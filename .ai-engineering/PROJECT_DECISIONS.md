@@ -108,3 +108,17 @@ Fuera del MVP (no inventar): inventario, contabilidad, nómina, Factus/DIAN, Rap
 Motivo:
 
 Un ERP se reconoce por tenant, roles, trazabilidad y módulos que no se pisan. Un POS suelto no exige eso. La visión es ERP; el incremento actual no debe fingir módulos que aún no existen.
+
+---
+
+## DEC-009
+
+Mobile-first en operación (`/restaurant/*`)
+
+El POS se usa en teléfono. Toda superficie `/restaurant/*` se diseña primero a ~390px (tap ≥ 44px, header sticky, acciones de cobro/cocina fijas abajo, sin scroll horizontal). Escritorio es el caso amplio, no el único.
+
+No bloquear zoom (`maximumScale`) por accesibilidad.
+
+Motivo:
+
+Mesero y caja trabajan de pie, con una mano. Una UI que solo cabe en laptop no es operable en el local.

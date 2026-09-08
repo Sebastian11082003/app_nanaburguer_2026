@@ -41,6 +41,9 @@ export type CreateOrderScreenProps = {
  * Shared dine-in ordering UI for waiter and admin: open/resume a table's
  * order, add/remove items, send to kitchen, transfer table.
  *
+ * On phones, kitchen/charge stay in a fixed bottom bar so they are not
+ * buried under the menu. Desktop keeps those buttons in the ticket aside.
+ *
  * Navigated to as `…/create-order?tableId=<id>`. Opening an order for a
  * table that already has one resumes it (backend dedupe in
  * `OrdersService.create`).
@@ -385,29 +388,35 @@ export function CreateOrderScreen({
       hasPermission(currentUser, "ORDERS_DISCOUNT"));
   const kitchenButtonLabel =
     order?.status === "CREATED" ? "Enviar a cocina" : "Imprimir comanda";
+  const kitchenDisabled =
+    busy ||
+    !order ||
+    !order.items?.length ||
+    order.status === "CLOSED" ||
+    order.status === "CANCELED";
 
   if (loading) {
-    return <main className="p-8">Abriendo orden...</main>;
+    return <main className="p-6 sm:p-8">Abriendo orden...</main>;
   }
 
   return (
     <>
-      <main className="mx-auto grid max-w-6xl gap-6 overflow-x-hidden p-4 sm:gap-8 sm:p-8 lg:grid-cols-[1.2fr_0.8fr] print:hidden">
+      <main className="relative mx-auto grid max-w-6xl gap-5 overflow-x-hidden pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:pb-0 print:hidden">
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-black sm:text-4xl">Tomar orden</h1>
-              <p className="text-zinc-400">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black sm:text-4xl">Tomar orden</h1>
+              <p className="text-sm text-zinc-400 sm:text-base">
                 Mesa {order?.table?.label ?? "—"} · Orden #
                 {order?.orderNumber ?? "—"} · {order?.status ?? "—"}
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
               {order && !!order.items?.length && (
                 <button
                   type="button"
                   onClick={() => setTicketOpen(true)}
-                  className="text-sm text-zinc-400 hover:text-white"
+                  className="min-h-11 text-zinc-400 hover:text-white"
                 >
                   Ver comanda
                 </button>
@@ -416,12 +425,15 @@ export function CreateOrderScreen({
                 <button
                   type="button"
                   onClick={() => setTransferOpen(true)}
-                  className="text-sm text-zinc-400 hover:text-white"
+                  className="min-h-11 text-zinc-400 hover:text-white"
                 >
                   Transferir mesa
                 </button>
               )}
-              <Link href={tablesHref} className="text-zinc-400 hover:text-white">
+              <Link
+                href={tablesHref}
+                className="inline-flex min-h-11 items-center text-zinc-400 hover:text-white"
+              >
                 ← Mesas
               </Link>
             </div>
@@ -435,15 +447,15 @@ export function CreateOrderScreen({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar producto por nombre..."
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm"
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-base"
           />
 
           {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <button
                 type="button"
                 onClick={() => setCategoryFilter(null)}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                className={`shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition ${
                   categoryFilter === null
                     ? "border-white bg-white text-black"
                     : "border-zinc-700 text-zinc-300 hover:border-white"
@@ -456,7 +468,7 @@ export function CreateOrderScreen({
                   key={category.id}
                   type="button"
                   onClick={() => setCategoryFilter(category.id)}
-                  className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                  className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${
                     categoryFilter === category.id
                       ? "border-white bg-white text-black"
                       : "border-zinc-700 text-zinc-300 hover:border-white"
@@ -473,7 +485,7 @@ export function CreateOrderScreen({
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {filteredItems.map((item) => {
               const category = categoryById.get(item.categoryId);
               return (
@@ -482,7 +494,7 @@ export function CreateOrderScreen({
                   type="button"
                   disabled={busy || !canAddItems}
                   onClick={() => setPickingItem(item)}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-left transition hover:border-white disabled:opacity-50"
+                  className="min-h-16 rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-left transition hover:border-white disabled:opacity-50"
                 >
                   {category && (
                     <span
@@ -513,8 +525,8 @@ export function CreateOrderScreen({
           )}
         </section>
 
-        <aside className="h-fit rounded-3xl border border-zinc-800 bg-zinc-950 p-6">
-          <h2 className="text-2xl font-bold">Resumen</h2>
+        <aside className="h-fit rounded-3xl border border-zinc-800 bg-zinc-950 p-4 sm:p-6">
+          <h2 className="text-xl font-bold sm:text-2xl">Resumen</h2>
           {currentUser && (
             <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500">
               Atendido por: {currentUser.fullName}
@@ -556,7 +568,7 @@ export function CreateOrderScreen({
                         onClick={() =>
                           handleChangeQuantity(line.id, line.quantity - 1)
                         }
-                        className="h-7 w-7 rounded-lg border border-zinc-700 text-sm disabled:opacity-40"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-700 text-lg disabled:opacity-40"
                       >
                         −
                       </button>
@@ -569,7 +581,7 @@ export function CreateOrderScreen({
                         onClick={() =>
                           handleChangeQuantity(line.id, line.quantity + 1)
                         }
-                        className="h-7 w-7 rounded-lg border border-zinc-700 text-sm disabled:opacity-40"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-700 text-lg disabled:opacity-40"
                       >
                         +
                       </button>
@@ -685,31 +697,27 @@ export function CreateOrderScreen({
             No imprimir comanda
           </label>
 
-          <button
-            type="button"
-            disabled={
-              busy ||
-              !order ||
-              !order.items?.length ||
-              order.status === "CLOSED" ||
-              order.status === "CANCELED"
-            }
-            onClick={handleSendToKitchen}
-            className="mt-3 w-full rounded-xl bg-white py-3 font-bold text-black disabled:opacity-40"
-          >
-            {kitchenButtonLabel}
-          </button>
-
-          {canCharge && (
+          <div className="hidden lg:block">
             <button
               type="button"
-              disabled={busy}
-              onClick={() => setPayOpen(true)}
-              className="mt-3 w-full rounded-xl border border-emerald-500/50 py-3 font-bold text-emerald-400 transition hover:bg-emerald-500/10 disabled:opacity-40"
+              disabled={kitchenDisabled}
+              onClick={handleSendToKitchen}
+              className="mt-3 w-full rounded-xl bg-white py-3 font-bold text-black disabled:opacity-40"
             >
-              Cerrar y cobrar
+              {kitchenButtonLabel}
             </button>
-          )}
+
+            {canCharge && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setPayOpen(true)}
+                className="mt-3 w-full rounded-xl border border-emerald-500/50 py-3 font-bold text-emerald-400 transition hover:bg-emerald-500/10 disabled:opacity-40"
+              >
+                Cerrar y cobrar
+              </button>
+            )}
+          </div>
 
           {canCancelOrder && (
             <button
@@ -747,6 +755,29 @@ export function CreateOrderScreen({
           onConfirm={handleCloseAndPay}
         />
       </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950/95 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden print:hidden">
+        <div className="mx-auto flex max-w-6xl gap-2">
+          <button
+            type="button"
+            disabled={kitchenDisabled}
+            onClick={handleSendToKitchen}
+            className="min-h-11 flex-1 rounded-xl bg-white px-3 py-3 text-sm font-bold text-black disabled:opacity-40"
+          >
+            {kitchenButtonLabel}
+          </button>
+          {canCharge && (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => setPayOpen(true)}
+              className="min-h-11 flex-1 rounded-xl border border-emerald-500/50 px-3 py-3 text-sm font-bold text-emerald-400 disabled:opacity-40"
+            >
+              Cerrar y cobrar
+            </button>
+          )}
+        </div>
+      </div>
 
       {order && ticketOpen && (
         <KitchenTicket order={order} onClose={() => setTicketOpen(false)} />

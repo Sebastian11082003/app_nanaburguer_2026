@@ -133,17 +133,23 @@ export default function CashierPosPage() {
   }
 
   const canEdit = !order || order.status === "CREATED";
+  const kitchenDisabled = busy || !order || order.status !== "CREATED";
+  const chargeDisabled =
+    busy || !order || !order.items?.length || order.status === "CLOSED";
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 p-6 sm:p-8">
+    <main className="relative mx-auto max-w-6xl space-y-6 overflow-x-hidden pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-4xl font-black">POS mostrador</h1>
-          <p className="text-zinc-400">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-black sm:text-4xl">POS mostrador</h1>
+          <p className="text-sm text-zinc-400 sm:text-base">
             Pickup sin mesa. Cobra ya o manda a cocina.
           </p>
         </div>
-        <Link href="/restaurant/app" className="text-zinc-400 hover:text-white">
+        <Link
+          href="/restaurant/app"
+          className="inline-flex min-h-11 items-center text-zinc-400 hover:text-white"
+        >
           ← Mesas
         </Link>
       </div>
@@ -158,14 +164,14 @@ export default function CashierPosPage() {
             className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-5"
           >
             <input
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-base"
               placeholder="Nombre del cliente"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               disabled={!canEdit}
             />
             <input
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-base"
               placeholder="Teléfono (opcional)"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
@@ -175,7 +181,7 @@ export default function CashierPosPage() {
               Hora de recoger
               <input
                 type="datetime-local"
-                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-paper"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-base text-paper"
                 value={pickupAt}
                 onChange={(e) => setPickupAt(e.target.value)}
                 disabled={!canEdit}
@@ -227,23 +233,46 @@ export default function CashierPosPage() {
             <span>Total</span>
             <span>{formatCents(order?.totalCents ?? 0)}</span>
           </div>
+          <div className="hidden lg:block space-y-3">
+            <button
+              type="button"
+              disabled={kitchenDisabled}
+              onClick={handleSendToKitchen}
+              className="w-full rounded-xl border border-zinc-700 py-3 font-bold disabled:opacity-40"
+            >
+              Enviar a cocina
+            </button>
+            <button
+              type="button"
+              disabled={chargeDisabled}
+              onClick={() => setPayOpen(true)}
+              className="w-full rounded-xl bg-white py-3 font-bold text-black disabled:opacity-40"
+            >
+              Cobrar
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950/95 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+        <div className="mx-auto flex max-w-6xl gap-2">
           <button
             type="button"
-            disabled={busy || !order || order.status !== "CREATED"}
+            disabled={kitchenDisabled}
             onClick={handleSendToKitchen}
-            className="w-full rounded-xl border border-zinc-700 py-3 font-bold disabled:opacity-40"
+            className="min-h-11 flex-1 rounded-xl border border-zinc-700 px-3 py-3 text-sm font-bold disabled:opacity-40"
           >
             Enviar a cocina
           </button>
           <button
             type="button"
-            disabled={busy || !order || !order.items?.length || order.status === "CLOSED"}
+            disabled={chargeDisabled}
             onClick={() => setPayOpen(true)}
-            className="w-full rounded-xl bg-white py-3 font-bold text-black disabled:opacity-40"
+            className="min-h-11 flex-1 rounded-xl bg-white px-3 py-3 text-sm font-bold text-black disabled:opacity-40"
           >
             Cobrar
           </button>
-        </aside>
+        </div>
       </div>
 
       <ClosePayModal

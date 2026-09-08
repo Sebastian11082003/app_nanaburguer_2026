@@ -191,6 +191,8 @@ h3,
   background: rgba(0, 0, 0, 0.35);
   padding: 0.85rem 1rem;
   color: var(--paper);
+  /* 16px avoids iOS zooming the page when the field is focused. */
+  font-size: 1rem;
   outline: none;
   transition: border-color 160ms ease;
 }

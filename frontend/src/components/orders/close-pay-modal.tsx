@@ -87,12 +87,12 @@ export function ClosePayModal({
     !!method && cashOk && totalCents > 0 && !loadingMethods && methods.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="close-pay-title"
-        className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-xl"
+        className="w-full max-w-md rounded-t-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-xl sm:rounded-2xl"
       >
         <h2 id="close-pay-title" className="text-xl font-bold">
           Cerrar y cobrar
@@ -126,7 +126,7 @@ export function ClosePayModal({
                   type="button"
                   disabled={busy}
                   onClick={() => setMethod(option.method)}
-                  className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                  className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
                     method === option.method
                       ? "border-white bg-white text-black"
                       : "border-zinc-700 text-zinc-300 hover:border-white"
@@ -149,7 +149,7 @@ export function ClosePayModal({
               value={receivedInput}
               disabled={busy}
               onChange={(e) => setReceivedInput(e.target.value)}
-              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2"
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-3 text-base"
             />
             <span
               className={`block text-xs ${
@@ -168,7 +168,7 @@ export function ClosePayModal({
             type="button"
             disabled={busy}
             onClick={onClose}
-            className="flex-1 rounded-xl border border-zinc-700 py-2.5 text-sm font-semibold hover:bg-zinc-900 disabled:opacity-50"
+            className="min-h-11 flex-1 rounded-xl border border-zinc-700 py-2.5 text-sm font-semibold hover:bg-zinc-900 disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -182,7 +182,7 @@ export function ClosePayModal({
                 receivedCents: method === "CASH" ? receivedCents : undefined,
               });
             }}
-            className="flex-1 rounded-xl bg-white py-2.5 text-sm font-bold text-black disabled:opacity-40"
+            className="min-h-11 flex-1 rounded-xl bg-white py-2.5 text-sm font-bold text-black disabled:opacity-40"
           >
             {busy ? "Procesando..." : "Confirmar cobro"}
           </button>

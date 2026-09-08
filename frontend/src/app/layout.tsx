@@ -1,6 +1,6 @@
 import "./globals.css";
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Outfit, Pacifico } from "next/font/google";
 
 import { PLATFORM_BRAND } from "@/src/config/platform-brand";
@@ -29,6 +29,12 @@ const script = Pacifico({
 export const metadata: Metadata = {
   title: `${PLATFORM_BRAND.name} · SaaS`,
   description: `${PLATFORM_BRAND.tagline}. Pedidos, cocina, caja y delivery.`,
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

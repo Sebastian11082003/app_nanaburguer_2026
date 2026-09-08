@@ -35,7 +35,7 @@ export function BrandMark({
   return (
     <div className={`flex flex-col items-center gap-3 ${className}`}>
       <div
-        className="flex items-center justify-center overflow-hidden rounded-[28%] border border-white/15 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+        className="flex shrink-0 items-center justify-center overflow-hidden rounded-[28%] border border-white/15 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
         style={{ width: size, height: size }}
       >
         {resolvedLogoUrl ? (

@@ -100,7 +100,7 @@ export function CashMovementsPanel() {
           <select
             value={type}
             onChange={(event) => setType(event.target.value as CashType)}
-            className="rounded-xl border border-zinc-700 bg-black px-3 py-2"
+            className="min-h-11 w-full rounded-xl border border-zinc-700 bg-black px-3 py-2 sm:w-auto"
           >
             <option value="INCOME">Ingreso</option>
             <option value="EXPENSE">Egreso</option>
@@ -109,25 +109,25 @@ export function CashMovementsPanel() {
             value={concept}
             onChange={(event) => setConcept(event.target.value)}
             placeholder="Concepto"
-            className="min-w-[12rem] flex-1 rounded-xl border border-zinc-700 bg-black px-3 py-2"
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-zinc-700 bg-black px-3 py-2 text-base"
           />
           <input
             value={pesos}
             onChange={(event) => setPesos(event.target.value)}
             placeholder="Monto (COP)"
             inputMode="decimal"
-            className="w-36 rounded-xl border border-zinc-700 bg-black px-3 py-2"
+            className="w-full rounded-xl border border-zinc-700 bg-black px-3 py-3 text-base sm:w-36"
           />
           <input
             value={reference}
             onChange={(event) => setReference(event.target.value)}
             placeholder="Referencia (opcional)"
-            className="min-w-[10rem] flex-1 rounded-xl border border-zinc-700 bg-black px-3 py-2"
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-zinc-700 bg-black px-3 py-2 text-base"
           />
           <button
             type="submit"
             disabled={saving}
-            className="rounded-xl bg-white px-4 py-2 font-bold text-black disabled:opacity-50"
+            className="min-h-11 w-full rounded-xl bg-white px-4 py-2 font-bold text-black disabled:opacity-50 sm:w-auto"
           >
             {saving ? "Guardando..." : "Registrar"}
           </button>

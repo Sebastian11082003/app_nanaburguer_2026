@@ -23,8 +23,8 @@ interface Props {
  */
 export function KitchenTicket({ order, onClose }: Props) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 print:static print:bg-white print:p-0">
-      <div className="comanda-ticket w-full max-w-sm rounded-2xl bg-white p-6 text-black print:max-w-none print:rounded-none print:shadow-none">
+    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] print:static print:bg-white print:p-0 sm:items-center">
+      <div className="comanda-ticket w-full max-w-sm rounded-t-2xl bg-white p-6 text-black print:max-w-none print:rounded-none print:shadow-none sm:rounded-2xl">
         <div className="text-center">
           <p className="text-lg font-black uppercase tracking-wide">Comanda</p>
           <p className="text-sm text-zinc-600">
@@ -58,14 +58,14 @@ export function KitchenTicket({ order, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-zinc-300 py-2 text-sm font-semibold"
+            className="min-h-11 flex-1 rounded-xl border border-zinc-300 py-2 text-sm font-semibold"
           >
             Cerrar
           </button>
           <button
             type="button"
             onClick={() => window.print()}
-            className="flex-1 rounded-xl bg-black py-2 text-sm font-semibold text-white"
+            className="min-h-11 flex-1 rounded-xl bg-black py-2 text-sm font-semibold text-white"
           >
             Imprimir
           </button>

@@ -11,6 +11,7 @@ import { useRestaurantStore } from "@/src/store/restaurant.store";
 
 /**
  * Shared POS chrome: one header + one nav. Role only filters the tabs.
+ * Sticky + horizontal-scroll tabs so a phone can run the floor.
  */
 export function PosShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -34,30 +35,35 @@ export function PosShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-ink text-paper">
-      <header className="border-b border-white/10 bg-black/40">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen overflow-x-hidden bg-ink text-paper">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-black/80 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-2.5 sm:gap-4 sm:px-6 sm:py-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <BrandMark
-              size={36}
+              size={32}
+              className="shrink-0 sm:!w-auto"
               name={restaurant?.name ?? "Restaurante"}
               logoUrl={restaurant?.logoUrl}
             />
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-flame">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] uppercase tracking-[0.16em] text-flame sm:text-xs sm:tracking-[0.2em]">
                 {restaurant?.name ?? "Restaurante"}
               </p>
               {restaurant?.slug && (
-                <p className="font-mono text-xs text-muted">{restaurant.slug}</p>
+                <p className="truncate font-mono text-[11px] text-muted sm:text-xs">
+                  {restaurant.slug}
+                </p>
               )}
-              <p className="text-sm text-muted">{user?.fullName}</p>
+              <p className="hidden truncate text-sm text-muted sm:block">
+                {user?.fullName}
+              </p>
             </div>
           </div>
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
-              className="rounded-full border border-white/15 px-3 py-1.5 text-sm"
+              className="min-h-11 rounded-full border border-white/15 px-3 py-1.5 text-xs sm:text-sm"
             >
               {user?.role ?? "Cuenta"}
             </button>
@@ -66,14 +72,14 @@ export function PosShell({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="block w-full px-4 py-2 text-left hover:bg-white/5"
+                  className="block min-h-11 w-full px-4 py-2 text-left hover:bg-white/5"
                 >
                   Cerrar sesión
                 </button>
                 <button
                   type="button"
                   onClick={handleChangeLocal}
-                  className="block w-full px-4 py-2 text-left hover:bg-white/5"
+                  className="block min-h-11 w-full px-4 py-2 text-left hover:bg-white/5"
                 >
                   Cambiar local
                 </button>
@@ -81,7 +87,7 @@ export function PosShell({ children }: { children: ReactNode }) {
             )}
           </div>
         </div>
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
+        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 pb-2 sm:px-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {nav.map((item) => {
             const active =
               item.href === "/restaurant/app"
@@ -91,7 +97,7 @@ export function PosShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.key}
                 href={item.href}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${
+                className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-3 py-1.5 text-sm ${
                   active
                     ? "bg-paper text-ink"
                     : "text-muted hover:bg-white/5 hover:text-paper"
@@ -103,7 +109,7 @@ export function PosShell({ children }: { children: ReactNode }) {
           })}
         </nav>
       </header>
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">{children}</div>
+      <div className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-6">{children}</div>
     </div>
   );
 }

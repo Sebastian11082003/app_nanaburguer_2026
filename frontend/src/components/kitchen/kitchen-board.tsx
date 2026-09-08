@@ -65,20 +65,22 @@ export function KitchenBoard({
   return (
     <main className="mx-auto max-w-5xl space-y-6 overflow-x-hidden p-4 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black sm:text-4xl">{title}</h1>
-          <p className="text-zinc-400">{description}</p>
+        <div className="min-w-0">
+          <h1 className="text-2xl font-black sm:text-4xl">{title}</h1>
+          <p className="text-sm text-zinc-400 sm:text-base">{description}</p>
         </div>
         {restaurant && (
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <BrandMark
               size={44}
               name={restaurant.name}
               logoUrl={restaurant.logoUrl}
             />
-            <div>
-              <p className="text-sm font-semibold">{restaurant.name}</p>
-              <p className="font-mono text-xs text-flame">{restaurant.slug}</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{restaurant.name}</p>
+              <p className="truncate font-mono text-xs text-flame">
+                {restaurant.slug}
+              </p>
             </div>
           </div>
         )}
@@ -110,7 +112,7 @@ export function KitchenBoard({
                     type="button"
                     disabled={busyId === order.id}
                     onClick={() => advance(order.id)}
-                    className="rounded-xl bg-white px-5 py-3 font-bold text-black disabled:opacity-50"
+                    className="min-h-11 w-full rounded-xl bg-white px-5 py-3 font-bold text-black disabled:opacity-50 sm:w-auto"
                   >
                     {busyId === order.id ? "..." : nextLabel}
                   </button>
