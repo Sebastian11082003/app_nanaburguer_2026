@@ -14,8 +14,10 @@ export default function RecoverPasswordPage() {
   const [done, setDone] = useState(false);
   const [resetUrl, setResetUrl] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    const email = String(data.get("email") ?? "").trim();
     try {
       setLoading(true);
       setError("");
@@ -54,11 +56,13 @@ export default function RecoverPasswordPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
+            name="email"
             placeholder="Correo"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="field-input"
             required
+            autoComplete="username"
           />
           {error && <p className="text-sm text-danger">{error}</p>}
           <button type="submit" disabled={loading} className="btn-primary w-full">

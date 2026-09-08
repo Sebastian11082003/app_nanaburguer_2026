@@ -20,8 +20,11 @@ export default function StaffLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    const email = String(data.get("email") ?? "").trim();
+    const password = String(data.get("password") ?? "");
     try {
       setLoading(true);
       setError("");
@@ -48,6 +51,7 @@ export default function StaffLoginPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="email"
+          name="email"
           placeholder="Correo"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -57,6 +61,7 @@ export default function StaffLoginPage() {
         />
         <input
           type="password"
+          name="password"
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
