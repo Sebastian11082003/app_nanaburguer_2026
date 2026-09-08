@@ -10,6 +10,7 @@ export interface FindOrdersParams {
   status?: OrderStatus;
   type?: string;
   tableId?: string;
+  activeOnly?: boolean;
 }
 
 /**

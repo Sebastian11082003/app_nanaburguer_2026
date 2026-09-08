@@ -786,6 +786,7 @@ export class OrdersService {
   // ================================
   /**
    * Lists orders for the tenant, optionally filtered by status/type/table.
+   * `activeOnly` is the same occupancy set as the floor (not CLOSED/CANCELED).
    * `restaurantId` is always the first `where` clause — never build a
    * variant of this query without it, or you'd leak orders across tenants.
    */
@@ -794,9 +795,11 @@ export class OrdersService {
       where: {
         restaurantId,
 
-        ...(query.status && {
-          status: query.status,
-        }),
+        ...(query.activeOnly
+          ? { status: { in: ACTIVE_ORDER_STATUSES } }
+          : query.status
+            ? { status: query.status }
+            : {}),
 
         ...(query.type && {
           type: query.type,

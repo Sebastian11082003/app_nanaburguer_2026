@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Llevar abiertos en mostrador (v0.4.30)
+
+- Vender lista pickups activos para retomarlos y cobrar. `GET /orders?activeOnly=true` filtra estados abiertos.
+
 ### Admin del tenant demo (v0.4.29)
 
 - El seed de `nana-neiva` crea `admin@nana-neiva.test` si el local no tiene ADMIN.

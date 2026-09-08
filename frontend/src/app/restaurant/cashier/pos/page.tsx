@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
@@ -20,6 +20,9 @@ import { Order } from "@/src/types/order";
  * Counter / pickup sale for cashier. No table. Kitchen is optional:
  * close+pay is allowed on CREATED so a drink at the register does not
  * have to go through KDS.
+ *
+ * Open pickups stay on the floor Llevar card. This screen lists them so
+ * caja resumes/charges instead of opening another ticket every time.
  */
 export default function CashierPosPage() {
   const router = useRouter();
@@ -27,6 +30,7 @@ export default function CashierPosPage() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [pickupAt, setPickupAt] = useState("");
   const [items, setItems] = useState<MenuItem[]>([]);
+  const [openPickups, setOpenPickups] = useState<Order[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
@@ -35,6 +39,14 @@ export default function CashierPosPage() {
 
   useEmptyTicketLeave(order);
 
+  const loadOpenPickups = useCallback(async () => {
+    const rows = await ordersService.getAll({
+      type: "PICKUP",
+      activeOnly: true,
+    });
+    setOpenPickups(rows);
+  }, []);
+
   useEffect(() => {
     menuService
       .getItems()
@@ -42,7 +54,10 @@ export default function CashierPosPage() {
       .catch((err: unknown) =>
         setError(getErrorMessage(err, "No se pudo cargar el menú")),
       );
-  }, []);
+    loadOpenPickups().catch((err: unknown) =>
+      setError(getErrorMessage(err, "No se pudieron cargar pedidos abiertos")),
+    );
+  }, [loadOpenPickups]);
 
   async function ensureOrder(): Promise<Order | null> {
     if (order) return order;
@@ -58,6 +73,7 @@ export default function CashierPosPage() {
       pickupAt: pickupAt ? new Date(pickupAt).toISOString() : undefined,
     });
     setOrder(created);
+    await loadOpenPickups();
     return created;
   }
 
@@ -130,8 +146,25 @@ export default function CashierPosPage() {
       setOrder(null);
       setCustomerName("Mostrador");
       setCustomerPhone("");
+      await loadOpenPickups();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo cobrar"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resumePickup(open: Order) {
+    try {
+      setBusy(true);
+      setError("");
+      await releaseEmptyTicketIfNeeded();
+      const fresh = await ordersService.getById(open.id);
+      setOrder(fresh);
+      setCustomerName("Mostrador");
+      setMessage(`Continuando #${fresh.orderNumber}`);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo retomar el pedido"));
     } finally {
       setBusy(false);
     }
@@ -167,6 +200,34 @@ export default function CashierPosPage() {
 
       {error && <p className="text-red-500">{error}</p>}
       {message && <p className="text-emerald-400">{message}</p>}
+
+      {openPickups.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+            Llevar abiertos
+          </p>
+          {openPickups.map((open) => (
+            <button
+              key={open.id}
+              type="button"
+              disabled={busy}
+              onClick={() => void resumePickup(open)}
+              className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left disabled:opacity-40 ${
+                order?.id === open.id
+                  ? "border-paper bg-paper/10"
+                  : "border-zinc-800 bg-zinc-950"
+              }`}
+            >
+              <span className="text-sm font-semibold">
+                #{open.orderNumber} · {open.status}
+              </span>
+              <span className="text-sm font-bold tabular-nums">
+                {formatCents(open.totalCents)}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="space-y-4">

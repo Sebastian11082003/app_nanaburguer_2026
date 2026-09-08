@@ -532,6 +532,23 @@ describe('OrdersService', () => {
       expect(callArgs.where.restaurantId).toBe('restaurant-1');
     });
 
+    it('filters findAll to open statuses when activeOnly is set', async () => {
+      (prisma.order as { findMany: jest.Mock }).findMany.mockResolvedValue([]);
+
+      await service.findAll('restaurant-1', { activeOnly: true });
+
+      const [[callArgs]] = (prisma.order as { findMany: jest.Mock }).findMany.mock.calls;
+      expect(callArgs.where.status).toEqual({
+        in: [
+          OrderStatus.CREATED,
+          OrderStatus.SENT_TO_KITCHEN,
+          OrderStatus.IN_PREPARATION,
+          OrderStatus.READY,
+          OrderStatus.OUT_FOR_DELIVERY,
+        ],
+      });
+    });
+
     it('always scopes findOne by restaurantId and throws NotFound for other tenants', async () => {
       (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);
 
