@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.27
+
+- Piso: ocupada sin total dice “Sin cuenta”. Cobro huérfano redirige a Ventas. Anular en detalle confirma. Domicilio activo abre “Nuevo pedido”.
+
 ## v0.4.26
 
 - Caja retoma el ticket de mesa desde Ventas. Cancelar con productos queda en admin. Mesero/órdenes redirige al piso.

@@ -58,12 +58,20 @@ export default function DeliveryActivePage() {
             Pedidos activos
           </h1>
         </div>
-        <Link
-          href="/restaurant/app"
-          className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
-        >
-          ← Volver
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/restaurant/delivery/orders"
+            className="inline-flex min-h-11 items-center rounded-full bg-paper px-4 text-sm font-semibold text-ink"
+          >
+            Nuevo pedido
+          </Link>
+          <Link
+            href="/restaurant/app"
+            className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
+          >
+            ← Mesas
+          </Link>
+        </div>
       </div>
 
         {error && <p className="text-danger">{error}</p>}

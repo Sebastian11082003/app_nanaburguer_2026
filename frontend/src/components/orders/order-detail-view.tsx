@@ -115,6 +115,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
   /** Admin-only: voids the order without charging it (e.g. customer walked out). */
   async function handleCancel() {
     if (!order) return;
+    if (!window.confirm("¿Cancelar esta orden? No se cobrará.")) return;
 
     try {
       setBusy(true);

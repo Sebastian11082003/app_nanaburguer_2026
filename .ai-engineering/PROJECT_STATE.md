@@ -42,6 +42,13 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Piso a $0, cobro y domicilio (v0.4.27)
+
+- Mesa ocupada sin total muestra “Sin cuenta”, no `$ 0` subrayado.
+- `/restaurant/cashier/payments` redirige a Ventas.
+- Anular desde el detalle pide confirmación (igual que en el ticket).
+- Domicilio activo tiene “Nuevo pedido” hacia el alta.
+
 ### Caja retoma mesa; cancelar vacío (v0.4.26)
 
 - Desde Ventas, caja puede Continuar orden en la mesa.

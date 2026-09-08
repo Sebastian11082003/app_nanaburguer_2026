@@ -15,6 +15,25 @@ import { tablesService } from "@/src/services/tables.service";
 import { Table } from "@/src/services/tables.service";
 import { useAuthStore } from "@/src/store/auth.store";
 
+/**
+ * Occupied cards used to always paint a currency amount, so a CREATED
+ * ticket with no lines looked like a $0 bill. Only underline a real total.
+ */
+function OccupancyAmount({ cents }: { cents: number }) {
+  if (cents <= 0) {
+    return (
+      <p className="mt-auto pt-3 text-[11px] font-medium text-muted sm:text-sm">
+        Sin cuenta
+      </p>
+    );
+  }
+  return (
+    <p className="mt-auto pt-3 text-sm font-semibold text-sky-400 underline">
+      {formatCents(cents)}
+    </p>
+  );
+}
+
 function ChannelCard({
   title,
   occupied,
@@ -42,11 +61,7 @@ function ChannelCard({
         <h2 className="mt-1.5 font-display text-base leading-tight sm:mt-2 sm:text-xl">
           {title}
         </h2>
-        {occupied && (
-          <p className="mt-auto pt-3 text-sm font-semibold text-sky-400 underline">
-            {formatCents(totalCents)}
-          </p>
-        )}
+        {occupied && <OccupancyAmount cents={totalCents} />}
       </div>
     </button>
   );
@@ -118,9 +133,7 @@ export function FloorBoard() {
                 Mesa {table.label}
               </h2>
               {occupied && (
-                <p className="mt-auto pt-3 text-sm font-semibold text-sky-400 underline">
-                  {formatCents(table.activeOrder?.totalCents ?? 0)}
-                </p>
+                <OccupancyAmount cents={table.activeOrder?.totalCents ?? 0} />
               )}
             </div>
           </button>
