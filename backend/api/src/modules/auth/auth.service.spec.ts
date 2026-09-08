@@ -204,7 +204,7 @@ describe('AuthService', () => {
         id: 'restaurant-1',
         name: 'Nana',
         slug: 'nana',
-        logoUrl: null,
+        logoUrl: '/logo/nana-logo.jpeg',
       });
 
       const result = await service.staffLogin('cashier@nana.test', 'secret123');
@@ -212,6 +212,7 @@ describe('AuthService', () => {
       expect(result.accessToken).toBe('signed-jwt-token');
       expect(result.user.role).toBe(UserRole.CASHIER);
       expect(result.restaurant.slug).toBe('nana');
+      expect(result.restaurant.logoUrl).toBe('/logo/nana-logo.jpeg');
     });
 
     it('rejects invalid credentials', async () => {

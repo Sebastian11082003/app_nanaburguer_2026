@@ -24,8 +24,13 @@ export function PosShell({ children }: { children: ReactNode }) {
 
   function handleLogout() {
     logoutStaff();
-    logoutRestaurant();
     router.push("/restaurant/login");
+  }
+
+  function handleChangeLocal() {
+    logoutStaff();
+    logoutRestaurant();
+    router.push("/restaurant/local-login");
   }
 
   return (
@@ -64,6 +69,13 @@ export function PosShell({ children }: { children: ReactNode }) {
                   className="block w-full px-4 py-2 text-left hover:bg-white/5"
                 >
                   Cerrar sesión
+                </button>
+                <button
+                  type="button"
+                  onClick={handleChangeLocal}
+                  className="block w-full px-4 py-2 text-left hover:bg-white/5"
+                >
+                  Cambiar local
                 </button>
               </div>
             )}

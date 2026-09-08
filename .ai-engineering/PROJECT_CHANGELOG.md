@@ -152,6 +152,7 @@
 ## v0.4.21
 
 - El chrome del tenant pinta el logotipo (`logoUrl`), no el monograma. Branding se refresca por slug.
+- Cerrar sesión de personal conserva el local; “Cambiar local” lo suelta.
 
 ## v0.4.20
 

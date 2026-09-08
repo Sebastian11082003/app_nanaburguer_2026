@@ -71,10 +71,9 @@ export interface Order {
   source: OrderSource;
   tableId?: string | null;
   subtotalCents: number;
+  /** Dine-in 5% service fee until a real tax engine exists. */
   taxCents: number;
   discountCents?: number;
-  /** Dine-in 5% service fee, stored in taxCents. */
-  taxCents?: number;
   pickupAt?: string | null;
   totalCents: number;
   items: OrderItem[];

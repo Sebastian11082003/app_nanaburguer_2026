@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { restaurantAuthService } from "@/src/services/restaurant-auth.service";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
 
+const BRANDING_TIMEOUT_MS = 2500;
+
 /**
  * Wait for persist, then refresh name/logo from the API. Persist can be
  * stale (logo uploaded later); the monogram must not replace a real logo.
@@ -31,7 +33,12 @@ export function useHydratedRestaurant() {
       }
 
       try {
-        const branding = await restaurantAuthService.getBranding(current.slug);
+        const branding = await Promise.race([
+          restaurantAuthService.getBranding(current.slug),
+          new Promise<null>((resolve) => {
+            setTimeout(() => resolve(null), BRANDING_TIMEOUT_MS);
+          }),
+        ]);
         if (cancelled || !branding) return;
         const latest = useRestaurantStore.getState().restaurant;
         if (!latest || latest.slug !== current.slug) return;
