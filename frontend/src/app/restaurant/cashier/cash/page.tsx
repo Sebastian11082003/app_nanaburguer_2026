@@ -11,7 +11,8 @@ export default function CashierCashPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-black sm:text-4xl">Caja</h1>
           <p className="text-sm text-zinc-400 sm:text-base">
-            Ingresos y egresos manuales. El cobro de órdenes está en Cobrar.
+            Ingresos y egresos manuales. El cobro de órdenes está en la mesa
+            o en Ventas.
           </p>
         </div>
         <Link

@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.25
+
+- Liberar mesa vacía (CREATED sin ítems) para no dejar el piso en rojo a $0. Admin Domicilios = despacho. Caja apunta a mesa/Ventas.
+
 ## v0.4.24
 
 - Mesa desde el piso abre el ticket en el POS (admin incluido). Domicilio pinta el nombre del producto en la línea.

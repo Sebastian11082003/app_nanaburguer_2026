@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Liberar mesa vacía (v0.4.25)
+
+- Un ticket CREATED sin productos se libera desde el POS (mesero/caja/admin). Deja de quedar la mesa roja a $0.
+- Domicilios en la barra de admin apunta al despacho, igual que el piso. Caja ya no manda a una pantalla “Cobrar” huérfana.
+
 ### Ticket de mesa en el POS (v0.4.24)
 
 - Abrir mesa desde el piso (también admin) queda en el chrome POS, no salta al panel.

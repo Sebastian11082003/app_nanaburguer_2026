@@ -329,6 +329,25 @@ export function CreateOrderScreen({
     }
   }
 
+  async function handleReleaseTable() {
+    if (!order) return;
+    if (!window.confirm("¿Liberar la mesa? No hay productos en el ticket.")) {
+      return;
+    }
+
+    try {
+      setBusy(true);
+      setError("");
+      await ordersService.updateStatus(order.id, "CANCELED");
+      setMessage("Mesa liberada");
+      router.push(tablesHref);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo liberar la mesa"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const filteredItems = useMemo(() => {
     const query = search.trim().toLowerCase();
     return items.filter((item) => {
@@ -368,6 +387,18 @@ export function CreateOrderScreen({
     (role === "admin" ||
       currentUser?.role === "ADMIN" ||
       hasPermission(currentUser, "ORDERS_CANCEL"));
+  // Opening a table creates a CREATED ticket immediately. Without this,
+  // going back leaves the floor red at $0 and waiters cannot cancel.
+  const canReleaseEmptyTable =
+    !!order &&
+    order.status === "CREATED" &&
+    (order.items ?? []).every((line) => line.canceledAt) &&
+    (role === "admin" ||
+      role === "cashier" ||
+      role === "waiter" ||
+      currentUser?.role === "ADMIN" ||
+      currentUser?.role === "CASHIER" ||
+      currentUser?.role === "WAITER");
   const canCancelItem =
     !!order &&
     order.status !== "CLOSED" &&
@@ -719,7 +750,16 @@ export function CreateOrderScreen({
             )}
           </div>
 
-          {canCancelOrder && (
+          {canReleaseEmptyTable ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={handleReleaseTable}
+              className="mt-2 w-full rounded-xl border border-white/20 py-2.5 text-sm font-semibold text-paper transition hover:bg-white/5 disabled:opacity-40"
+            >
+              Liberar mesa
+            </button>
+          ) : canCancelOrder ? (
             <button
               type="button"
               disabled={busy}
@@ -728,7 +768,7 @@ export function CreateOrderScreen({
             >
               Cancelar orden
             </button>
-          )}
+          ) : null}
         </aside>
 
         <TransferTableModal
@@ -758,23 +798,36 @@ export function CreateOrderScreen({
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950/95 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden print:hidden">
         <div className="mx-auto flex max-w-6xl gap-2">
-          <button
-            type="button"
-            disabled={kitchenDisabled}
-            onClick={handleSendToKitchen}
-            className="min-h-11 flex-1 rounded-xl bg-white px-3 py-3 text-sm font-bold text-black disabled:opacity-40"
-          >
-            {kitchenButtonLabel}
-          </button>
-          {canCharge && (
+          {canReleaseEmptyTable ? (
             <button
               type="button"
               disabled={busy}
-              onClick={() => setPayOpen(true)}
-              className="min-h-11 flex-1 rounded-xl border border-emerald-500/50 px-3 py-3 text-sm font-bold text-emerald-400 disabled:opacity-40"
+              onClick={handleReleaseTable}
+              className="min-h-11 flex-1 rounded-xl border border-white/20 px-3 py-3 text-sm font-bold disabled:opacity-40"
             >
-              Cerrar y cobrar
+              Liberar mesa
             </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={kitchenDisabled}
+                onClick={handleSendToKitchen}
+                className="min-h-11 flex-1 rounded-xl bg-white px-3 py-3 text-sm font-bold text-black disabled:opacity-40"
+              >
+                {kitchenButtonLabel}
+              </button>
+              {canCharge && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setPayOpen(true)}
+                  className="min-h-11 flex-1 rounded-xl border border-emerald-500/50 px-3 py-3 text-sm font-bold text-emerald-400 disabled:opacity-40"
+                >
+                  Cerrar y cobrar
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -58,7 +58,7 @@ export function posNavForRole(role: UserRole | null | undefined): PosNavItem[] {
     if (item.key === "sales" && role === "CASHIER") {
       return { ...item, href: "/restaurant/cashier/orders" };
     }
-    if (item.key === "delivery" && role === "CASHIER") {
+    if (item.key === "delivery" && (role === "CASHIER" || role === "ADMIN")) {
       return { ...item, href: "/restaurant/cashier/delivery" };
     }
     if (item.key === "delivery" && role === "DELIVERY") {

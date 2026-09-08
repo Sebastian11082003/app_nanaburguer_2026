@@ -130,8 +130,8 @@ export default function DeliveryCreateOrderPage() {
   }
 
   return (
-    <main className="brand-atmosphere relative min-h-screen overflow-x-hidden px-0 py-2 text-paper sm:py-4">
-      <div className="relative z-10 mx-auto grid max-w-6xl gap-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:pb-0">
+    <main className="relative overflow-x-hidden pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <div className="mx-auto grid max-w-6xl gap-6 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>

@@ -102,7 +102,7 @@ export function KitchenBoard({
                   <h2 className="text-2xl font-bold">#{order.orderNumber}</h2>
                   <p className="text-zinc-400">
                     Mesa {order.table?.label ?? "—"} ·{" "}
-                    {order.items?.length ?? 0} items ·{" "}
+                    {order.items?.length ?? 0} ítems ·{" "}
                     {formatCents(order.totalCents)}
                   </p>
                 </div>
