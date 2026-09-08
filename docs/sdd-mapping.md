@@ -20,7 +20,7 @@ Nada de lo listado aquí se movió en este incremento. Los documentos nuevos sí
 | 09-microservices | mapeado (monolito) | [architecture/module-boundaries.md](architecture/module-boundaries.md) — un módulo de catálogo, no microservicios. |
 | 10-devops | mapeado | [10-devops/local-setup.md](10-devops/local-setup.md), [architecture/deployment-aws.md](architecture/deployment-aws.md), `docker/` |
 | 11-quality | parcial | Jest en backend (roles, órdenes, caja). Reportes/caja tienen UI sobre el API existente. No hay `testing-strategy.md`. |
-| 12-ux-ui | parcial | Login único + chrome de tenant (logotipo/nombre/slug) en personal, POS, admin y hubs. Nav por rol. Piso: ocupada a $0 muestra “Sin cuenta”; salir de ticket vacío libera solo mesa (no pickup/domicilio). Mostrador lista Llevar abiertos con nombre; domicilio retoma borradores. Pedidos activos es cola DELIVERY. Ventas nombra mesa/Llevar/Domicilio. Caja/admin en `restaurant-navigation.ts`. |
+| 12-ux-ui | parcial | Login único + chrome de tenant (logotipo/nombre/slug) en personal, POS, admin y hubs. Nav por rol. Piso: ocupada a $0 muestra “Sin cuenta”; salir de ticket vacío libera solo mesa (no pickup/domicilio). Mostrador lista Llevar abiertos con nombre; domicilio retoma borradores. Pedidos activos es cola DELIVERY. Caja cobra domicilio desde Domicilios. Ventas nombra mesa/Llevar/Domicilio. Caja/admin en `restaurant-navigation.ts`. |
 | 13-operations | parcial | Runbook MVP + HTTPS/Caddy + secretos de arranque en [10-devops/local-setup.md](10-devops/local-setup.md). Sin AWS. |
 | 14-training | parcial | Setup en [README.md](../README.md). No hay onboarding técnico aparte. |
 | 15-project-control | mapeado | `.ai-engineering/PROJECT_STATE.md`, `PROJECT_DECISIONS.md`, `PROJECT_CHANGELOG.md` |

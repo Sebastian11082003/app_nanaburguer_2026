@@ -4,20 +4,31 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { closeAndPayOrder } from "@/src/lib/close-and-pay";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderLineLabel } from "@/src/lib/order-line-label";
-import { ordersService } from "@/src/services/orders.service";
 import { deliveryService } from "@/src/services/delivery.service";
+import { ordersService } from "@/src/services/orders.service";
+import { PaymentMethod } from "@/src/services/payment.service";
+import { useAuthStore } from "@/src/store/auth.store";
 import { Order } from "@/src/types/order";
 
 export default function DeliveryOrderDetailPage() {
   const params = useParams<{ id: string }>();
   const orderId = params.id;
+  const role = useAuthStore((s) => s.user?.role);
+  const canCharge = role === "ADMIN" || role === "CASHIER";
+  const backHref =
+    role === "CASHIER" || role === "ADMIN"
+      ? "/restaurant/cashier/delivery"
+      : "/restaurant/delivery/active";
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -53,6 +64,25 @@ export default function DeliveryOrderDetailPage() {
     }
   }
 
+  async function handlePay(payload: {
+    method: PaymentMethod;
+    receivedCents?: number;
+  }) {
+    if (!order) return;
+    try {
+      setBusy(true);
+      setError("");
+      await closeAndPayOrder(order.id, payload);
+      setPayOpen(false);
+      setMessage("Pedido cobrado");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cobrar"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return <main className="p-4 text-paper sm:p-8">Cargando...</main>;
   }
@@ -77,7 +107,7 @@ export default function DeliveryOrderDetailPage() {
           </h1>
         </div>
         <Link
-          href="/restaurant/delivery/active"
+          href={backHref}
           className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
         >
           ← Volver
@@ -142,12 +172,26 @@ export default function DeliveryOrderDetailPage() {
               Continuar pedido
             </Link>
           )}
+          {canCharge &&
+            order.status !== "CLOSED" &&
+            order.status !== "CANCELED" &&
+            (order.items?.length ?? 0) > 0 && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setPayOpen(true)}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-paper font-semibold text-ink disabled:opacity-40"
+              >
+                Cerrar y cobrar
+              </button>
+            )}
         <button
           type="button"
           disabled={
             busy ||
             !order.delivery ||
             order.status === "CREATED" ||
+            order.status === "CLOSED" ||
             order.delivery.status === "DELIVERED" ||
             order.delivery.status === "CANCELLED"
           }
@@ -157,6 +201,16 @@ export default function DeliveryOrderDetailPage() {
           {busy ? "Actualizando..." : "Marcar como entregado"}
         </button>
         </div>
+
+      {canCharge ? (
+        <ClosePayModal
+          open={payOpen}
+          totalCents={order.totalCents}
+          busy={busy}
+          onClose={() => setPayOpen(false)}
+          onConfirm={handlePay}
+        />
+      ) : null}
     </main>
   );
 }

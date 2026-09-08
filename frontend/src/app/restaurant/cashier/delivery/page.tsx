@@ -56,12 +56,20 @@ export default function CashierDeliveryPage() {
             Asigna repartidor a los pedidos pendientes.
           </p>
         </div>
-        <Link
-          href="/restaurant/app"
-          className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
-        >
-          ← Mesas
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/restaurant/delivery/orders"
+            className="inline-flex min-h-11 items-center rounded-full bg-paper px-4 text-sm font-semibold text-ink"
+          >
+            Nuevo pedido
+          </Link>
+          <Link
+            href="/restaurant/app"
+            className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
+          >
+            ← Mesas
+          </Link>
+        </div>
       </div>
 
       {error && <p className="text-danger">{error}</p>}
@@ -91,6 +99,17 @@ export default function CashierDeliveryPage() {
                       className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold sm:flex-none"
                     >
                       Continuar
+                    </Link>
+                  ) : null}
+                  {delivery.order &&
+                  delivery.order.status !== "CLOSED" &&
+                  delivery.order.status !== "CANCELED" &&
+                  (delivery.order.totalCents ?? 0) > 0 ? (
+                    <Link
+                      href={`/restaurant/cashier/orders/${delivery.orderId}`}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold sm:flex-none"
+                    >
+                      Cobrar
                     </Link>
                   ) : null}
                 <button

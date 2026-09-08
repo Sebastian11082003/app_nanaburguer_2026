@@ -3,24 +3,31 @@
 import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-import { getErrorMessage } from "@/src/lib/get-error-message";
+import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
+import { closeAndPayOrder } from "@/src/lib/close-and-pay";
 import { releaseEmptyTicketIfNeeded } from "@/src/lib/empty-ticket-leave";
+import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderLineLabel } from "@/src/lib/order-line-label";
 import { menuService } from "@/src/services/menu.service";
 import { ordersService } from "@/src/services/orders.service";
+import { PaymentMethod } from "@/src/services/payment.service";
+import { useAuthStore } from "@/src/store/auth.store";
 import { MenuItem } from "@/src/types/menu";
 import { Order, OrderType } from "@/src/types/order";
 
 /**
  * Delivery/pickup create. Open DELIVERY tickets used to stay on the floor
  * with no way to add items again (active list only offers Entregado).
+ * Cashier/admin can close+pay here; the rider cannot (API close is caja).
  */
 function DeliveryCreateOrderPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const resumeId = searchParams.get("orderId");
+  const role = useAuthStore((s) => s.user?.role);
+  const canCharge = role === "ADMIN" || role === "CASHIER";
   const [type, setType] = useState<OrderType>("DELIVERY");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -31,6 +38,7 @@ function DeliveryCreateOrderPage() {
   const [openDeliveries, setOpenDeliveries] = useState<Order[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -184,6 +192,31 @@ function DeliveryCreateOrderPage() {
     }
   }
 
+  async function handlePay(payload: {
+    method: PaymentMethod;
+    receivedCents?: number;
+  }) {
+    if (!order) return;
+    try {
+      setBusy(true);
+      setError("");
+      await closeAndPayOrder(order.id, payload);
+      setPayOpen(false);
+      setMessage(`Pedido #${order.orderNumber} cobrado`);
+      setOrder(null);
+      setCustomerName("");
+      setCustomerPhone("");
+      setDeliveryAddress("");
+      setNeighborhood("");
+      await loadOpenDeliveries();
+      router.replace("/restaurant/delivery/orders");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cobrar"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function resumeOpen(open: Order) {
     try {
       setBusy(true);
@@ -199,6 +232,17 @@ function DeliveryCreateOrderPage() {
       setBusy(false);
     }
   }
+
+  const chargeDisabled =
+    busy ||
+    !order ||
+    !order.items?.length ||
+    order.status === "CLOSED" ||
+    order.status === "CANCELED";
+  const afterCreateHref =
+    role === "CASHIER" || role === "ADMIN"
+      ? "/restaurant/cashier/delivery"
+      : "/restaurant/delivery/active";
 
   return (
     <main className="relative overflow-x-hidden pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0">
@@ -216,12 +260,12 @@ function DeliveryCreateOrderPage() {
               onClick={() => {
                 void (async () => {
                   await releaseEmptyTicketIfNeeded();
-                  router.push("/restaurant/delivery/active");
+                  router.push(afterCreateHref);
                 })();
               }}
               className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
             >
-              ← Pedidos activos
+              ← {role === "CASHIER" || role === "ADMIN" ? "Despacho" : "Pedidos activos"}
             </button>
           </div>
 
@@ -369,27 +413,61 @@ function DeliveryCreateOrderPage() {
             <span>{formatCents(order?.totalCents ?? 0)}</span>
           </div>
 
-          <button
-            type="button"
-            disabled={busy || !order || order.status !== "CREATED"}
-            onClick={handleSendToKitchen}
-            className="btn-primary mt-6 hidden w-full disabled:opacity-40 lg:inline-flex"
-          >
-            Enviar a cocina
-          </button>
+          <div className="mt-6 hidden space-y-3 lg:block">
+            <button
+              type="button"
+              disabled={busy || !order || order.status !== "CREATED"}
+              onClick={handleSendToKitchen}
+              className="btn-primary w-full disabled:opacity-40"
+            >
+              Enviar a cocina
+            </button>
+            {canCharge ? (
+              <button
+                type="button"
+                disabled={chargeDisabled}
+                onClick={() => setPayOpen(true)}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-paper font-semibold text-ink disabled:opacity-40"
+              >
+                Cerrar y cobrar
+              </button>
+            ) : null}
+          </div>
         </aside>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950/95 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
-        <button
-          type="button"
-          disabled={busy || !order || order.status !== "CREATED"}
-          onClick={handleSendToKitchen}
-          className="btn-primary min-h-11 w-full disabled:opacity-40"
-        >
-          Enviar a cocina
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={busy || !order || order.status !== "CREATED"}
+            onClick={handleSendToKitchen}
+            className="btn-primary min-h-11 flex-1 disabled:opacity-40"
+          >
+            Enviar a cocina
+          </button>
+          {canCharge ? (
+            <button
+              type="button"
+              disabled={chargeDisabled}
+              onClick={() => setPayOpen(true)}
+              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-paper px-3 text-sm font-semibold text-ink disabled:opacity-40"
+            >
+              Cerrar y cobrar
+            </button>
+          ) : null}
+        </div>
       </div>
+
+      {canCharge ? (
+        <ClosePayModal
+          open={payOpen}
+          totalCents={order?.totalCents ?? 0}
+          busy={busy}
+          onClose={() => setPayOpen(false)}
+          onConfirm={handlePay}
+        />
+      ) : null}
     </main>
   );
 }

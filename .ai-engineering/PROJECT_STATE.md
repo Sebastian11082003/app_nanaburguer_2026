@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Cobro de domicilio desde Domicilios (v0.4.35)
+
+- Caja/admin cierran y cobran el domicilio en el alta y en el detalle. El repartidor no.
+- Despacho de caja tiene Nuevo pedido y Cobrar (detalle de Ventas).
+
 ### Ventas nombra el canal (v0.4.34)
 
 - Caja/admin dejan de mostrar pickup/domicilio como “Mesa —”. Sale mesa, Llevar o Domicilio con el cliente.
