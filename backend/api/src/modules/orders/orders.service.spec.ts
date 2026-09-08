@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrderSource, OrderStatus, OrderType } from '@prisma/client';
+import { OrderSource, OrderStatus, OrderType, Prisma } from '@prisma/client';
 
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -89,6 +89,37 @@ describe('OrdersService', () => {
       expect(result).toBe(existingOrder);
       expect(prisma.order as { create: jest.Mock }).toHaveProperty('create');
       expect((prisma.order as { create: jest.Mock }).create).not.toHaveBeenCalled();
+    });
+
+    it('returns the table ticket when orderNumber collides for the same tenant', async () => {
+      const raced = { id: 'order-5', orderNumber: 5 };
+      (prisma.tableEntity as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'table-1',
+        isActive: true,
+      });
+      (prisma.order as { findFirst: jest.Mock }).findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ orderNumber: 4 })
+        .mockResolvedValueOnce(raced);
+      (prisma.order as { create: jest.Mock }).create.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: '6.19.3',
+          meta: { target: ['restaurantId', 'orderNumber'] },
+        }),
+      );
+
+      const result = await service.create(
+        {
+          type: OrderType.DINE_IN,
+          source: OrderSource.WAITER,
+          tableId: 'table-1',
+        } as never,
+        'restaurant-1',
+        'user-1',
+      );
+
+      expect(result).toBe(raced);
     });
 
     it('creates a new order with the next sequential order number, scoped to the tenant', async () => {

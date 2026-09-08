@@ -154,6 +154,7 @@
 - El chrome del tenant pinta el logotipo (`logoUrl`), no el monograma. Branding se refresca por slug.
 - Cerrar sesión de personal conserva el local; “Cambiar local” lo suelta.
 - Hub de cocina, KDS y admin pintan el logotipo del tenant.
+- Crear orden reutiliza el ticket de la mesa si choca el número (tenant). Menú demo de `nana-neiva`.
 
 ## v0.4.20
 

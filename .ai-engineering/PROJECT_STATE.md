@@ -48,6 +48,7 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 - Persist viejo se refresca con `GET /restaurant-auth/branding`. Demo `nana-neiva` usa `/logo/nana-logo.jpeg` si no había logo.
 - Cerrar sesión del personal no borra el local. “Cambiar local” sí.
 - Cocina (hub + KDS) y admin heredan el mismo logotipo/slug del tenant. El piso espera hidratar la marca antes de pintar.
+- Abrir mesa no truena si dos creates piden el mismo `orderNumber`. Seed deja un producto del tenant para poder vender.
 
 ### Tipo de producto (DEC-008)
 

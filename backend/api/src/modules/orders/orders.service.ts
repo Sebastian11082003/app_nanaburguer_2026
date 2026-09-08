@@ -6,7 +6,7 @@ import {
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 
-import { OrderStatus, OrderType, PaymentMethod } from '@prisma/client';
+import { OrderStatus, OrderType, PaymentMethod, Prisma } from '@prisma/client';
 
 import { ACTIVE_ORDER_STATUSES } from '../../common/constants/order-status.constants';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -175,79 +175,98 @@ export class OrdersService {
 
       const nextOrderNumber = (lastOrder?.orderNumber ?? 0) + 1;
 
-      // 4. CREAR ORDEN
-      const order = await tx.order.create({
-        data: {
-          orderNumber: nextOrderNumber,
-
-          type: dto.type,
-          source: dto.source,
-
-          status: OrderStatus.CREATED,
-
-          restaurant: {
-            connect: {
-              id: restaurantId,
-            },
-          },
-
-          table: dto.tableId
-            ? {
-                connect: {
-                  id: dto.tableId,
-                },
-              }
-            : undefined,
-
-          createdBy: {
-            connect: {
-              id: userId,
-            },
-          },
-
-          updatedBy: {
-            connect: {
-              id: userId,
-            },
-          },
-
-          subtotalCents: 0,
-          taxCents: 0,
-          totalCents: 0,
-          pickupAt: dto.pickupAt ? new Date(dto.pickupAt) : undefined,
-        },
-
-        include: OrdersService.ORDER_INCLUDE,
-      });
-
-      // 5. CREAR DELIVERY
-      if (dto.type === OrderType.DELIVERY) {
-        await tx.delivery.create({
+      // 4. CREAR ORDEN. Two POS tabs can allocate the same next number
+      // (React Strict Mode also double-mounts). On the unique hit, return
+      // the table's ticket instead of a 500 — still one ticket per tenant.
+      try {
+        const order = await tx.order.create({
           data: {
-            orderId: order.id,
+            orderNumber: nextOrderNumber,
 
-            customerName: dto.customerName!,
-            phone: dto.customerPhone!,
-            address: dto.deliveryAddress,
-            neighborhood: dto.neighborhood,
+            type: dto.type,
+            source: dto.source,
 
-            paymentMethod: dto.paymentMethod as PaymentMethod,
+            status: OrderStatus.CREATED,
 
-            restaurantId,
+            restaurant: {
+              connect: {
+                id: restaurantId,
+              },
+            },
 
-            deliveryUserId: userId,
+            table: dto.tableId
+              ? {
+                  connect: {
+                    id: dto.tableId,
+                  },
+                }
+              : undefined,
+
+            createdBy: {
+              connect: {
+                id: userId,
+              },
+            },
+
+            updatedBy: {
+              connect: {
+                id: userId,
+              },
+            },
+
+            subtotalCents: 0,
+            taxCents: 0,
+            totalCents: 0,
+            pickupAt: dto.pickupAt ? new Date(dto.pickupAt) : undefined,
           },
+
+          include: OrdersService.ORDER_INCLUDE,
         });
+
+        if (dto.type === OrderType.DELIVERY) {
+          await tx.delivery.create({
+            data: {
+              orderId: order.id,
+
+              customerName: dto.customerName!,
+              phone: dto.customerPhone!,
+              address: dto.deliveryAddress,
+              neighborhood: dto.neighborhood,
+
+              paymentMethod: dto.paymentMethod as PaymentMethod,
+
+              restaurantId,
+
+              deliveryUserId: userId,
+            },
+          });
+        }
+
+        return tx.order.findUnique({
+          where: {
+            id: order.id,
+          },
+
+          include: OrdersService.ORDER_INCLUDE,
+        });
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002' &&
+          dto.tableId
+        ) {
+          const raced = await tx.order.findFirst({
+            where: {
+              tableId: dto.tableId,
+              restaurantId,
+              status: { in: ACTIVE_ORDER_STATUSES },
+            },
+            include: OrdersService.ORDER_INCLUDE,
+          });
+          if (raced) return raced;
+        }
+        throw err;
       }
-
-      // 6. RETORNAR COMPLETA
-      return tx.order.findUnique({
-        where: {
-          id: order.id,
-        },
-
-        include: OrdersService.ORDER_INCLUDE,
-      });
     });
   }
 

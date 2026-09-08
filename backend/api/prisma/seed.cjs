@@ -58,19 +58,55 @@ async function main() {
     });
 
     console.log("SUPER ADMIN CREADO");
-    return;
+  } else {
+    console.log("SUPER ADMIN YA EXISTE");
   }
 
-  console.log("SUPER ADMIN YA EXISTE");
+  await seedDemoTenant(prisma);
+}
 
-  // Demo tenant already created from platform: attach the bundled
-  // Nana mark so staff chrome does not fall back to a monogram.
-  const demoLogo = await prisma.restaurant.updateMany({
-    where: { slug: "nana-neiva", OR: [{ logoUrl: null }, { logoUrl: "" }] },
-    data: { logoUrl: "/logo/nana-logo.jpeg" },
+/**
+ * Demo tenant created from platform. Brand + one sellable item so the
+ * POS can open a ticket without an empty catalog (still scoped to that
+ * restaurantId — never a global menu).
+ */
+async function seedDemoTenant(prisma) {
+  const restaurant = await prisma.restaurant.findFirst({
+    where: { slug: "nana-neiva" },
   });
-  if (demoLogo.count > 0) {
+  if (!restaurant) return;
+
+  if (!restaurant.logoUrl) {
+    await prisma.restaurant.update({
+      where: { id: restaurant.id },
+      data: { logoUrl: "/logo/nana-logo.jpeg" },
+    });
     console.log("LOGO DE NANA-NEIVA ASIGNADO");
+  }
+
+  let category = await prisma.category.findFirst({
+    where: { restaurantId: restaurant.id, name: "Hamburguesas" },
+  });
+  if (!category) {
+    category = await prisma.category.create({
+      data: { name: "Hamburguesas", restaurantId: restaurant.id },
+    });
+  }
+
+  const existingItem = await prisma.menuItem.findFirst({
+    where: { restaurantId: restaurant.id, name: "NANA Clásica" },
+  });
+  if (!existingItem) {
+    await prisma.menuItem.create({
+      data: {
+        name: "NANA Clásica",
+        description: "Hamburguesa de casa",
+        priceCents: 18000,
+        restaurantId: restaurant.id,
+        categoryId: category.id,
+      },
+    });
+    console.log("MENÚ DEMO DE NANA-NEIVA ASIGNADO");
   }
 }
 
