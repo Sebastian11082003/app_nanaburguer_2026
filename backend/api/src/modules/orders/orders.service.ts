@@ -122,78 +122,60 @@ export class OrdersService {
   async create(dto: CreateOrderDto, restaurantId: string, userId: string) {
     this.validateOrderBusinessRules(dto);
 
-    return this.prisma.$transaction(async (tx) => {
-      // 1. VALIDAR MESA: must belong to this tenant and be active.
-      if (dto.tableId) {
-        const table = await tx.tableEntity.findFirst({
-          where: {
-            id: dto.tableId,
-            restaurantId,
-          },
-        });
-
-        if (!table) {
-          throw new NotFoundException('Table not found');
-        }
-
-        if (!table.isActive) {
-          throw new BadRequestException('Table not active');
-        }
-      }
-
-      // 2. EVITAR DUPLICADOS: reuse the table's current order if it still
-      // has one "in play". Only CREATED/SENT_TO_KITCHEN/IN_PREPARATION/
-      // READY/OUT_FOR_DELIVERY count — CLOSED and CANCELED orders must
-      // NOT block a table from taking a fresh order (that was a real bug:
-      // a canceled order used to keep the table stuck forever).
-      if (dto.tableId) {
-        const existingOrder = await tx.order.findFirst({
-          where: {
-            tableId: dto.tableId,
-            restaurantId,
-            status: {
-              in: ACTIVE_ORDER_STATUSES,
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        if (dto.tableId) {
+          const table = await tx.tableEntity.findFirst({
+            where: {
+              id: dto.tableId,
+              restaurantId,
             },
-          },
+          });
 
-          include: OrdersService.ORDER_INCLUDE,
+          if (!table) {
+            throw new NotFoundException('Table not found');
+          }
+
+          if (!table.isActive) {
+            throw new BadRequestException('Table not active');
+          }
+
+          const existingOrder = await tx.order.findFirst({
+            where: {
+              tableId: dto.tableId,
+              restaurantId,
+              status: {
+                in: ACTIVE_ORDER_STATUSES,
+              },
+            },
+            include: OrdersService.ORDER_INCLUDE,
+          });
+
+          if (existingOrder) {
+            return existingOrder;
+          }
+        }
+
+        const lastOrder = await tx.order.findFirst({
+          where: { restaurantId },
+          orderBy: {
+            orderNumber: 'desc',
+          },
         });
 
-        if (existingOrder) {
-          return existingOrder;
-        }
-      }
+        const nextOrderNumber = (lastOrder?.orderNumber ?? 0) + 1;
 
-      // 3. GENERAR NÚMERO
-      const lastOrder = await tx.order.findFirst({
-        where: { restaurantId },
-
-        orderBy: {
-          orderNumber: 'desc',
-        },
-      });
-
-      const nextOrderNumber = (lastOrder?.orderNumber ?? 0) + 1;
-
-      // 4. CREAR ORDEN. Two POS tabs can allocate the same next number
-      // (React Strict Mode also double-mounts). On the unique hit, return
-      // the table's ticket instead of a 500 — still one ticket per tenant.
-      try {
         const order = await tx.order.create({
           data: {
             orderNumber: nextOrderNumber,
-
             type: dto.type,
             source: dto.source,
-
             status: OrderStatus.CREATED,
-
             restaurant: {
               connect: {
                 id: restaurantId,
               },
             },
-
             table: dto.tableId
               ? {
                   connect: {
@@ -201,25 +183,21 @@ export class OrdersService {
                   },
                 }
               : undefined,
-
             createdBy: {
               connect: {
                 id: userId,
               },
             },
-
             updatedBy: {
               connect: {
                 id: userId,
               },
             },
-
             subtotalCents: 0,
             taxCents: 0,
             totalCents: 0,
             pickupAt: dto.pickupAt ? new Date(dto.pickupAt) : undefined,
           },
-
           include: OrdersService.ORDER_INCLUDE,
         });
 
@@ -227,16 +205,12 @@ export class OrdersService {
           await tx.delivery.create({
             data: {
               orderId: order.id,
-
               customerName: dto.customerName!,
               phone: dto.customerPhone!,
               address: dto.deliveryAddress,
               neighborhood: dto.neighborhood,
-
               paymentMethod: dto.paymentMethod as PaymentMethod,
-
               restaurantId,
-
               deliveryUserId: userId,
             },
           });
@@ -246,28 +220,29 @@ export class OrdersService {
           where: {
             id: order.id,
           },
-
           include: OrdersService.ORDER_INCLUDE,
         });
-      } catch (err) {
-        if (
-          err instanceof Prisma.PrismaClientKnownRequestError &&
-          err.code === 'P2002' &&
-          dto.tableId
-        ) {
-          const raced = await tx.order.findFirst({
-            where: {
-              tableId: dto.tableId,
-              restaurantId,
-              status: { in: ACTIVE_ORDER_STATUSES },
-            },
-            include: OrdersService.ORDER_INCLUDE,
-          });
-          if (raced) return raced;
-        }
-        throw err;
+      });
+    } catch (err) {
+      // Postgres aborts the tx on unique violation, so recovery must
+      // happen in a new query. Same tenant, same table → same ticket.
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002' &&
+        dto.tableId
+      ) {
+        const raced = await this.prisma.order.findFirst({
+          where: {
+            tableId: dto.tableId,
+            restaurantId,
+            status: { in: ACTIVE_ORDER_STATUSES },
+          },
+          include: OrdersService.ORDER_INCLUDE,
+        });
+        if (raced) return raced;
       }
-    });
+      throw err;
+    }
   }
 
   // ================================
