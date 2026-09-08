@@ -9,11 +9,11 @@ export default function PosFloorPage() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-flame">
-          Dashboard
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-flame sm:text-xs sm:tracking-[0.24em]">
+          Piso
         </p>
-        <h1 className="mt-2 font-display text-4xl">Mesas</h1>
-        <p className="mt-2 text-muted">
+        <h1 className="mt-2 font-display text-2xl sm:text-4xl">Mesas</h1>
+        <p className="mt-2 text-sm text-muted sm:text-base">
           Verde libre, rojo con cuenta. El rol {user?.role ?? ""} solo
           cambia qué puedes abrir, no el piso.
         </p>

@@ -38,22 +38,21 @@ export default function DeliveryHistoryPage() {
   }, []);
 
   return (
-    <main className="brand-atmosphere min-h-screen px-6 py-10 text-paper">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-flame">
-              Delivery
-            </p>
-            <h1 className="mt-2 font-display text-4xl">Historial</h1>
-          </div>
-          <Link
-            href="/restaurant/app"
-            className="text-sm text-muted hover:text-paper"
-          >
-            ← Volver
-          </Link>
+    <main className="mx-auto max-w-5xl space-y-6 overflow-x-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-flame sm:text-xs sm:tracking-[0.24em]">
+            Delivery
+          </p>
+          <h1 className="mt-2 font-display text-2xl sm:text-4xl">Historial</h1>
         </div>
+        <Link
+          href="/restaurant/app"
+          className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
+        >
+          ← Volver
+        </Link>
+      </div>
 
         {error && <p className="text-danger">{error}</p>}
         {loading ? (
@@ -80,7 +79,6 @@ export default function DeliveryHistoryPage() {
             )}
           </div>
         )}
-      </div>
     </main>
   );
 }

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 
 import { BrandMark } from "@/src/components/brand/brand-mark";
-import { posNavForRole } from "@/src/lib/pos-nav";
+import { isPosNavActive, posNavForRole } from "@/src/lib/pos-nav";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
 
@@ -89,10 +89,7 @@ export function PosShell({ children }: { children: ReactNode }) {
         </div>
         <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 pb-2 sm:px-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {nav.map((item) => {
-            const active =
-              item.href === "/restaurant/app"
-                ? pathname === "/restaurant/app"
-                : pathname.startsWith(item.href);
+            const active = isPosNavActive(item, pathname);
             return (
               <Link
                 key={item.key}

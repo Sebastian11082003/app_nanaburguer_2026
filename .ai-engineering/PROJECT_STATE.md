@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### POS: Mesas vs Vender (v0.4.23)
+
+- La barra ya no duplica Dashboard y Vender sobre el mismo piso. Mesas es el tablero; Vender abre el mostrador.
+- El mesero solo ve Mesas (vende tocando la mesa). Llevar y Domicilios no aparecen si el rol no puede abrirlos.
+
 ### POS mobile-first (v0.4.22)
 
 - `/restaurant/*` se diseña primero para teléfono (DEC-009): header sticky, nav con scroll, tap de 44px, cobro/cocina fijos abajo.

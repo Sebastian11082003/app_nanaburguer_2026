@@ -17,12 +17,15 @@ export interface PosNavItem {
 }
 
 /**
- * Shared POS chrome (Loggro pattern): everyone lands on the same floor.
+ * Shared POS chrome: everyone lands on the same floor.
  * The role only decides which modules are visible.
+ *
+ * Mesas = occupancy board. Vender = counter/pickup (not a second copy of
+ * the floor). Waiters sell by tapping a table, so they do not get Vender.
  */
 const ALL_NAV: PosNavItem[] = [
-  { key: "dashboard", label: "Dashboard", href: "/restaurant/app" },
-  { key: "sell", label: "Vender", href: "/restaurant/app" },
+  { key: "dashboard", label: "Mesas", href: "/restaurant/app" },
+  { key: "sell", label: "Vender", href: "/restaurant/cashier/pos" },
   { key: "sales", label: "Ventas", href: "/restaurant/admin/orders" },
   { key: "products", label: "Productos", href: "/restaurant/admin/menu/items" },
   { key: "delivery", label: "Domicilios", href: "/restaurant/delivery/orders" },
@@ -43,7 +46,7 @@ const VISIBLE: Record<UserRole, PosNavKey[]> = {
     "settings",
   ],
   CASHIER: ["dashboard", "sell", "sales", "delivery", "cash"],
-  WAITER: ["dashboard", "sell"],
+  WAITER: ["dashboard"],
   DELIVERY: ["dashboard", "delivery"],
   KITCHEN: ["dashboard"],
 };
@@ -63,6 +66,21 @@ export function posNavForRole(role: UserRole | null | undefined): PosNavItem[] {
     }
     return item;
   });
+}
+
+/** Which tab is current — Mesas also covers an open table ticket. */
+export function isPosNavActive(item: PosNavItem, pathname: string): boolean {
+  if (item.key === "dashboard") {
+    return (
+      pathname === "/restaurant/app" ||
+      pathname.includes("/create-order") ||
+      pathname.startsWith("/restaurant/waiter/tables")
+    );
+  }
+  if (item.key === "sell") {
+    return pathname.startsWith("/restaurant/cashier/pos");
+  }
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
 export function tableOrderHref(role: UserRole | null | undefined): string {

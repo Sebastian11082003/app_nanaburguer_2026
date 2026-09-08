@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.23
+
+- Mesas y Vender dejan de ser el mismo enlace. Mostrador es Vender; el mesero vende desde la mesa. Canales Llevar/Domicilios solo si el rol puede abrirlos.
+
 ## v0.4.22
 
 - DEC-009: `/restaurant/*` es mobile-first (teléfono de mesero/caja). Barra de cobro/cocina fija, tap 44px, login y piso sin overflow horizontal.

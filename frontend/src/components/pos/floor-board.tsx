@@ -88,6 +88,9 @@ export function FloorBoard() {
     router.push(`${tableOrderHref(role)}?tableId=${table.id}`);
   }
 
+  const pickupHrefForRole = pickupHref(role);
+  const deliveryHrefForRole = deliveryHref(role);
+
   if (loading) return <p className="text-muted">Cargando mesas...</p>;
   if (error) return <p className="text-danger">{error}</p>;
 
@@ -124,24 +127,22 @@ export function FloorBoard() {
         );
       })}
 
-      <ChannelCard
-        title="Llevar · Recoger"
-        occupied={pickup.count > 0}
-        totalCents={pickup.totalCents}
-        onClick={() => {
-          const href = pickupHref(role);
-          if (href) router.push(href);
-        }}
-      />
-      <ChannelCard
-        title="Domicilios"
-        occupied={delivery.count > 0}
-        totalCents={delivery.totalCents}
-        onClick={() => {
-          const href = deliveryHref(role);
-          if (href) router.push(href);
-        }}
-      />
+      {pickupHrefForRole ? (
+        <ChannelCard
+          title="Llevar · Recoger"
+          occupied={pickup.count > 0}
+          totalCents={pickup.totalCents}
+          onClick={() => router.push(pickupHrefForRole)}
+        />
+      ) : null}
+      {deliveryHrefForRole ? (
+        <ChannelCard
+          title="Domicilios"
+          occupied={delivery.count > 0}
+          totalCents={delivery.totalCents}
+          onClick={() => router.push(deliveryHrefForRole)}
+        />
+      ) : null}
     </div>
   );
 }

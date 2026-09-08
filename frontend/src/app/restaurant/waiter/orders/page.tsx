@@ -31,7 +31,7 @@ export default function WaiterOrdersPage() {
   }, []);
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-4 sm:p-8">
+    <main className="mx-auto max-w-5xl space-y-6 overflow-x-hidden">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-black sm:text-4xl">Órdenes activas</h1>
