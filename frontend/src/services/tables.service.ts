@@ -31,6 +31,15 @@ export const tablesService = {
     return data;
   },
 
+  async getFloor(): Promise<{
+    tables: Table[];
+    pickup: { count: number; totalCents: number };
+    delivery: { count: number; totalCents: number };
+  }> {
+    const { data } = await api.get("/tables/floor");
+    return data;
+  },
+
   /** Fetches a single table with its current active order (if any). */
   async getById(id: string): Promise<Table> {
     const { data } = await api.get(`/tables/${id}`);

@@ -149,6 +149,11 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.16
+
+- Login único de personal (correo + contraseña) y recuperar acceso.
+- Piso de mesas compartido; nav filtrada por rol (mesero/caja/domicilio).
+
 ## v0.4.9
 
 - Cierre de huecos operativos: detalle de usuario (activar/rol/password), 86 de producto, POS mostrador, despacho de domicilios en el hub de caja.

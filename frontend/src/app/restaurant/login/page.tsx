@@ -1,73 +1,37 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { AuthShell } from "@/src/components/brand/auth-shell";
-import { BrandMark } from "@/src/components/brand/brand-mark";
 import { getErrorMessage } from "@/src/lib/get-error-message";
-import {
-  RestaurantBranding,
-  restaurantAuthService,
-} from "@/src/services/restaurant-auth.service";
+import { homeForRole, userAuthService } from "@/src/services/user-auth.service";
+import { useAuthStore } from "@/src/store/auth.store";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
 
-/** Debounce delay for the slug → branding lookup, in ms. Short enough to feel live, long enough to not spam the API on every keystroke. */
-const BRANDING_LOOKUP_DEBOUNCE_MS = 400;
-
-export default function RestaurantLoginPage() {
+export default function StaffLoginPage() {
   const router = useRouter();
-  const { setRestaurantAuth } = useRestaurantStore();
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const setTenantPreview = useRestaurantStore((s) => s.setTenantPreview);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({
-    slug: "",
-    email: "",
-    password: "",
-  });
-
-  // Local-only preview of the typed slug's branding — deliberately NOT
-  // `useRestaurantStore` (no tenant is authenticated/resolved yet here).
-  // Shows the restaurant's logo "as a profile picture" while identifying
-  // yourself, before submitting credentials.
-  const [branding, setBranding] = useState<RestaurantBranding | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-
-    if (!form.slug.trim()) {
-      setBranding(null);
-      return;
-    }
-
-    debounceRef.current = setTimeout(() => {
-      restaurantAuthService
-        .getBranding(form.slug)
-        .then(setBranding)
-        .catch(() => setBranding(null)); // wrong/unknown slug: just fall back to the generic mark
-    }, BRANDING_LOOKUP_DEBOUNCE_MS);
-
-    return () => clearTimeout(debounceRef.current);
-  }, [form.slug]);
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
     try {
       setLoading(true);
       setError("");
-      const response = await restaurantAuthService.login(form);
-      setRestaurantAuth(response.accessToken, response.restaurant);
-      router.push("/restaurant/home");
+      const response = await userAuthService.staffLogin({ email, password });
+      setAuth(response.accessToken, response.user);
+      setTenantPreview(response.restaurant);
+      void remember;
+      router.push(homeForRole(response.user.role));
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Error al iniciar sesión"));
+      setError(getErrorMessage(err, "Correo o contraseña incorrectos"));
     } finally {
       setLoading(false);
     }
@@ -75,48 +39,48 @@ export default function RestaurantLoginPage() {
 
   return (
     <AuthShell
-      eyebrow="Acceso del local"
-      title={branding?.name ?? "Restaurante"}
-      description="Ingresa con el slug y las credenciales del restaurante para abrir el portal operativo."
-      brand={
-        branding ? (
-          <BrandMark size={88} name={branding.name} logoUrl={branding.logoUrl} />
-        ) : undefined
-      }
+      eyebrow="Personal"
+      title="Bienvenido"
+      description="El mismo acceso para mesero, caja y domicilio. Lo que cambia después es el menú, no el login."
+      footerHref="/restaurant/local-login"
+      footerLabel="Acceso del local (slug del restaurante)"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
-          name="slug"
-          placeholder="Slug del restaurante"
-          value={form.slug}
-          onChange={handleChange}
-          className="field-input"
-          required
-        />
-        <input
           type="email"
-          name="email"
-          placeholder="Correo del restaurante"
-          value={form.email}
-          onChange={handleChange}
+          placeholder="Correo"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="field-input"
           required
+          autoComplete="username"
         />
         <input
           type="password"
-          name="password"
-          placeholder="Contraseña del restaurante"
-          value={form.password}
-          onChange={handleChange}
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="field-input"
           required
+          autoComplete="current-password"
         />
-
+        <label className="flex items-center gap-2 text-sm text-muted">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+          />
+          Recordar sesión
+        </label>
         {error && <p className="text-sm text-danger">{error}</p>}
-
         <button type="submit" disabled={loading} className="btn-primary w-full">
-          {loading ? "Ingresando..." : "Entrar al portal"}
+          {loading ? "Ingresando..." : "Ingresar"}
         </button>
+        <p className="text-center text-sm">
+          <Link href="/restaurant/recover" className="text-flame underline">
+            Olvidé mi contraseña
+          </Link>
+        </p>
       </form>
     </AuthShell>
   );

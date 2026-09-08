@@ -59,7 +59,34 @@ export class TablesService {
     });
   }
 
-  /** Lists every table for the tenant, including its current active order (if any). */
+  /** Occupancy board: dine-in tables plus pickup/delivery channel totals. */
+  async floor(restaurantId: string) {
+    const tables = await this.findAll(restaurantId);
+    const openChannels = await this.prisma.order.findMany({
+      where: {
+        restaurantId,
+        status: { in: ACTIVE_ORDER_STATUSES },
+        type: { in: ['PICKUP', 'DELIVERY'] },
+      },
+      select: { type: true, totalCents: true },
+    });
+
+    const pickup = openChannels.filter((row) => row.type === 'PICKUP');
+    const delivery = openChannels.filter((row) => row.type === 'DELIVERY');
+
+    return {
+      tables,
+      pickup: {
+        count: pickup.length,
+        totalCents: pickup.reduce((sum, row) => sum + row.totalCents, 0),
+      },
+      delivery: {
+        count: delivery.length,
+        totalCents: delivery.reduce((sum, row) => sum + row.totalCents, 0),
+      },
+    };
+  }
+
   async findAll(restaurantId: string) {
     const tables = await this.prisma.tableEntity.findMany({
       where: { restaurantId },

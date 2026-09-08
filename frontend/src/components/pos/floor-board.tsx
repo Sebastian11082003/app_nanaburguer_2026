@@ -1,0 +1,145 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+
+import { getErrorMessage } from "@/src/lib/get-error-message";
+import { formatCents } from "@/src/lib/money";
+import {
+  canOpenTable,
+  deliveryHref,
+  pickupHref,
+  tableOrderHref,
+} from "@/src/lib/pos-nav";
+import { tablesService } from "@/src/services/tables.service";
+import { Table } from "@/src/services/tables.service";
+import { useAuthStore } from "@/src/store/auth.store";
+
+function ChannelCard({
+  title,
+  occupied,
+  totalCents,
+  onClick,
+}: {
+  title: string;
+  occupied: boolean;
+  totalCents: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex min-h-[140px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40"
+    >
+      <div
+        className={`w-1.5 shrink-0 ${occupied ? "bg-red-500" : "bg-emerald-400"}`}
+      />
+      <div className="flex flex-1 flex-col p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+          {occupied ? "Ocupada" : "Disponible"}
+        </p>
+        <h2 className="mt-2 font-display text-xl">{title}</h2>
+        {occupied && (
+          <p className="mt-auto pt-3 text-sm font-semibold text-sky-400 underline">
+            {formatCents(totalCents)}
+          </p>
+        )}
+      </div>
+    </button>
+  );
+}
+
+/**
+ * Loggro-style occupancy board: tables + Llevar + Domicilios.
+ */
+export function FloorBoard() {
+  const router = useRouter();
+  const role = useAuthStore((s) => s.user?.role);
+  const [tables, setTables] = useState<Table[]>([]);
+  const [pickup, setPickup] = useState({ count: 0, totalCents: 0 });
+  const [delivery, setDelivery] = useState({ count: 0, totalCents: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const data = await tablesService.getFloor();
+      setTables(data.tables.filter((table) => table.isActive));
+      setPickup(data.pickup);
+      setDelivery(data.delivery);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cargar el piso"));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  function openTable(table: Table) {
+    if (!canOpenTable(role)) return;
+    router.push(`${tableOrderHref(role)}?tableId=${table.id}`);
+  }
+
+  if (loading) return <p className="text-muted">Cargando mesas...</p>;
+  if (error) return <p className="text-danger">{error}</p>;
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      {tables.map((table) => {
+        const occupied = Boolean(table.activeOrder);
+        return (
+          <button
+            key={table.id}
+            type="button"
+            onClick={() => openTable(table)}
+            className="flex min-h-[140px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40"
+          >
+            <div
+              className={`w-1.5 shrink-0 ${
+                occupied ? "bg-red-500" : "bg-emerald-400"
+              }`}
+            />
+            <div className="flex flex-1 flex-col p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                {occupied ? "Ocupada" : "Disponible"}
+              </p>
+              <h2 className="mt-2 font-display text-xl">
+                Mesa {table.label}
+              </h2>
+              {occupied && (
+                <p className="mt-auto pt-3 text-sm font-semibold text-sky-400 underline">
+                  {formatCents(table.activeOrder?.totalCents ?? 0)}
+                </p>
+              )}
+            </div>
+          </button>
+        );
+      })}
+
+      <ChannelCard
+        title="Llevar · Recoger"
+        occupied={pickup.count > 0}
+        totalCents={pickup.totalCents}
+        onClick={() => {
+          const href = pickupHref(role);
+          if (href) router.push(href);
+        }}
+      />
+      <ChannelCard
+        title="Domicilios"
+        occupied={delivery.count > 0}
+        totalCents={delivery.totalCents}
+        onClick={() => {
+          const href = deliveryHref(role);
+          if (href) router.push(href);
+        }}
+      />
+    </div>
+  );
+}

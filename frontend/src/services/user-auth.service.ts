@@ -1,48 +1,61 @@
 import { api } from "@/src/lib/api";
-import { useRestaurantStore } from "@/src/store/restaurant.store";
+import { AuthUser, UserRole } from "@/src/types/auth";
 
-interface UserLoginDto {
+interface StaffLoginDto {
   email: string;
   password: string;
 }
 
-function buildPayload(data: UserLoginDto) {
-  const slug = useRestaurantStore.getState().restaurant?.slug;
+export interface StaffRestaurant {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+}
 
-  return {
-    slug,
-    ...data,
-  };
+export interface StaffLoginResponse {
+  accessToken: string;
+  user: AuthUser;
+  restaurant: StaffRestaurant;
+}
+
+export function homeForRole(role: UserRole): string {
+  if (role === "KITCHEN") return "/restaurant/kitchen";
+  return "/restaurant/app";
 }
 
 export const userAuthService = {
-  adminLogin(data: UserLoginDto) {
+  staffLogin(data: StaffLoginDto): Promise<StaffLoginResponse> {
+    return api.post("/auth/staff-login", data).then((res) => res.data);
+  },
+
+  forgotPassword(email: string): Promise<{ ok: true; resetUrl?: string }> {
+    return api.post("/auth/forgot-password", { email }).then((res) => res.data);
+  },
+
+  resetPassword(token: string, password: string): Promise<{ ok: true }> {
     return api
-      .post("/auth/admin-login", buildPayload(data))
+      .post("/auth/reset-password", { token, password })
       .then((res) => res.data);
   },
 
-  cashierLogin(data: UserLoginDto) {
-    return api
-      .post("/auth/cashier-login", buildPayload(data))
-      .then((res) => res.data);
+  adminLogin(data: StaffLoginDto & { slug?: string }) {
+    return api.post("/auth/admin-login", data).then((res) => res.data);
   },
 
-  waiterLogin(data: UserLoginDto) {
-    return api
-      .post("/auth/waiter-login", buildPayload(data))
-      .then((res) => res.data);
+  cashierLogin(data: StaffLoginDto & { slug?: string }) {
+    return api.post("/auth/cashier-login", data).then((res) => res.data);
   },
 
-  kitchenLogin(data: UserLoginDto) {
-    return api
-      .post("/auth/kitchen-login", buildPayload(data))
-      .then((res) => res.data);
+  waiterLogin(data: StaffLoginDto & { slug?: string }) {
+    return api.post("/auth/waiter-login", data).then((res) => res.data);
   },
 
-  deliveryLogin(data: UserLoginDto) {
-    return api
-      .post("/auth/delivery-login", buildPayload(data))
-      .then((res) => res.data);
+  kitchenLogin(data: StaffLoginDto & { slug?: string }) {
+    return api.post("/auth/kitchen-login", data).then((res) => res.data);
+  },
+
+  deliveryLogin(data: StaffLoginDto & { slug?: string }) {
+    return api.post("/auth/delivery-login", data).then((res) => res.data);
   },
 };

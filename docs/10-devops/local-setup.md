@@ -26,7 +26,7 @@ Servicios:
 | http://localhost:3000/health | API |
 | http://localhost:3000/api | Swagger |
 
-Credencial seed (solo local): `admin@nanaburger.com` / `123456`. Entrar por `/platform/login`, crear un restaurante, luego `/restaurant/login`.
+Credencial seed (solo local): `admin@nanaburger.com` / `123456`. Entrar por `/platform/login`, crear un restaurante. El personal del local entra en `/restaurant/login` con correo y contraseña (mesero, caja y domicilio usan la misma pantalla). Olvidé mi contraseña está en `/restaurant/recover`.
 
 La API aplica `prisma migrate deploy` y el seed al arrancar. El seed es idempotente.
 

@@ -4,6 +4,11 @@ import { AuthService } from './auth.service';
 
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { StaffLoginDto } from './dto/staff-login.dto';
+import {
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from './dto/password-reset.dto';
 
 import { Public } from '../../common/decorators/public.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -17,6 +22,24 @@ import { UserRole } from '@prisma/client';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('staff-login')
+  staffLogin(@Body() dto: StaffLoginDto) {
+    return this.authService.staffLogin(dto.email, dto.password);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.password);
+  }
 
   // =====================================
   // LOGIN ADMIN

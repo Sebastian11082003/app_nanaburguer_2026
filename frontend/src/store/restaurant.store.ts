@@ -19,6 +19,7 @@ interface State {
   restaurant: Restaurant | null;
   accessToken: string | null;
   setRestaurantAuth: (token: string, restaurant: Restaurant) => void;
+  setTenantPreview: (restaurant: Restaurant) => void;
   logout: () => void;
 }
 
@@ -33,6 +34,8 @@ export const useRestaurantStore = create<State>()(
           accessToken,
           restaurant,
         }),
+
+      setTenantPreview: (restaurant) => set({ restaurant }),
 
       logout: () =>
         set({

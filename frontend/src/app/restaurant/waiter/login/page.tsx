@@ -1,31 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useRouter } from "next/navigation";
-
-import { RoleLoginForm } from "@/src/components/auth/role-login-form";
-import { userAuthService } from "@/src/services/user-auth.service";
-import { useAuthStore } from "@/src/store/auth.store";
-
-export default function WaiterLoginPage() {
-  const router = useRouter();
-  const { setAuth } = useAuthStore();
-
-  async function handleLogin(email: string, password: string) {
-    const response = await userAuthService.waiterLogin({ email, password });
-
-    if (response.user.role !== "WAITER") {
-      throw new Error("Este usuario no es mesero");
-    }
-
-    setAuth(response.accessToken, response.user);
-    router.push("/restaurant/waiter");
-  }
-
-  return (
-    <RoleLoginForm
-      title="Login Mesero"
-      description="Acceso a mesas y órdenes"
-      onSubmit={handleLogin}
-    />
-  );
+/** Same staff login for every station — role is applied after JWT. */
+export default function RoleLoginRedirectPage() {
+  redirect("/restaurant/login");
 }

@@ -246,10 +246,25 @@ model User {
 
   payments      Payment[]
   cashMovements CashMovement[]
+  passwordResets PasswordResetToken[]
 
   @@unique([email, restaurantId])
   @@index([restaurantId])
   @@index([roleId])
+}
+
+/// One-time token for "olvidé mi contraseña". Hash only; raw token is emailed/shown once.
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 //////////////////////

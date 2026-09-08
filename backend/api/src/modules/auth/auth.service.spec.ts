@@ -1,6 +1,7 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -32,6 +33,10 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: JwtService, useValue: { signAsync: jwtSign } },
         { provide: RolesService, useValue: rolesService },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue(true) },
+        },
       ],
     }).compile();
 
@@ -180,6 +185,78 @@ describe('AuthService', () => {
         role: UserRole.WAITER,
         restaurantId: 'restaurant-1',
       });
+    });
+  });
+
+  describe('staffLogin', () => {
+    it('returns JWT, user and restaurant without a role picker', async () => {
+      (prisma.user as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'user-1',
+        email: 'cashier@nana.test',
+        passwordHash: 'hashed',
+        role: UserRole.CASHIER,
+        restaurantId: 'restaurant-1',
+        fullName: 'Cajero',
+        isActive: true,
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (prisma.restaurant as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'restaurant-1',
+        name: 'Nana',
+        slug: 'nana',
+        logoUrl: null,
+      });
+
+      const result = await service.staffLogin('cashier@nana.test', 'secret123');
+
+      expect(result.accessToken).toBe('signed-jwt-token');
+      expect(result.user.role).toBe(UserRole.CASHIER);
+      expect(result.restaurant.slug).toBe('nana');
+    });
+
+    it('rejects invalid credentials', async () => {
+      (prisma.user as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);
+      await expect(
+        service.staffLogin('nobody@nana.test', 'secret123'),
+      ).rejects.toThrow('Invalid credentials');
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('does not leak whether the email exists', async () => {
+      (prisma.user as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);
+      const result = await service.forgotPassword('missing@nana.test');
+      expect(result).toEqual({ ok: true });
+      expect(
+        (prisma.passwordResetToken as { create: jest.Mock }).create,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('returns a local resetUrl when the user exists', async () => {
+      (prisma.user as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'user-1',
+        email: 'cashier@nana.test',
+        isActive: true,
+      });
+      (prisma.passwordResetToken as { create: jest.Mock }).create.mockResolvedValue(
+        {},
+      );
+
+      const result = await service.forgotPassword('cashier@nana.test');
+      expect(result.ok).toBe(true);
+      expect(result.resetUrl).toMatch(/^\/restaurant\/reset\?token=/);
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('rejects an unknown token', async () => {
+      (
+        prisma.passwordResetToken as { findFirst: jest.Mock }
+      ).findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.resetPassword('a'.repeat(32), 'newpass'),
+      ).rejects.toThrow('Invalid or expired reset token');
     });
   });
 });

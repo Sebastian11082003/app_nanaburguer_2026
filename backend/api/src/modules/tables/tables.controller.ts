@@ -30,8 +30,14 @@ export class TablesController {
     return this.tablesService.create(dto, restaurantId);
   }
 
+  @Get('floor')
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
+  floor(@Tenant() restaurantId: string) {
+    return this.tablesService.floor(restaurantId);
+  }
+
   @Get()
-  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
   findAll(@Tenant() restaurantId: string) {
     return this.tablesService.findAll(restaurantId);
   }

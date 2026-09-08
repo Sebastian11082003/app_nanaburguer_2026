@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Edge middleware cannot read Zustand/localStorage.
- * Soft protection: redirect unauthenticated browser navigations
- * when the staff token cookie is missing.
- * Cookie is set by auth store on login (see auth.store + login pages).
+ * Cookie-only gate. Role filtering happens in the POS nav after login.
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,17 +11,17 @@ export function middleware(request: NextRequest) {
   const platformToken = request.cookies.get("nb_platform_token")?.value;
 
   const isStaffProtected =
-    pathname.startsWith("/restaurant/admin") &&
-    !pathname.startsWith("/restaurant/admin/login");
+    (pathname.startsWith("/restaurant/admin") &&
+      !pathname.startsWith("/restaurant/admin/login")) ||
+    pathname === "/restaurant/app" ||
+    pathname.startsWith("/restaurant/app/");
 
   const isPlatformProtected =
     pathname.startsWith("/platform") &&
     !pathname.startsWith("/platform/login");
 
   if (isStaffProtected && !staffToken) {
-    return NextResponse.redirect(
-      new URL("/restaurant/admin/login", request.url),
-    );
+    return NextResponse.redirect(new URL("/restaurant/login", request.url));
   }
 
   if (isPlatformProtected && !platformToken) {
@@ -35,5 +32,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/restaurant/admin/:path*", "/platform/:path*"],
+  matcher: [
+    "/restaurant/admin",
+    "/restaurant/admin/:path*",
+    "/restaurant/app",
+    "/restaurant/app/:path*",
+    "/platform/:path*",
+  ],
 };

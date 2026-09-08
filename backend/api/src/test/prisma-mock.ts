@@ -22,6 +22,7 @@ export function createPrismaMock(): PrismaMock {
     tableEntity: createDelegateMock(),
     order: createDelegateMock(),
     orderItem: createDelegateMock(),
+    passwordResetToken: createDelegateMock(),
     menuItem: createDelegateMock(),
     category: createDelegateMock(),
     delivery: createDelegateMock(),

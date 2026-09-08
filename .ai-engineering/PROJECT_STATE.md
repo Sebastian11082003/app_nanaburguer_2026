@@ -42,6 +42,14 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### POS unificado estilo restobar (v0.4.16)
+
+- Un solo login de personal (`POST /auth/staff-login`): mesero, caja y domicilio.
+- Recuperar contraseña (token 6 h). En local el API devuelve el enlace.
+- Después del login, piso de mesas (`/restaurant/app`): verde/rojo + total, Llevar y Domicilios.
+- La barra superior oculta módulos según el rol (el cajero no ve Configuración; el mesero no ve Caja).
+- Cocina sigue yendo al KDS, no al piso de mesas.
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.

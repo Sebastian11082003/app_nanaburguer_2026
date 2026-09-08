@@ -3,6 +3,8 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createHash, randomBytes } from 'crypto';
 
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -10,8 +12,11 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 
+import { parseEnvFlag } from '../../config/env.schema';
 import { RegisterDto } from './dto/register.dto';
 import { RolesService } from '../roles/roles.service';
+
+const RESET_TTL_MS = 6 * 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -19,6 +24,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly rolesService: RolesService,
+    private readonly config: ConfigService,
   ) {}
 
   // ============================
@@ -102,6 +108,105 @@ export class AuthService {
     }
 
     return this.buildAuthResponse(user);
+  }
+
+  /**
+   * Same login for every station (Loggro-style). Email is globally unique,
+   * so the tenant is resolved from the user — no slug, no role picker.
+   */
+  async staffLogin(email: string, password: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: { equals: email.trim(), mode: 'insensitive' },
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const validPassword = await bcrypt.compare(password, user.passwordHash);
+    if (!validPassword) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const restaurant = await this.prisma.restaurant.findFirst({
+      where: { id: user.restaurantId, isActive: true },
+      select: { id: true, name: true, slug: true, logoUrl: true },
+    });
+
+    if (!restaurant) {
+      throw new UnauthorizedException('Restaurant not found');
+    }
+
+    const auth = await this.buildAuthResponse(user);
+    return { ...auth, restaurant };
+  }
+
+  /**
+   * Always returns ok so we do not leak whether the email exists.
+   * Local/dev (`ALLOW_INSECURE_DEFAULTS`) also returns `resetUrl` so the
+   * flow can be tested without SMTP.
+   */
+  async forgotPassword(email: string) {
+    const generic = { ok: true as const };
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: { equals: email.trim(), mode: 'insensitive' },
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      return generic;
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt: new Date(Date.now() + RESET_TTL_MS),
+      },
+    });
+
+    const allowInsecure = parseEnvFlag(
+      this.config.get('ALLOW_INSECURE_DEFAULTS'),
+      false,
+    );
+    if (!allowInsecure) {
+      return generic;
+    }
+
+    return { ...generic, resetUrl: `/restaurant/reset?token=${token}` };
+  }
+
+  async resetPassword(token: string, password: string) {
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+    const row = await this.prisma.passwordResetToken.findFirst({
+      where: { tokenHash },
+    });
+
+    if (!row || row.usedAt || row.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: row.userId },
+        data: { passwordHash },
+      });
+      await tx.passwordResetToken.update({
+        where: { id: row.id },
+        data: { usedAt: new Date() },
+      });
+    });
+
+    return { ok: true };
   }
 
   // ============================

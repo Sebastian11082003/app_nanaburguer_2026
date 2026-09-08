@@ -28,8 +28,8 @@ export default function RestaurantHomePage() {
             {restaurant?.name ?? "Restaurante"}
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-muted">
-            Centro del local. Desde aquí abres el portal de roles para operar
-            salón, cocina, caja o delivery.
+            Centro del local. El personal entra con el mismo login; el rol
+            decide qué ve en el piso.
           </p>
         </section>
 
@@ -60,10 +60,11 @@ export default function RestaurantHomePage() {
           <p className="font-script text-3xl text-flame">Listos para servir</p>
           <h2 className="mt-2 font-display text-4xl">Portal operativo</h2>
           <p className="mx-auto mt-3 max-w-lg text-muted">
-            Selecciona el módulo según tu rol.
+            El personal entra con correo y contraseña. Mesero, caja y
+            domicilio ven el mismo piso de mesas.
           </p>
-          <Link href="/restaurant/roles" className="btn-primary mt-8">
-            Ir al portal de roles →
+          <Link href="/restaurant/login" className="btn-primary mt-8">
+            Entrar como personal →
           </Link>
         </section>
       </div>

@@ -9,7 +9,7 @@ export default function WaiterCreateOrderPage() {
     <Suspense fallback={<main className="p-8">Cargando...</main>}>
       <CreateOrderScreen
         role="waiter"
-        tablesHref="/restaurant/waiter/tables"
+        tablesHref="/restaurant/app"
         createOrderPath="/restaurant/waiter/create-order"
       />
     </Suspense>
