@@ -202,17 +202,26 @@ export class OrdersService {
           include: OrdersService.ORDER_INCLUDE,
         });
 
-        if (dto.type === OrderType.DELIVERY) {
+        // Off-floor tickets have no table label. Name/phone live on
+        // Delivery so Llevar/Domicilio can resume the same customer.
+        if (
+          (dto.type === OrderType.DELIVERY || dto.type === OrderType.PICKUP) &&
+          dto.customerName?.trim()
+        ) {
           await tx.delivery.create({
             data: {
               orderId: order.id,
-              customerName: dto.customerName!,
-              phone: dto.customerPhone!,
-              address: dto.deliveryAddress,
+              customerName: dto.customerName.trim(),
+              phone: dto.customerPhone?.trim() || '',
+              address:
+                dto.type === OrderType.DELIVERY
+                  ? dto.deliveryAddress
+                  : undefined,
               neighborhood: dto.neighborhood,
               paymentMethod: dto.paymentMethod as PaymentMethod,
               restaurantId,
-              deliveryUserId: userId,
+              deliveryUserId:
+                dto.type === OrderType.DELIVERY ? userId : undefined,
             },
           });
         }

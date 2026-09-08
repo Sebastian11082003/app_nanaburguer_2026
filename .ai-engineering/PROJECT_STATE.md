@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Nombre del pickup al retomar (v0.4.33)
+
+- Crear PICKUP también guarda cliente en `Delivery` (sin asignar repartidor).
+- `GET /deliveries` sigue siendo solo domicilio. Vender muestra el nombre en Llevar abiertos.
+
 ### Domicilio no se auto-cancela; repartidor lista la cola (v0.4.32)
 
 - Salir de un CREATED vacío solo libera **mesa**. Pickup/domicilio se quedan para retomar.

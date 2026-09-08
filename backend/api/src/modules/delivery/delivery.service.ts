@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
-import { DeliveryStatus } from '@prisma/client';
+import { DeliveryStatus, OrderType } from '@prisma/client';
 
 @Injectable()
 export class DeliveryService {
@@ -11,8 +11,13 @@ export class DeliveryService {
   // 🔎 FIND ALL
   // ============================
   async findAll(restaurantId: string) {
+    // Pickup also stores customer data on Delivery. This queue is
+    // domicilio only — Llevar is listed from GET /orders?type=PICKUP.
     return this.prisma.delivery.findMany({
-      where: { restaurantId },
+      where: {
+        restaurantId,
+        order: { type: OrderType.DELIVERY },
+      },
       include: {
         order: true,
         deliveryUser: true,

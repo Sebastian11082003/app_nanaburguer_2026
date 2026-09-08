@@ -216,6 +216,34 @@ describe('OrdersService', () => {
         restaurantId: 'restaurant-1',
       });
     });
+
+    it('creates a linked Delivery record for PICKUP so the name survives resume', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValueOnce(null);
+      (prisma.order as { create: jest.Mock }).create.mockResolvedValue({ id: 'order-p' });
+      (prisma.order as { findUnique: jest.Mock }).findUnique.mockResolvedValue({
+        id: 'order-p',
+      });
+
+      await service.create(
+        {
+          type: OrderType.PICKUP,
+          source: OrderSource.CASHIER,
+          customerName: 'Ana',
+          customerPhone: '3110000000',
+        } as never,
+        'restaurant-1',
+        'user-1',
+      );
+
+      const [[deliveryArgs]] = (prisma.delivery as { create: jest.Mock }).create.mock.calls;
+      expect(deliveryArgs.data).toMatchObject({
+        orderId: 'order-p',
+        customerName: 'Ana',
+        phone: '3110000000',
+        restaurantId: 'restaurant-1',
+        deliveryUserId: undefined,
+      });
+    });
   });
 
   describe('addItem', () => {

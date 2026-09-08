@@ -161,7 +161,8 @@ export default function CashierPosPage() {
       await releaseEmptyTicketIfNeeded();
       const fresh = await ordersService.getById(open.id);
       setOrder(fresh);
-      setCustomerName("Mostrador");
+      setCustomerName(fresh.delivery?.customerName || "Mostrador");
+      setCustomerPhone(fresh.delivery?.phone ?? "");
       setMessage(`Continuando #${fresh.orderNumber}`);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo retomar el pedido"));
@@ -218,8 +219,9 @@ export default function CashierPosPage() {
                   : "border-zinc-800 bg-zinc-950"
               }`}
             >
-              <span className="text-sm font-semibold">
-                #{open.orderNumber} · {open.status}
+              <span className="min-w-0 truncate text-sm font-semibold">
+                #{open.orderNumber} ·{" "}
+                {open.delivery?.customerName ?? open.status}
               </span>
               <span className="text-sm font-bold tabular-nums">
                 {formatCents(open.totalCents)}
