@@ -1,15 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AddItemModal } from "@/src/components/orders/add-item-modal";
+import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { KitchenTicket } from "@/src/components/orders/kitchen-ticket";
 import { TransferTableModal } from "@/src/components/tables/transfer-table-modal";
 import { categoryColor } from "@/src/lib/category-color";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import {
+  clearEmptyTicketReleaser,
+  releaseEmptyTicketIfNeeded,
+} from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderLineLabel } from "@/src/lib/order-line-label";
@@ -120,6 +124,8 @@ export function CreateOrderScreen({
   useEffect(() => {
     bootstrap();
   }, [bootstrap]);
+
+  useEmptyTicketLeave(order);
 
   async function handleConfirmAddItem(quantity: number, notes?: string) {
     if (!order || !pickingItem) return;
@@ -335,6 +341,7 @@ export function CreateOrderScreen({
       return;
     }
 
+    clearEmptyTicketReleaser();
     try {
       setBusy(true);
       setError("");
@@ -346,6 +353,16 @@ export function CreateOrderScreen({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function goToTables() {
+    try {
+      setBusy(true);
+      await releaseEmptyTicketIfNeeded();
+    } finally {
+      setBusy(false);
+    }
+    router.push(tablesHref);
   }
 
   const filteredItems = useMemo(() => {
@@ -461,12 +478,13 @@ export function CreateOrderScreen({
                   Transferir mesa
                 </button>
               )}
-              <Link
-                href={tablesHref}
+              <button
+                type="button"
+                onClick={() => void goToTables()}
                 className="inline-flex min-h-11 items-center text-zinc-400 hover:text-white"
               >
                 ← Mesas
-              </Link>
+              </button>
             </div>
           </div>
 

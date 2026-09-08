@@ -12,7 +12,7 @@ export default function WaiterOrderDetailPage() {
     <OrderDetailView
       orderId={params.id}
       role="waiter"
-      backHref="/restaurant/waiter/orders"
+      backHref="/restaurant/app"
     />
   );
 }

@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.28
+
+- Salir de un ticket CREATED vacío libera la mesa (y el canal de mostrador/domicilio). Domicilios resalta el alta. Admin Ventas queda en el chrome POS.
+
 ## v0.4.27
 
 - Piso: ocupada sin total dice “Sin cuenta”. Cobro huérfano redirige a Ventas. Anular en detalle confirma. Domicilio activo abre “Nuevo pedido”.

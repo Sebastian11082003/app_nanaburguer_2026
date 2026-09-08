@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 
 import { BrandMark } from "@/src/components/brand/brand-mark";
+import { releaseEmptyTicketIfNeeded } from "@/src/lib/empty-ticket-leave";
 import { isPosNavActive, posNavForRole } from "@/src/lib/pos-nav";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
@@ -23,12 +24,20 @@ export function PosShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const nav = posNavForRole(user?.role);
 
-  function handleLogout() {
+  async function leaveTo(href: string) {
+    // Empty CREATED tickets must die here — a plain Link would leave the floor red.
+    await releaseEmptyTicketIfNeeded();
+    router.push(href);
+  }
+
+  async function handleLogout() {
+    await releaseEmptyTicketIfNeeded();
     logoutStaff();
     router.push("/restaurant/login");
   }
 
-  function handleChangeLocal() {
+  async function handleChangeLocal() {
+    await releaseEmptyTicketIfNeeded();
     logoutStaff();
     logoutRestaurant();
     router.push("/restaurant/local-login");
@@ -94,6 +103,10 @@ export function PosShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.key}
                 href={item.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  void leaveTo(item.href);
+                }}
                 className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-3 py-1.5 text-sm ${
                   active
                     ? "bg-paper text-ink"

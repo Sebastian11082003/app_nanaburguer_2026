@@ -55,7 +55,7 @@ export function posNavForRole(role: UserRole | null | undefined): PosNavItem[] {
   if (!role) return [];
   const allowed = new Set(VISIBLE[role]);
   return ALL_NAV.filter((item) => allowed.has(item.key)).map((item) => {
-    if (item.key === "sales" && role === "CASHIER") {
+    if (item.key === "sales" && (role === "CASHIER" || role === "ADMIN")) {
       return { ...item, href: "/restaurant/cashier/orders" };
     }
     if (item.key === "delivery" && (role === "CASHIER" || role === "ADMIN")) {
@@ -79,6 +79,13 @@ export function isPosNavActive(item: PosNavItem, pathname: string): boolean {
   }
   if (item.key === "sell") {
     return pathname.startsWith("/restaurant/cashier/pos");
+  }
+  if (item.key === "delivery") {
+    return (
+      pathname.startsWith("/restaurant/delivery/orders") ||
+      pathname.startsWith("/restaurant/delivery/active") ||
+      pathname.startsWith("/restaurant/cashier/delivery")
+    );
   }
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }

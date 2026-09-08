@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { releaseEmptyTicketIfNeeded } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderLineLabel } from "@/src/lib/order-line-label";
@@ -20,6 +22,7 @@ import { Order } from "@/src/types/order";
  * have to go through KDS.
  */
 export default function CashierPosPage() {
+  const router = useRouter();
   const [customerName, setCustomerName] = useState("Mostrador");
   const [customerPhone, setCustomerPhone] = useState("");
   const [pickupAt, setPickupAt] = useState("");
@@ -29,6 +32,8 @@ export default function CashierPosPage() {
   const [payOpen, setPayOpen] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  useEmptyTicketLeave(order);
 
   useEffect(() => {
     menuService
@@ -146,12 +151,18 @@ export default function CashierPosPage() {
             Pickup sin mesa. Cobra ya o manda a cocina.
           </p>
         </div>
-        <Link
-          href="/restaurant/app"
+        <button
+          type="button"
+          onClick={() => {
+            void (async () => {
+              await releaseEmptyTicketIfNeeded();
+              router.push("/restaurant/app");
+            })();
+          }}
           className="inline-flex min-h-11 items-center text-zinc-400 hover:text-white"
         >
           ← Mesas
-        </Link>
+        </button>
       </div>
 
       {error && <p className="text-red-500">{error}</p>}
@@ -248,7 +259,7 @@ export default function CashierPosPage() {
               onClick={() => setPayOpen(true)}
               className="w-full rounded-xl bg-white py-3 font-bold text-black disabled:opacity-40"
             >
-              Cobrar
+              Cerrar y cobrar
             </button>
           </div>
         </aside>
@@ -270,7 +281,7 @@ export default function CashierPosPage() {
             onClick={() => setPayOpen(true)}
             className="min-h-11 flex-1 rounded-xl bg-white px-3 py-3 text-sm font-bold text-black disabled:opacity-40"
           >
-            Cobrar
+            Cerrar y cobrar
           </button>
         </div>
       </div>

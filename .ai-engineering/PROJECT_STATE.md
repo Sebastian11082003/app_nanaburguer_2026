@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Salir de mesa vacía (v0.4.28)
+
+- Volver a Mesas (enlace o pestaña) cancela el ticket CREATED sin productos; la mesa no queda roja.
+- Mismo criterio en mostrador y alta de domicilio. Domicilios se marca activo en el alta. Ventas de admin usa el listado de caja.
+
 ### Piso a $0, cobro y domicilio (v0.4.27)
 
 - Mesa ocupada sin total muestra “Sin cuenta”, no `$ 0` subrayado.

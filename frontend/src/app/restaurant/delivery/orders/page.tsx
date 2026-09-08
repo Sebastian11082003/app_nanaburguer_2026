@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
+import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
+import { releaseEmptyTicketIfNeeded } from "@/src/lib/empty-ticket-leave";
 import { formatCents } from "@/src/lib/money";
 import { orderLineLabel } from "@/src/lib/order-line-label";
 import { menuService } from "@/src/services/menu.service";
@@ -12,6 +14,7 @@ import { MenuItem } from "@/src/types/menu";
 import { Order, OrderType } from "@/src/types/order";
 
 export default function DeliveryCreateOrderPage() {
+  const router = useRouter();
   const [type, setType] = useState<OrderType>("DELIVERY");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -23,6 +26,8 @@ export default function DeliveryCreateOrderPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  useEmptyTicketLeave(order);
 
   useEffect(() => {
     menuService
@@ -140,12 +145,18 @@ export default function DeliveryCreateOrderPage() {
               </p>
               <h1 className="mt-2 font-display text-2xl sm:text-4xl">Nuevo pedido</h1>
             </div>
-            <Link
-              href="/restaurant/app"
-              className="text-sm text-muted hover:text-paper"
+            <button
+              type="button"
+              onClick={() => {
+                void (async () => {
+                  await releaseEmptyTicketIfNeeded();
+                  router.push("/restaurant/delivery/active");
+                })();
+              }}
+              className="inline-flex min-h-11 items-center text-sm text-muted hover:text-paper"
             >
-              ← Volver
-            </Link>
+              ← Pedidos activos
+            </button>
           </div>
 
           {error && <p className="text-danger">{error}</p>}
