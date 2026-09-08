@@ -85,7 +85,7 @@ Unificar SaaS operativo + futuro landing de pedidos online bajo la misma identid
 
 Identidad de tenant obligatoria (ERP multi-tenant)
 
-Después del login del restaurante, toda superficie `/restaurant/*` muestra **nombre + slug** (y logo si existe). La marca de plataforma (RestoOS) solo vive en landing y `/platform/*`.
+Después del login del restaurante, toda superficie `/restaurant/*` muestra **logotipo + nombre + slug**. Si hay `logoUrl`, el mark es esa imagen, no la letra del nombre. La marca de plataforma (RestoOS) solo vive en landing y `/platform/*`.
 
 El chrome compartido (`RestaurantAuthShell`, `PosShell`, admin, hubs) lee `restaurant-auth`. Una pantalla nueva no “elige” si pinta el local: lo hereda.
 

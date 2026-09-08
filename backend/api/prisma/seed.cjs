@@ -62,6 +62,16 @@ async function main() {
   }
 
   console.log("SUPER ADMIN YA EXISTE");
+
+  // Demo tenant already created from platform: attach the bundled
+  // Nana mark so staff chrome does not fall back to a monogram.
+  const demoLogo = await prisma.restaurant.updateMany({
+    where: { slug: "nana-neiva", OR: [{ logoUrl: null }, { logoUrl: "" }] },
+    data: { logoUrl: "/logo/nana-logo.jpeg" },
+  });
+  if (demoLogo.count > 0) {
+    console.log("LOGO DE NANA-NEIVA ASIGNADO");
+  }
 }
 
 main()

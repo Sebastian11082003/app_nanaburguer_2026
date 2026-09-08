@@ -44,7 +44,7 @@ export function BrandMark({
             alt={name}
             width={size}
             height={size}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain p-1"
             priority
           />
         ) : (

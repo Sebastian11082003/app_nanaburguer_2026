@@ -42,6 +42,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Logotipo del tenant en el chrome (v0.4.21)
+
+- Después de identificar el local, el mark es el `logoUrl` del restaurante, no la letra inicial.
+- Persist viejo se refresca con `GET /restaurant-auth/branding`. Demo `nana-neiva` usa `/logo/nana-logo.jpeg` si no había logo.
+
 ### Tipo de producto (DEC-008)
 
 - Clase: ERP vertical gastronómico (SaaS multi-tenant).

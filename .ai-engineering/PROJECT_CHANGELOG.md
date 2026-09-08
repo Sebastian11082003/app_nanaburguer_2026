@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.21
+
+- El chrome del tenant pinta el logotipo (`logoUrl`), no el monograma. Branding se refresca por slug.
+
 ## v0.4.20
 
 - DEC-008: el producto se clasifica como ERP vertical de restaurantes. El MVP es el núcleo operativo.
