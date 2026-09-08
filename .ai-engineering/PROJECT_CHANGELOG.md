@@ -149,6 +149,11 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.29
+
+- Seed del tenant demo: ADMIN de restaurante (`admin@nana-neiva.test`) para anular tickets con ítems.
+- Cerrar orden responde con la `Sale` creada (el cobro no depende de un GET extra).
+
 ## v0.4.28
 
 - Salir de un ticket CREATED vacío libera la mesa (y el canal de mostrador/domicilio). Domicilios resalta el alta. Admin Ventas queda en el chrome POS.

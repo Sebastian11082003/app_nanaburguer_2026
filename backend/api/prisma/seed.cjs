@@ -62,15 +62,19 @@ async function main() {
     console.log("SUPER ADMIN YA EXISTE");
   }
 
-  await seedDemoTenant(prisma);
+  await seedDemoTenant(prisma, {
+    staffPassword: password,
+    allowInsecure,
+  });
 }
 
 /**
  * Demo tenant created from platform. Brand + one sellable item so the
  * POS can open a ticket without an empty catalog (still scoped to that
- * restaurantId — never a global menu).
+ * restaurantId — never a global menu). Also plants a restaurant ADMIN
+ * so the local can void tickets; waiter/cashier cannot.
  */
-async function seedDemoTenant(prisma) {
+async function seedDemoTenant(prisma, { staffPassword, allowInsecure }) {
   const restaurant = await prisma.restaurant.findFirst({
     where: { slug: "nana-neiva" },
   });
@@ -108,6 +112,48 @@ async function seedDemoTenant(prisma) {
     });
     console.log("MENÚ DEMO DE NANA-NEIVA ASIGNADO");
   }
+
+  await seedDemoAdmin(prisma, restaurant.id, staffPassword, allowInsecure);
+}
+
+async function seedDemoAdmin(
+  prisma,
+  restaurantId,
+  staffPassword,
+  allowInsecure,
+) {
+  const email = "admin@nana-neiva.test";
+  const existingAdmin = await prisma.user.findFirst({
+    where: { restaurantId, role: "ADMIN" },
+  });
+  if (existingAdmin) {
+    console.log("ADMIN DE NANA-NEIVA YA EXISTE");
+    return;
+  }
+
+  if (!allowInsecure && INSECURE_SEED_PASSWORDS.has(staffPassword)) {
+    console.log(
+      "Omitiendo admin de nana-neiva: password de seed inseguro en este entorno.",
+    );
+    return;
+  }
+
+  const adminRole = await prisma.role.findFirst({
+    where: { restaurantId, systemKey: "ADMIN" },
+  });
+  const passwordHash = await bcrypt.hash(staffPassword, 10);
+
+  await prisma.user.create({
+    data: {
+      email,
+      fullName: "Admin Nana",
+      passwordHash,
+      role: "ADMIN",
+      roleId: adminRole?.id,
+      restaurantId,
+    },
+  });
+  console.log("ADMIN DE NANA-NEIVA CREADO");
 }
 
 main()

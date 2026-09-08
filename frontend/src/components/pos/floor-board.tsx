@@ -100,7 +100,7 @@ export function FloorBoard() {
 
   function openTable(table: Table) {
     if (!canOpenTable(role)) return;
-    router.push(`${tableOrderHref(role)}?tableId=${table.id}`);
+    router.push(`${tableOrderHref()}?tableId=${table.id}`);
   }
 
   const pickupHrefForRole = pickupHref(role);

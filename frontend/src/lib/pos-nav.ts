@@ -91,7 +91,7 @@ export function isPosNavActive(item: PosNavItem, pathname: string): boolean {
 }
 
 /** Floor tickets stay in the POS shell. Admin tables still use admin/create-order. */
-export function tableOrderHref(_role?: UserRole | null): string {
+export function tableOrderHref(): string {
   return "/restaurant/waiter/create-order";
 }
 

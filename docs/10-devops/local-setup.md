@@ -26,7 +26,9 @@ Servicios:
 | http://localhost:3000/health | API |
 | http://localhost:3000/api | Swagger |
 
-Credencial seed (solo local): `admin@nanaburger.com` / `123456`. Entrar por `/platform/login`, crear un restaurante. El personal del local entra en `/restaurant/login` con correo y contraseña (mesero, caja y domicilio usan la misma pantalla). Olvidé mi contraseña está en `/restaurant/recover`.
+Credencial seed (solo local): `admin@nanaburger.com` / `123456`. Entrar por `/platform/login`, crear un restaurante. El personal del local entra en `/restaurant/login` con correo y contraseña (mesero, caja, domicilio y **admin del local** usan la misma pantalla). Olvidé mi contraseña está en `/restaurant/recover`.
+
+Si el tenant demo `nana-neiva` ya existe, el seed crea `admin@nana-neiva.test` / `123456` cuando `ALLOW_INSECURE_DEFAULTS=true` y aún no hay un ADMIN de ese restaurante. Caja/mesero no pueden anular un ticket con productos; ese usuario sí.
 
 La API aplica `prisma migrate deploy` y el seed al arrancar. El seed es idempotente.
 

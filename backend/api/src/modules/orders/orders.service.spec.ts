@@ -491,13 +491,17 @@ describe('OrdersService', () => {
         id: 'order-1',
         status: OrderStatus.CLOSED,
       });
+      (prisma.sale as { create: jest.Mock }).create.mockResolvedValue({
+        id: 'sale-new',
+        totalCents: 20000,
+      });
 
-      await service.closeOrder('order-1', 'restaurant-1', 'user-1');
+      const result = await service.closeOrder('order-1', 'restaurant-1', 'user-1');
 
-      expect(prisma.sale as { create: jest.Mock }).toHaveProperty('create');
       const [[saleArgs]] = (prisma.sale as { create: jest.Mock }).create.mock.calls;
       expect(saleArgs.data.totalCents).toBe(20000);
       expect(saleArgs.data.restaurant.connect.id).toBe('restaurant-1');
+      expect(result.sale).toEqual({ id: 'sale-new', totalCents: 20000 });
     });
 
     it('does not create a duplicate Sale when one already exists', async () => {

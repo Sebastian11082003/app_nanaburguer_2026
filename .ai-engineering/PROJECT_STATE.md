@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Admin del tenant demo (v0.4.29)
+
+- El seed de `nana-neiva` crea `admin@nana-neiva.test` si el local no tiene ADMIN.
+- Sirve para anular tickets con productos (mesero/caja no pueden).
+- `PATCH /orders/:id/close` ya devuelve la `Sale`; el cobro no se queda sin `sale.id`.
+
 ### Salir de mesa vacía (v0.4.28)
 
 - Volver a Mesas (enlace o pestaña) cancela el ticket CREATED sin productos; la mesa no queda roja.

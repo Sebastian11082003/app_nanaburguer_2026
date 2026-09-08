@@ -579,7 +579,7 @@ export class OrdersService {
     status: OrderStatus,
     restaurantId: string,
     userId: string,
-    role?: UserRole | string,
+    role?: UserRole,
   ) {
     const order = await this.prisma.order.findFirst({
       where: {
@@ -753,9 +753,12 @@ export class OrdersService {
         include: OrdersService.ORDER_INCLUDE,
       });
 
-      // CREAR SALE
-      if (!order.sale) {
-        await tx.sale.create({
+      // CREAR SALE — do this before returning so PATCH /close includes sale.id.
+      // The UI (and any client) pays against that id; returning the pre-sale
+      // `updated` row left cobro looking at a missing sale.
+      let sale = order.sale;
+      if (!sale) {
+        sale = await tx.sale.create({
           data: {
             order: {
               connect: {
@@ -774,7 +777,7 @@ export class OrdersService {
         });
       }
 
-      return updated;
+      return { ...updated, sale };
     });
   }
 
