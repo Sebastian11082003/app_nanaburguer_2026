@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
+import { orderChannelLabel } from "@/src/lib/order-channel-label";
 import { formatCents } from "@/src/lib/money";
 import { ordersService } from "@/src/services/orders.service";
 import { Order } from "@/src/types/order";
@@ -57,7 +58,7 @@ export default function CashierOrdersPage() {
                 <div>
                   <h2 className="text-xl font-bold">#{order.orderNumber}</h2>
                   <p className="text-sm text-zinc-400">
-                    {order.status} · Mesa {order.table?.label ?? "—"}
+                    {order.status} · {orderChannelLabel(order)}
                   </p>
                 </div>
                 <p className="font-bold">{formatCents(order.totalCents)}</p>

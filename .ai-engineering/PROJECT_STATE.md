@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Ventas nombra el canal (v0.4.34)
+
+- Caja/admin dejan de mostrar pickup/domicilio como “Mesa —”. Sale mesa, Llevar o Domicilio con el cliente.
+
 ### Nombre del pickup al retomar (v0.4.33)
 
 - Crear PICKUP también guarda cliente en `Delivery` (sin asignar repartidor).

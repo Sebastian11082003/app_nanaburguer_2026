@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.34
+
+- Ventas (caja y admin) etiquetan mesa / Llevar / Domicilio con el nombre del cliente.
+
 ## v0.4.33
 
 - Pickup guarda nombre/teléfono en `Delivery` para retomar Llevar. La cola `/deliveries` filtra solo domicilio.
