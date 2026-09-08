@@ -149,6 +149,11 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.17
+
+- Barra POS en caja/mesero/domicilio. Hubs redirigen al piso.
+- Servicio 5% en mesa, cancelar ítem con motivo, hora de recoger.
+
 ## v0.4.16
 
 - Login único de personal (correo + contraseña) y recuperar acceso.

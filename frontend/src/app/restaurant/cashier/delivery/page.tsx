@@ -55,8 +55,8 @@ export default function CashierDeliveryPage() {
               Asigna repartidor a los pedidos pendientes.
             </p>
           </div>
-          <Link href="/restaurant/cashier" className="text-sm text-muted hover:text-paper">
-            ← Volver
+          <Link href="/restaurant/app" className="text-sm text-muted hover:text-paper">
+            ← Mesas
           </Link>
         </div>
 

@@ -48,7 +48,7 @@ export default function DeliveryHistoryPage() {
             <h1 className="mt-2 font-display text-4xl">Historial</h1>
           </div>
           <Link
-            href="/restaurant/delivery"
+            href="/restaurant/app"
             className="text-sm text-muted hover:text-paper"
           >
             ← Volver

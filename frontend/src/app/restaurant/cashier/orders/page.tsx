@@ -37,8 +37,8 @@ export default function CashierOrdersPage() {
           <h1 className="text-3xl font-black sm:text-4xl">Órdenes</h1>
           <p className="text-zinc-400">Vista general para caja</p>
         </div>
-        <Link href="/restaurant/cashier" className="text-zinc-400 hover:text-white">
-          ← Volver
+        <Link href="/restaurant/app" className="text-zinc-400 hover:text-white">
+          ← Mesas
         </Link>
       </div>
 

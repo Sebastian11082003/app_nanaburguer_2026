@@ -14,8 +14,8 @@ export default function CashierCashPage() {
             Ingresos y egresos manuales. El cobro de órdenes está en Cobrar.
           </p>
         </div>
-        <Link href="/restaurant/cashier" className="text-zinc-400 hover:text-white">
-          ← Volver
+        <Link href="/restaurant/app" className="text-zinc-400 hover:text-white">
+          ← Mesas
         </Link>
       </div>
       <CashMovementsPanel />

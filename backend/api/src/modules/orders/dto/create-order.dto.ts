@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 import { OrderType, OrderSource } from '@prisma/client';
 
 export class CreateOrderDto {
@@ -29,6 +29,10 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   paymentMethod?: string;
+
+  @IsOptional()
+  @IsDateString()
+  pickupAt?: string;
 
   // 🔥 ORIGEN
   @IsEnum(OrderSource)

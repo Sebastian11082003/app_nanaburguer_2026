@@ -62,6 +62,18 @@ export const ordersService = {
     return data;
   },
 
+  async cancelItem(
+    orderId: string,
+    itemId: string,
+    reason?: string,
+  ): Promise<Order> {
+    const { data } = await api.post(
+      `/orders/${orderId}/items/${itemId}/cancel`,
+      { reason },
+    );
+    return data;
+  },
+
   /** Advances (or otherwise changes) the order's kitchen/lifecycle status. */
   async updateStatus(orderId: string, status: OrderStatus): Promise<Order> {
     const { data } = await api.patch(`/orders/${orderId}/status`, { status });

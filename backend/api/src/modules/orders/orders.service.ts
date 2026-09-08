@@ -61,22 +61,27 @@ export class OrdersService {
   }
 
   /**
-   * Recomputes order-level totals from its current line items.
-   * Tax is a flat 0 for now (no tax engine yet) — kept as an explicit
-   * field so it's a one-line change when that's implemented.
+   * Recomputes order-level totals. `taxCents` holds the dine-in 5%
+   * service fee (HU-017) until a real tax engine exists.
    */
   private calculateTotals(
-    items: { lineTotalCents: number }[],
+    items: { lineTotalCents: number; canceledAt?: Date | null }[],
     discountCents = 0,
+    type?: OrderType,
   ) {
-    const subtotal = items.reduce((acc, i) => acc + i.lineTotalCents, 0);
+    const subtotal = items
+      .filter((item) => !item.canceledAt)
+      .reduce((acc, i) => acc + i.lineTotalCents, 0);
     const discount = Math.min(Math.max(discountCents, 0), subtotal);
+    const net = subtotal - discount;
+    const serviceFee =
+      type === OrderType.DINE_IN ? Math.round(net * 0.05) : 0;
 
     return {
       subtotalCents: subtotal,
-      taxCents: 0,
+      taxCents: serviceFee,
       discountCents: discount,
-      totalCents: subtotal - discount,
+      totalCents: net + serviceFee,
     };
   }
 
@@ -186,6 +191,7 @@ export class OrdersService {
           subtotalCents: 0,
           taxCents: 0,
           totalCents: 0,
+          pickupAt: dto.pickupAt ? new Date(dto.pickupAt) : undefined,
         },
 
         include: OrdersService.ORDER_INCLUDE,
@@ -290,7 +296,7 @@ export class OrdersService {
         where: { orderId },
       });
 
-      const totals = this.calculateTotals(items, order.discountCents);
+      const totals = this.calculateTotals(items, order.discountCents, order.type);
 
       return tx.order.update({
         where: {
@@ -376,7 +382,7 @@ export class OrdersService {
       });
 
       const items = await tx.orderItem.findMany({ where: { orderId } });
-      const totals = this.calculateTotals(items, order.discountCents);
+      const totals = this.calculateTotals(items, order.discountCents, order.type);
 
       return tx.order.update({
         where: { id: orderId },
@@ -412,7 +418,7 @@ export class OrdersService {
       }
 
       const items = await tx.orderItem.findMany({ where: { orderId } });
-      const totals = this.calculateTotals(items, discountCents);
+      const totals = this.calculateTotals(items, discountCents, order.type);
 
       return tx.order.update({
         where: { id: orderId },
@@ -464,7 +470,73 @@ export class OrdersService {
       await tx.orderItem.delete({ where: { id: itemId } });
 
       const items = await tx.orderItem.findMany({ where: { orderId } });
-      const totals = this.calculateTotals(items, order.discountCents);
+      const totals = this.calculateTotals(
+        items,
+        order.discountCents,
+        order.type,
+      );
+
+      return tx.order.update({
+        where: { id: orderId },
+        data: totals,
+        include: OrdersService.ORDER_INCLUDE,
+      });
+    });
+  }
+
+  /**
+   * Soft-cancels a line after the ticket left the kitchen queue.
+   * Hard delete stays on `removeItem` (CREATED only).
+   */
+  async cancelItem(
+    orderId: string,
+    itemId: string,
+    restaurantId: string,
+    reason?: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findFirst({
+        where: { id: orderId, restaurantId },
+      });
+
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+
+      if (
+        order.status === OrderStatus.CLOSED ||
+        order.status === OrderStatus.CANCELED
+      ) {
+        throw new BadRequestException('Order is closed or canceled');
+      }
+
+      const item = await tx.orderItem.findFirst({
+        where: { id: itemId, orderId },
+      });
+
+      if (!item) {
+        throw new NotFoundException('Order item not found');
+      }
+
+      if (item.canceledAt) {
+        throw new BadRequestException('Item already canceled');
+      }
+
+      await tx.orderItem.update({
+        where: { id: itemId },
+        data: {
+          canceledAt: new Date(),
+          cancelReason: reason?.trim() || 'Cancelado en ticket',
+          lineTotalCents: 0,
+        },
+      });
+
+      const items = await tx.orderItem.findMany({ where: { orderId } });
+      const totals = this.calculateTotals(
+        items,
+        order.discountCents,
+        order.type,
+      );
 
       return tx.order.update({
         where: { id: orderId },

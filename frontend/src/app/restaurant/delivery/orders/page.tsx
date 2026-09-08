@@ -16,6 +16,7 @@ export default function DeliveryCreateOrderPage() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
+  const [pickupAt, setPickupAt] = useState("");
   const [items, setItems] = useState<MenuItem[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
@@ -51,6 +52,10 @@ export default function DeliveryCreateOrderPage() {
         type === "DELIVERY" ? deliveryAddress.trim() : undefined,
       neighborhood: neighborhood.trim() || undefined,
       paymentMethod: "CASH",
+      pickupAt:
+        type === "PICKUP" && pickupAt
+          ? new Date(pickupAt).toISOString()
+          : undefined,
     });
 
     setOrder(created);
@@ -61,6 +66,7 @@ export default function DeliveryCreateOrderPage() {
     customerPhone,
     deliveryAddress,
     neighborhood,
+    pickupAt,
   ]);
 
   async function handleStart(e: FormEvent) {
@@ -134,7 +140,7 @@ export default function DeliveryCreateOrderPage() {
               <h1 className="mt-2 font-display text-3xl sm:text-4xl">Nuevo pedido</h1>
             </div>
             <Link
-              href="/restaurant/delivery"
+              href="/restaurant/app"
               className="text-sm text-muted hover:text-paper"
             >
               ← Volver
@@ -192,6 +198,17 @@ export default function DeliveryCreateOrderPage() {
                   onChange={(e) => setNeighborhood(e.target.value)}
                 />
               </>
+            )}
+            {type === "PICKUP" && (
+              <label className="block text-sm text-muted">
+                Hora de recoger
+                <input
+                  type="datetime-local"
+                  className="field-input mt-1"
+                  value={pickupAt}
+                  onChange={(e) => setPickupAt(e.target.value)}
+                />
+              </label>
             )}
 
             {!order && (

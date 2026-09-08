@@ -349,6 +349,8 @@ model Order {
   taxCents       Int
   discountCents  Int @default(0)
   totalCents     Int
+  /// Estimated pickup instant for PICKUP orders (HU-014).
+  pickupAt       DateTime?
 
   createdById String
   updatedById String
@@ -382,6 +384,9 @@ model OrderItem {
   notes          String?
   /// When true, lineTotalCents is forced to 0 (kitchen still prepares it).
   isComplimentary Boolean @default(false)
+  /// Soft-cancel after the ticket left CREATED (HU-012). Kept for audit.
+  canceledAt      DateTime?
+  cancelReason    String?
 
   order    Order    @relation(fields: [orderId], references: [id])
   menuItem MenuItem @relation(fields: [menuItemId], references: [id])

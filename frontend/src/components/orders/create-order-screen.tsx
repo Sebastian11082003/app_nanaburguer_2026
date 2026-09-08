@@ -34,7 +34,7 @@ export type CreateOrderScreenProps = {
    * Admin can close/charge and cancel from the table (Loggro-style).
    * Waiter keeps kitchen-focused actions only.
    */
-  role?: "admin" | "waiter";
+  role?: "admin" | "waiter" | "cashier";
 };
 
 /**
@@ -149,6 +149,24 @@ export function CreateOrderScreen({
       setOrder(updated);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo quitar el producto"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCancelItem(itemId: string) {
+    if (!order) return;
+    const reason = window.prompt("Motivo de cancelación", "Error de digitación");
+    if (reason == null) return;
+
+    try {
+      setBusy(true);
+      setError("");
+      const updated = await ordersService.cancelItem(order.id, itemId, reason);
+      setOrder(updated);
+      setMessage("Ítem cancelado");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cancelar el ítem"));
     } finally {
       setBusy(false);
     }
@@ -335,17 +353,36 @@ export function CreateOrderScreen({
     order.status !== "CANCELED" &&
     (order?.items?.length ?? 0) > 0 &&
     order.totalCents > 0 &&
-    (role === "admin" || hasPermission(currentUser, "ORDERS_CLOSE_PAY"));
+    (role === "admin" ||
+      role === "cashier" ||
+      currentUser?.role === "CASHIER" ||
+      currentUser?.role === "ADMIN" ||
+      hasPermission(currentUser, "ORDERS_CLOSE_PAY"));
   const canCancelOrder =
     !!order &&
     order.status !== "CLOSED" &&
     order.status !== "CANCELED" &&
-    (role === "admin" || hasPermission(currentUser, "ORDERS_CANCEL"));
+    (role === "admin" ||
+      currentUser?.role === "ADMIN" ||
+      hasPermission(currentUser, "ORDERS_CANCEL"));
+  const canCancelItem =
+    !!order &&
+    order.status !== "CLOSED" &&
+    order.status !== "CANCELED" &&
+    (role === "admin" ||
+      role === "cashier" ||
+      currentUser?.role === "ADMIN" ||
+      currentUser?.role === "CASHIER" ||
+      hasPermission(currentUser, "ORDERS_CANCEL"));
   const canApplyDiscount =
     !!order &&
     order.status !== "CLOSED" &&
     order.status !== "CANCELED" &&
-    (role === "admin" || hasPermission(currentUser, "ORDERS_DISCOUNT"));
+    (role === "admin" ||
+      role === "cashier" ||
+      currentUser?.role === "CASHIER" ||
+      currentUser?.role === "ADMIN" ||
+      hasPermission(currentUser, "ORDERS_DISCOUNT"));
   const kitchenButtonLabel =
     order?.status === "CREATED" ? "Enviar a cocina" : "Imprimir comanda";
 
@@ -488,14 +525,21 @@ export function CreateOrderScreen({
             {(order?.items ?? []).map((line) => (
               <li
                 key={line.id}
-                className="flex items-start justify-between gap-3 text-sm"
+                className={`flex items-start justify-between gap-3 text-sm ${
+                  line.canceledAt ? "text-zinc-500 line-through" : ""
+                }`}
               >
                 <div className="min-w-0">
                   <p>
                     {orderLineLabel(line)} · {formatCents(line.unitPriceCents)}
                     {line.isComplimentary ? (
-                      <span className="ml-2 text-[10px] font-bold uppercase text-amber-400">
+                      <span className="ml-2 text-[10px] font-bold uppercase text-amber-400 no-underline">
                         Cortesía
+                      </span>
+                    ) : null}
+                    {line.canceledAt ? (
+                      <span className="ml-2 text-[10px] font-bold uppercase text-red-400 no-underline">
+                        Cancelado
                       </span>
                     ) : null}
                   </p>
@@ -552,7 +596,7 @@ export function CreateOrderScreen({
                       ? formatCents(0)
                       : formatCents(line.lineTotalCents)}
                   </span>
-                  {canEditLines && (
+                  {canEditLines && !line.canceledAt && (
                     <button
                       type="button"
                       disabled={busy}
@@ -563,6 +607,19 @@ export function CreateOrderScreen({
                       ✕
                     </button>
                   )}
+                  {!canEditLines &&
+                    canCancelItem &&
+                    !line.canceledAt && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => handleCancelItem(line.id)}
+                        title="Cancelar ítem"
+                        className="text-xs text-red-400 hover:text-red-300 disabled:opacity-40"
+                      >
+                        Cancelar
+                      </button>
+                    )}
                 </div>
               </li>
             ))}
@@ -581,6 +638,12 @@ export function CreateOrderScreen({
               <div className="flex justify-between text-sm text-amber-400">
                 <span>Descuento</span>
                 <span>-{formatCents(order?.discountCents ?? 0)}</span>
+              </div>
+            )}
+            {(order?.taxCents ?? 0) > 0 && (
+              <div className="flex justify-between text-sm text-zinc-400">
+                <span>Servicio 5%</span>
+                <span>{formatCents(order?.taxCents ?? 0)}</span>
               </div>
             )}
             <div className="flex justify-between font-bold">

@@ -37,8 +37,8 @@ export default function WaiterOrdersPage() {
           <h1 className="text-3xl font-black sm:text-4xl">Órdenes activas</h1>
           <p className="text-zinc-400">Seguimiento de pedidos del mesero</p>
         </div>
-        <Link href="/restaurant/waiter" className="text-zinc-400 hover:text-white">
-          ← Volver
+        <Link href="/restaurant/app" className="text-zinc-400 hover:text-white">
+          ← Mesas
         </Link>
       </div>
 

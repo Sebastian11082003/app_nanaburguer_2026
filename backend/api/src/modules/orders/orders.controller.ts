@@ -21,6 +21,7 @@ import { AddItemDto } from './dto/add-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { SetDiscountDto } from './dto/set-discount.dto';
 import { TransferTableDto } from './dto/transfer-table.dto';
+import { CancelItemDto } from './dto/cancel-item.dto';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -77,6 +78,22 @@ export class OrdersController {
     @Tenant() restaurantId: string,
   ) {
     return this.ordersService.removeItem(id, itemId, restaurantId);
+  }
+
+  @Post(':id/items/:itemId/cancel')
+  @Roles(UserRole.ADMIN, UserRole.CASHIER)
+  cancelItem(
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
+    @Body() dto: CancelItemDto,
+    @Tenant() restaurantId: string,
+  ) {
+    return this.ordersService.cancelItem(
+      id,
+      itemId,
+      restaurantId,
+      dto.reason,
+    );
   }
 
   // 🟢 CAMBIAR ESTADO (cocina)

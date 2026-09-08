@@ -14,7 +14,15 @@ export function middleware(request: NextRequest) {
     (pathname.startsWith("/restaurant/admin") &&
       !pathname.startsWith("/restaurant/admin/login")) ||
     pathname === "/restaurant/app" ||
-    pathname.startsWith("/restaurant/app/");
+    pathname.startsWith("/restaurant/app/") ||
+    (pathname.startsWith("/restaurant/cashier") &&
+      !pathname.startsWith("/restaurant/cashier/login")) ||
+    (pathname.startsWith("/restaurant/waiter") &&
+      !pathname.startsWith("/restaurant/waiter/login")) ||
+    (pathname.startsWith("/restaurant/delivery") &&
+      !pathname.startsWith("/restaurant/delivery/login")) ||
+    (pathname.startsWith("/restaurant/kitchen") &&
+      !pathname.startsWith("/restaurant/kitchen/login"));
 
   const isPlatformProtected =
     pathname.startsWith("/platform") &&
@@ -37,6 +45,14 @@ export const config = {
     "/restaurant/admin/:path*",
     "/restaurant/app",
     "/restaurant/app/:path*",
+    "/restaurant/cashier",
+    "/restaurant/cashier/:path*",
+    "/restaurant/waiter",
+    "/restaurant/waiter/:path*",
+    "/restaurant/delivery",
+    "/restaurant/delivery/:path*",
+    "/restaurant/kitchen",
+    "/restaurant/kitchen/:path*",
     "/platform/:path*",
   ],
 };

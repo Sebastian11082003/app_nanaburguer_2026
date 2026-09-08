@@ -171,6 +171,12 @@ export default function InvoiceDetailPage() {
                 <span>-{formatCents(receipt.totals.discount ?? 0)}</span>
               </div>
             )}
+            {(receipt.totals.service ?? 0) > 0 && (
+              <div className="flex justify-between">
+                <span>Servicio 5%</span>
+                <span>{formatCents(receipt.totals.service ?? 0)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span>Propina</span>
               <span>{formatCents(receipt.totals.tip)}</span>

@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### POS unificado — estaciones y ticket (v0.4.17)
+
+- Caja, mesero y domicilio usan la misma barra del piso. Los hubs de estación redirigen a mesas.
+- El cajero abre y cobra desde la mesa. Mesero no entra a Caja.
+- Mesa: servicio 5% (HU-017). Tras cocina, caja/admin cancela ítem con motivo (HU-012). Recoger guarda hora (HU-014).
+
 ### POS unificado estilo restobar (v0.4.16)
 
 - Un solo login de personal (`POST /auth/staff-login`): mesero, caja y domicilio.

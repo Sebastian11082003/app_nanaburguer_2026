@@ -58,7 +58,7 @@ export default function DeliveryActivePage() {
             <h1 className="mt-2 font-display text-4xl">Pedidos activos</h1>
           </div>
           <Link
-            href="/restaurant/delivery"
+            href="/restaurant/app"
             className="text-sm text-muted hover:text-paper"
           >
             ← Volver

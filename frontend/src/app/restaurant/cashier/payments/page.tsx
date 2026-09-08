@@ -66,8 +66,8 @@ export default function CashierPaymentsPage() {
             Órdenes READY → cerrar venta → método de pago del restaurante
           </p>
         </div>
-        <Link href="/restaurant/cashier" className="text-zinc-400 hover:text-white">
-          ← Volver
+        <Link href="/restaurant/app" className="text-zinc-400 hover:text-white">
+          ← Mesas
         </Link>
       </div>
 

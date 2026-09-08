@@ -260,6 +260,40 @@ describe('OrdersService', () => {
       });
       expect(result).toEqual({ id: 'order-1', totalCents: 30000 });
     });
+
+    it('adds a 5% service fee on dine-in totals', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CREATED,
+        type: OrderType.DINE_IN,
+        discountCents: 0,
+      });
+      (prisma.menuItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'item-1',
+        isAvailable: true,
+        priceCents: 20000,
+      });
+      (prisma.orderItem as { findMany: jest.Mock }).findMany.mockResolvedValue([
+        { lineTotalCents: 20000, canceledAt: null },
+      ]);
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+      });
+
+      await service.addItem(
+        'order-1',
+        { menuItemId: 'item-1', quantity: 1 } as never,
+        'restaurant-1',
+      );
+
+      const [[updateArgs]] = (prisma.order as { update: jest.Mock }).update.mock.calls;
+      expect(updateArgs.data).toEqual({
+        subtotalCents: 20000,
+        taxCents: 1000,
+        discountCents: 0,
+        totalCents: 21000,
+      });
+    });
   });
 
   describe('updateStatus', () => {

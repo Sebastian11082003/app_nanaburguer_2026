@@ -241,6 +241,7 @@ export class PaymentsService {
           totals: {
             subtotal: order.subtotalCents,
             discount: order.discountCents ?? 0,
+            service: order.taxCents ?? 0,
             tip: payment.tipCents ?? 0,
             total: payment.amountCents,
           },

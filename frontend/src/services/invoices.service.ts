@@ -48,7 +48,13 @@ export interface InvoicePrintData {
     total: number;
     notes: string | null;
   }[];
-  totals: { subtotal: number; discount?: number; tip: number; total: number };
+  totals: {
+    subtotal: number;
+    discount?: number;
+    service?: number;
+    tip: number;
+    total: number;
+  };
   payment: {
     method: string;
     /** Tenant display label frozen at payment time (falls back to method). */

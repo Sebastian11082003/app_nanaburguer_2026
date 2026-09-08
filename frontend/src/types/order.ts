@@ -19,6 +19,8 @@ export interface OrderItem {
   notes?: string | null;
   /** Free of charge — kitchen still prepares; line total is 0. */
   isComplimentary?: boolean;
+  canceledAt?: string | null;
+  cancelReason?: string | null;
   /** Product name, so tickets/receipts can show "2x Hamburguesa" instead of "2x item". */
   menuItem?: { name: string } | null;
 }
@@ -71,6 +73,9 @@ export interface Order {
   subtotalCents: number;
   taxCents: number;
   discountCents?: number;
+  /** Dine-in 5% service fee, stored in taxCents. */
+  taxCents?: number;
+  pickupAt?: string | null;
   totalCents: number;
   items: OrderItem[];
   table?: OrderTable | null;
@@ -92,6 +97,7 @@ export interface CreateOrderPayload {
   deliveryAddress?: string;
   neighborhood?: string;
   paymentMethod?: string;
+  pickupAt?: string;
 }
 
 export interface AddItemPayload {

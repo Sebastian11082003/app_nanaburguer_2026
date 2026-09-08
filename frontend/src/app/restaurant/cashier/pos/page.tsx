@@ -22,6 +22,7 @@ import { Order } from "@/src/types/order";
 export default function CashierPosPage() {
   const [customerName, setCustomerName] = useState("Mostrador");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [pickupAt, setPickupAt] = useState("");
   const [items, setItems] = useState<MenuItem[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
@@ -49,6 +50,7 @@ export default function CashierPosPage() {
       source: "CASHIER",
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim() || undefined,
+      pickupAt: pickupAt ? new Date(pickupAt).toISOString() : undefined,
     });
     setOrder(created);
     return created;
@@ -141,8 +143,8 @@ export default function CashierPosPage() {
             Pickup sin mesa. Cobra ya o manda a cocina.
           </p>
         </div>
-        <Link href="/restaurant/cashier" className="text-zinc-400 hover:text-white">
-          ← Volver
+        <Link href="/restaurant/app" className="text-zinc-400 hover:text-white">
+          ← Mesas
         </Link>
       </div>
 
@@ -169,6 +171,16 @@ export default function CashierPosPage() {
               onChange={(e) => setCustomerPhone(e.target.value)}
               disabled={!canEdit}
             />
+            <label className="block text-sm text-zinc-400">
+              Hora de recoger
+              <input
+                type="datetime-local"
+                className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-paper"
+                value={pickupAt}
+                onChange={(e) => setPickupAt(e.target.value)}
+                disabled={!canEdit}
+              />
+            </label>
             {!order && (
               <button
                 type="submit"
