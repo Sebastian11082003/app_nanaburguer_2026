@@ -79,10 +79,16 @@ export default function DeliveryActivePage() {
           <p>Cargando...</p>
         ) : (
           <div className="space-y-3">
-            {deliveries.map((delivery) => (
+            {deliveries.map((delivery) => {
+              const assembling = delivery.order?.status === "CREATED";
+              return (
               <Link
                 key={delivery.id}
-                href={`/restaurant/delivery/orders/${delivery.orderId}`}
+                href={
+                  assembling
+                    ? `/restaurant/delivery/orders?orderId=${delivery.orderId}`
+                    : `/restaurant/delivery/orders/${delivery.orderId}`
+                }
                 className="panel-surface block p-5 transition hover:border-flame/40"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -103,6 +109,11 @@ export default function DeliveryActivePage() {
                         {formatCents(delivery.order.totalCents)}
                       </p>
                     )}
+                    {assembling ? (
+                      <span className="inline-flex min-h-11 items-center text-sm font-semibold">
+                        Continuar
+                      </span>
+                    ) : (
                     <button
                       type="button"
                       disabled={busyId === delivery.id}
@@ -114,10 +125,12 @@ export default function DeliveryActivePage() {
                     >
                       {busyId === delivery.id ? "..." : "Entregado"}
                     </button>
+                    )}
                   </div>
                 </div>
               </Link>
-            ))}
+              );
+            })}
             {deliveries.length === 0 && (
               <p className="text-muted">No hay pedidos activos</p>
             )}

@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Retomar domicilio abierto (v0.4.31)
+
+- Nuevo pedido lista domicilios activos. Pedidos CREATED en activos/caja dicen Continuar (no Entregado).
+
 ### Llevar abiertos en mostrador (v0.4.30)
 
 - Vender lista pickups activos para retomarlos y cobrar. `GET /orders?activeOnly=true` filtra estados abiertos.

@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.31
+
+- Domicilio: lista y retoma tickets abiertos. CREATED ya no ofrece Entregado; abre Continuar.
+
 ## v0.4.30
 
 - Mostrador lista pickups abiertos (el piso Llevar deja de ser un callejón). `activeOnly` en listado de órdenes.

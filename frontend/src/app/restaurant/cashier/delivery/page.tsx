@@ -79,8 +79,20 @@ export default function CashierDeliveryPage() {
                   </h2>
                   <p className="text-sm text-muted">
                     {delivery.address ?? "Pickup"} · {delivery.phone}
+                    {delivery.order
+                      ? ` · ${delivery.order.status}`
+                      : ""}
                   </p>
                 </div>
+                <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                  {delivery.order?.status === "CREATED" ? (
+                    <Link
+                      href={`/restaurant/delivery/orders?orderId=${delivery.orderId}`}
+                      className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold sm:flex-none"
+                    >
+                      Continuar
+                    </Link>
+                  ) : null}
                 <button
                   type="button"
                   disabled={busyId === delivery.id}
@@ -89,6 +101,7 @@ export default function CashierDeliveryPage() {
                 >
                   {busyId === delivery.id ? "..." : "Despachar"}
                 </button>
+                </div>
               </div>
             </div>
           ))}

@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
@@ -13,8 +13,14 @@ import { ordersService } from "@/src/services/orders.service";
 import { MenuItem } from "@/src/types/menu";
 import { Order, OrderType } from "@/src/types/order";
 
-export default function DeliveryCreateOrderPage() {
+/**
+ * Delivery/pickup create. Open DELIVERY tickets used to stay on the floor
+ * with no way to add items again (active list only offers Entregado).
+ */
+function DeliveryCreateOrderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const resumeId = searchParams.get("orderId");
   const [type, setType] = useState<OrderType>("DELIVERY");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -22,12 +28,30 @@ export default function DeliveryCreateOrderPage() {
   const [neighborhood, setNeighborhood] = useState("");
   const [pickupAt, setPickupAt] = useState("");
   const [items, setItems] = useState<MenuItem[]>([]);
+  const [openDeliveries, setOpenDeliveries] = useState<Order[]>([]);
   const [order, setOrder] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
   useEmptyTicketLeave(order);
+
+  const loadOpenDeliveries = useCallback(async () => {
+    const rows = await ordersService.getAll({
+      type: "DELIVERY",
+      activeOnly: true,
+    });
+    setOpenDeliveries(rows);
+  }, []);
+
+  function applyOrder(open: Order) {
+    setOrder(open);
+    setType(open.type);
+    setCustomerName(open.delivery?.customerName ?? "");
+    setCustomerPhone(open.delivery?.phone ?? "");
+    setDeliveryAddress(open.delivery?.address ?? "");
+    setNeighborhood(open.delivery?.neighborhood ?? "");
+  }
 
   useEffect(() => {
     menuService
@@ -36,7 +60,31 @@ export default function DeliveryCreateOrderPage() {
       .catch((err: unknown) =>
         setError(getErrorMessage(err, "No se pudo cargar el menú")),
       );
-  }, []);
+    loadOpenDeliveries().catch((err: unknown) =>
+      setError(getErrorMessage(err, "No se pudieron cargar pedidos abiertos")),
+    );
+  }, [loadOpenDeliveries]);
+
+  useEffect(() => {
+    if (!resumeId) return;
+    let cancelled = false;
+    ordersService
+      .getById(resumeId)
+      .then((open) => {
+        if (!cancelled) {
+          applyOrder(open);
+          setMessage(`Continuando #${open.orderNumber}`);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(getErrorMessage(err, "No se pudo retomar el pedido"));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [resumeId]);
 
   const createOrder = useCallback(async () => {
     if (!customerName.trim() || !customerPhone.trim()) {
@@ -65,6 +113,7 @@ export default function DeliveryCreateOrderPage() {
     });
 
     setOrder(created);
+    await loadOpenDeliveries();
     return created;
   }, [
     type,
@@ -73,6 +122,7 @@ export default function DeliveryCreateOrderPage() {
     deliveryAddress,
     neighborhood,
     pickupAt,
+    loadOpenDeliveries,
   ]);
 
   async function handleStart(e: FormEvent) {
@@ -134,6 +184,22 @@ export default function DeliveryCreateOrderPage() {
     }
   }
 
+  async function resumeOpen(open: Order) {
+    try {
+      setBusy(true);
+      setError("");
+      await releaseEmptyTicketIfNeeded();
+      const fresh = await ordersService.getById(open.id);
+      applyOrder(fresh);
+      setMessage(`Continuando #${fresh.orderNumber}`);
+      router.replace(`/restaurant/delivery/orders?orderId=${fresh.id}`);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo retomar el pedido"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="relative overflow-x-hidden pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0">
       <div className="mx-auto grid max-w-6xl gap-6 sm:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
@@ -161,6 +227,35 @@ export default function DeliveryCreateOrderPage() {
 
           {error && <p className="text-danger">{error}</p>}
           {message && <p className="text-success">{message}</p>}
+
+          {openDeliveries.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                Domicilios abiertos
+              </p>
+              {openDeliveries.map((open) => (
+                <button
+                  key={open.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void resumeOpen(open)}
+                  className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left disabled:opacity-40 ${
+                    order?.id === open.id
+                      ? "border-paper bg-paper/10"
+                      : "border-white/10 bg-zinc-950"
+                  }`}
+                >
+                  <span className="min-w-0 truncate text-sm font-semibold">
+                    #{open.orderNumber} ·{" "}
+                    {open.delivery?.customerName ?? open.status}
+                  </span>
+                  <span className="shrink-0 text-sm font-bold tabular-nums">
+                    {formatCents(open.totalCents)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
 
           <form onSubmit={handleStart} className="panel-surface space-y-4 p-4 sm:p-6">
             <div className="flex gap-2">
@@ -296,5 +391,13 @@ export default function DeliveryCreateOrderPage() {
         </button>
       </div>
     </main>
+  );
+}
+
+export default function DeliveryCreateOrderRoute() {
+  return (
+    <Suspense fallback={<main className="p-8 text-muted">Cargando...</main>}>
+      <DeliveryCreateOrderPage />
+    </Suspense>
   );
 }

@@ -133,11 +133,21 @@ export default function DeliveryOrderDetailPage() {
           </div>
         </div>
 
+        <div className="flex flex-wrap gap-3">
+          {order.status === "CREATED" && (
+            <Link
+              href={`/restaurant/delivery/orders?orderId=${order.id}`}
+              className="btn-primary inline-flex min-h-11 w-full items-center justify-center sm:w-auto"
+            >
+              Continuar pedido
+            </Link>
+          )}
         <button
           type="button"
           disabled={
             busy ||
             !order.delivery ||
+            order.status === "CREATED" ||
             order.delivery.status === "DELIVERED" ||
             order.delivery.status === "CANCELLED"
           }
@@ -146,6 +156,7 @@ export default function DeliveryOrderDetailPage() {
         >
           {busy ? "Actualizando..." : "Marcar como entregado"}
         </button>
+        </div>
     </main>
   );
 }
