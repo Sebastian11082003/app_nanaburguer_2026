@@ -24,6 +24,6 @@ Crear un SaaS para administrar la operación completa.
 
 ## Restricciones
 
-- Debe soportar múltiples restaurantes en el futuro.
+- SaaS multi-tenant: cada local se identifica por slug. Tras el login del restaurante, nombre + slug no se ocultan.
 - Debe poder desplegarse en Docker.
-- Debe estar preparado para SaaS Multi Tenant.
+- Barra de calidad de ERP: el agente verifica flujos de tenant antes de pedir revisión humana. La revisión/testing del dueño es al cierre de beta en `dev`.

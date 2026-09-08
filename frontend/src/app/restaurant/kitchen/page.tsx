@@ -17,7 +17,7 @@ export default function KitchenPage() {
       subtitle={`${user?.fullName ?? "Cocina"} — cola, preparación y platos listos.`}
       onLogout={() => {
         logout();
-        router.push("/restaurant/roles");
+        router.push("/restaurant/login");
       }}
       links={[
         {

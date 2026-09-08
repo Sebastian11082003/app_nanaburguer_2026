@@ -40,8 +40,11 @@ export function PosShell({ children }: { children: ReactNode }) {
             />
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-flame">
-                {restaurant?.name ?? "RestoOS"}
+                {restaurant?.name ?? "Restaurante"}
               </p>
+              {restaurant?.slug && (
+                <p className="font-mono text-xs text-muted">{restaurant.slug}</p>
+              )}
               <p className="text-sm text-muted">{user?.fullName}</p>
             </div>
           </div>

@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 
-import { AuthShell } from "@/src/components/brand/auth-shell";
-import { BrandMark } from "@/src/components/brand/brand-mark";
+import { RestaurantAuthShell } from "@/src/components/brand/restaurant-auth-shell";
 import { getErrorMessage } from "@/src/lib/get-error-message";
-import { useRestaurantStore } from "@/src/store/restaurant.store";
 
 interface RoleLoginFormProps {
   title: string;
@@ -14,17 +12,14 @@ interface RoleLoginFormProps {
 }
 
 /**
- * Shared shell for every role login (admin/waiter/cashier/kitchen/
- * delivery). These screens are reached AFTER `/restaurant/login`, so the
- * tenant is already known — show that tenant's own logo/name instead of
- * the generic platform mark.
+ * Legacy per-role login. Role routes redirect to staff login; this
+ * still inherits tenant chrome if a leftover screen is opened.
  */
 export function RoleLoginForm({
   title,
   description,
   onSubmit,
 }: RoleLoginFormProps) {
-  const restaurant = useRestaurantStore((state) => state.restaurant);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,18 +40,11 @@ export function RoleLoginForm({
   }
 
   return (
-    <AuthShell
+    <RestaurantAuthShell
       title={title}
       description={description}
-      footerHref="/restaurant/roles"
-      footerLabel="Volver a roles"
-      brand={
-        <BrandMark
-          size={88}
-          name={restaurant?.name ?? "Restaurante"}
-          logoUrl={restaurant?.logoUrl}
-        />
-      }
+      footerHref="/restaurant/login"
+      footerLabel="Volver al inicio de sesión"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -83,6 +71,6 @@ export function RoleLoginForm({
           {loading ? "Ingresando..." : "Ingresar"}
         </button>
       </form>
-    </AuthShell>
+    </RestaurantAuthShell>
   );
 }

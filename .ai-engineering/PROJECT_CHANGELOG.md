@@ -149,6 +149,11 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.19
+
+- Chrome de tenant: `RestaurantAuthShell` obliga nombre/slug en login, recover y reset.
+- POS, admin y hubs muestran el slug. DEC-007 fija la identidad multi-tenant.
+
 ## v0.4.18
 
 - El login único de personal (y recuperar acceso) muestran el slug/nombre del restaurante cuando ya hay sesión del local.

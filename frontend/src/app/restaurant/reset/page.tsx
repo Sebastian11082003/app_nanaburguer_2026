@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
-import { AuthShell } from "@/src/components/brand/auth-shell";
+import { RestaurantAuthShell } from "@/src/components/brand/restaurant-auth-shell";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { userAuthService } from "@/src/services/user-auth.service";
 
@@ -33,7 +33,7 @@ function ResetForm() {
   }
 
   return (
-    <AuthShell
+    <RestaurantAuthShell
       title="Nueva contraseña"
       description="Elige una contraseña de al menos 6 caracteres."
       footerHref="/restaurant/login"
@@ -63,7 +63,7 @@ function ResetForm() {
           {loading ? "Guardando..." : "Guardar"}
         </button>
       </form>
-    </AuthShell>
+    </RestaurantAuthShell>
   );
 }
 

@@ -2,11 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 /**
- * The authenticated tenant (restaurant). `logoUrl` is per-tenant branding
- * — it must ONLY be rendered on screens that are already inside this
- * tenant's context (after restaurant-login, or staff login once the
- * local is in this store). Platform screens (`/`, `/platform/*`) must
- * never read from this store for branding.
+ * The authenticated tenant (restaurant). After restaurant-login, restaurant
+ * chrome must read this store (DEC-007). Platform screens (`/`, `/platform/*`)
+ * must never use it for branding.
  */
 interface Restaurant {
   id: string;

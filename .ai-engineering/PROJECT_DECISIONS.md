@@ -78,3 +78,17 @@ Tokens:
 Motivo:
 
 Unificar SaaS operativo + futuro landing de pedidos online bajo la misma identidad.
+
+---
+
+## DEC-007
+
+Identidad de tenant obligatoria (ERP multi-tenant)
+
+Después del login del restaurante, toda superficie `/restaurant/*` muestra **nombre + slug** (y logo si existe). La marca de plataforma (RestoOS) solo vive en landing y `/platform/*`.
+
+El chrome compartido (`RestaurantAuthShell`, `PosShell`, admin, hubs) lee `restaurant-auth`. Una pantalla nueva no “elige” si pinta el local: lo hereda.
+
+Motivo:
+
+Esto es un ERP profesional, no un login suelto. El operador debe ver en qué tenant está. El dueño no debería tener que cazar huecos de marca en cada pantalla.

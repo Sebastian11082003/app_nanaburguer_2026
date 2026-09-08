@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Identidad de tenant en el chrome (v0.4.19)
+
+- Login/recover/reset heredan `RestaurantAuthShell`: nombre, logo y slug salen del persist, no de cada página.
+- POS, admin y hubs de estación muestran el slug del local.
+- DEC-007: después del login del restaurante, el tenant no se esconde. Plataforma y tenant no comparten marca.
+
 ### Login de personal con el local ya identificado (v0.4.18)
 
 - Tras el login del restaurante, el acceso de personal muestra nombre, logo y slug del local (`nana-neiva`).

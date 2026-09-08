@@ -33,7 +33,9 @@ function AdminBrand() {
         <p className="font-display text-lg tracking-[0.14em]">
           {restaurant?.name ?? "Restaurante"}
         </p>
-        <p className="-mt-1 text-base text-flame">Admin</p>
+        <p className="font-mono text-xs text-flame">
+          {restaurant?.slug ?? "admin"}
+        </p>
       </div>
     </div>
   );

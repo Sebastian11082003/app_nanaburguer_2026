@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+
+import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 
 interface HubLink {
   href: string;
@@ -21,6 +25,8 @@ export function RoleHub({
   links,
   onLogout,
 }: RoleHubProps) {
+  const { restaurant } = useHydratedRestaurant();
+
   return (
     <main className="brand-atmosphere brand-noise relative min-h-screen overflow-x-hidden px-4 py-10 text-paper sm:px-6 sm:py-12">
       <div className="brand-grid absolute inset-0" />
@@ -31,6 +37,11 @@ export function RoleHub({
               {eyebrow}
             </p>
             <h1 className="mt-3 font-display text-4xl sm:text-5xl">{title}</h1>
+            {restaurant && (
+              <p className="mt-2 font-mono text-sm text-flame">
+                {restaurant.name} · {restaurant.slug}
+              </p>
+            )}
             <p className="mt-3 max-w-xl text-muted">{subtitle}</p>
           </div>
           {onLogout && (

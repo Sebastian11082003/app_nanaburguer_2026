@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { AuthShell } from "@/src/components/brand/auth-shell";
-import { BrandMark } from "@/src/components/brand/brand-mark";
+import { RestaurantAuthShell } from "@/src/components/brand/restaurant-auth-shell";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { userAuthService } from "@/src/services/user-auth.service";
 
 export default function RecoverPasswordPage() {
-  const { restaurant, ready } = useHydratedRestaurant();
+  const { restaurant } = useHydratedRestaurant();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -33,13 +32,8 @@ export default function RecoverPasswordPage() {
     }
   }
 
-  if (!ready) {
-    return <main className="p-8 text-muted">Cargando...</main>;
-  }
-
   return (
-    <AuthShell
-      eyebrow={restaurant ? "Personal del local" : "Acceso"}
+    <RestaurantAuthShell
       title="Recuperar acceso"
       description={
         restaurant
@@ -48,29 +42,10 @@ export default function RecoverPasswordPage() {
       }
       footerHref="/restaurant/login"
       footerLabel="Volver al inicio de sesión"
-      brand={
-        restaurant ? (
-          <BrandMark
-            size={88}
-            name={restaurant.name}
-            logoUrl={restaurant.logoUrl}
-          />
-        ) : undefined
-      }
     >
-      {restaurant && (
-        <p className="-mt-2 mb-6 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm">
-          <span className="text-muted">Slug del restaurante </span>
-          <span className="font-mono font-semibold text-flame">
-            {restaurant.slug}
-          </span>
-        </p>
-      )}
       {done ? (
         <div className="space-y-3 text-sm text-muted">
-          <p>
-            Si el correo existe, el enlace de recuperación ya está listo.
-          </p>
+          <p>Si el correo existe, el enlace de recuperación ya está listo.</p>
           {resetUrl && (
             <p>
               Entorno local:{" "}
@@ -113,6 +88,6 @@ export default function RecoverPasswordPage() {
           </button>
         </form>
       )}
-    </AuthShell>
+    </RestaurantAuthShell>
   );
 }
