@@ -133,7 +133,7 @@ export function CashShiftPanel() {
       setError("");
       setMessage("");
       const closed = await cashService.closeSession(session.id, {
-        countedCents,
+        countedCents: countedCents ?? undefined,
         notes: notes.trim() || undefined,
       });
       setCountedPesos("");
