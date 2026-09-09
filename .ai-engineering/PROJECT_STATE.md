@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Rider solo crea domicilio (v0.4.46)
+
+- En Nuevo pedido el personal `DELIVERY` ya no ve el chip Pickup. El alta fuerza `DELIVERY` (dirección obligatoria). Caja/admin siguen eligiendo Llevar o domicilio.
+
 ### Rider sin tarjeta Llevar (v0.4.45)
 
 - El piso de `DELIVERY` solo ofrece Domicilios. Llevar seguía abriendo el alta de pedido y parecía un canal de mostrador.

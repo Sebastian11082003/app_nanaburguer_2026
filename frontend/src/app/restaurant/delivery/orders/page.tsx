@@ -32,6 +32,9 @@ function DeliveryCreateOrderPage() {
   const resumeId = searchParams.get("orderId");
   const role = useAuthStore((s) => s.user?.role);
   const canCharge = role === "ADMIN" || role === "CASHIER";
+  // Rider "Nuevo pedido" still offered Pickup, so they could open a
+  // Llevar ticket from a channel they do not run.
+  const riderLockedToDelivery = role === "DELIVERY";
   const [type, setType] = useState<OrderType>("DELIVERY");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -47,6 +50,10 @@ function DeliveryCreateOrderPage() {
   const [message, setMessage] = useState("");
 
   useEmptyTicketLeave(order);
+
+  useEffect(() => {
+    if (riderLockedToDelivery) setType("DELIVERY");
+  }, [riderLockedToDelivery]);
 
   const loadOpenDeliveries = useCallback(async () => {
     const rows = await ordersService.getAll({
@@ -99,27 +106,29 @@ function DeliveryCreateOrderPage() {
   }, [resumeId]);
 
   const createOrder = useCallback(async () => {
+    const channelType: OrderType = riderLockedToDelivery ? "DELIVERY" : type;
+
     if (!customerName.trim() || !customerPhone.trim()) {
       setError("Nombre y teléfono del cliente son obligatorios");
       return null;
     }
 
-    if (type === "DELIVERY" && !deliveryAddress.trim()) {
+    if (channelType === "DELIVERY" && !deliveryAddress.trim()) {
       setError("La dirección es obligatoria para domicilio");
       return null;
     }
 
     const created = await ordersService.create({
-      type,
+      type: channelType,
       source: "DELIVERY",
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),
       deliveryAddress:
-        type === "DELIVERY" ? deliveryAddress.trim() : undefined,
+        channelType === "DELIVERY" ? deliveryAddress.trim() : undefined,
       neighborhood: neighborhood.trim() || undefined,
       paymentMethod: "CASH",
       pickupAt:
-        type === "PICKUP" && pickupAt
+        channelType === "PICKUP" && pickupAt
           ? new Date(pickupAt).toISOString()
           : undefined,
     });
@@ -134,6 +143,7 @@ function DeliveryCreateOrderPage() {
     deliveryAddress,
     neighborhood,
     pickupAt,
+    riderLockedToDelivery,
     loadOpenDeliveries,
   ]);
 
@@ -330,6 +340,7 @@ function DeliveryCreateOrderPage() {
           )}
 
           <form onSubmit={handleStart} className="panel-surface space-y-4 p-4 sm:p-6">
+            {riderLockedToDelivery ? null : (
             <div className="flex gap-2">
               {(["DELIVERY", "PICKUP"] as OrderType[]).map((option) => (
                 <button
@@ -346,6 +357,7 @@ function DeliveryCreateOrderPage() {
                 </button>
               ))}
             </div>
+            )}
 
             <input
               className="field-input"
@@ -361,7 +373,7 @@ function DeliveryCreateOrderPage() {
               onChange={(e) => setCustomerPhone(e.target.value)}
               required
             />
-            {type === "DELIVERY" && (
+            {(type === "DELIVERY" || riderLockedToDelivery) && (
               <>
                 <input
                   className="field-input"
@@ -378,7 +390,7 @@ function DeliveryCreateOrderPage() {
                 />
               </>
             )}
-            {type === "PICKUP" && (
+            {!riderLockedToDelivery && type === "PICKUP" && (
               <label className="block text-sm text-muted">
                 Hora de recoger
                 <input
