@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Llevar muestra En cocina / Listo (v0.4.42)
+
+- El listado de mostrador (y Ventas) distingue un pickup en fuego de uno listo para entregar.
+
 ### Cocina nombra Llevar y domicilio (v0.4.41)
 
 - KDS y comanda dejan de pintar `Mesa —` en tickets sin mesa. Mismo criterio que Ventas.

@@ -13,6 +13,7 @@ import {
 } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
+import { orderProgressLabel } from "@/src/lib/order-channel-label";
 import { orderLineLabel } from "@/src/lib/order-line-label";
 import { menuService } from "@/src/services/menu.service";
 import { ordersService } from "@/src/services/orders.service";
@@ -232,7 +233,9 @@ export default function CashierPosPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
             Llevar abiertos
           </p>
-          {openPickups.map((open) => (
+          {openPickups.map((open) => {
+            const progress = orderProgressLabel(open);
+            return (
             <button
               key={open.id}
               type="button"
@@ -247,12 +250,14 @@ export default function CashierPosPage() {
               <span className="min-w-0 truncate text-sm font-semibold">
                 #{open.orderNumber} ·{" "}
                 {open.delivery?.customerName ?? open.status}
+                {progress ? ` · ${progress}` : ""}
               </span>
               <span className="text-sm font-bold tabular-nums">
                 {formatCents(open.totalCents)}
               </span>
             </button>
-          ))}
+            );
+          })}
         </div>
       )}
 

@@ -22,19 +22,27 @@ export function orderChannelLabel(order: ChannelOrder): string {
 }
 
 /**
- * After the rider leaves, caja still has to cobro. Without this, a
- * READY domicilio looks the same as one still waiting in kitchen.
+ * Rider progress wins over kitchen: a dispatched ticket is En camino
+ * even if the order is still SENT_TO_KITCHEN.
  */
+export function orderProgressLabel(order: ChannelOrder): string | null {
+  if (order.status === "CLOSED" || order.status === "CANCELED") {
+    return null;
+  }
+  if (order.delivery?.status === "DELIVERED") return "Entregado";
+  if (order.delivery?.status === "DISPATCHED") return "En camino";
+  if (order.status === "READY") return "Listo";
+  if (
+    order.status === "SENT_TO_KITCHEN" ||
+    order.status === "IN_PREPARATION"
+  ) {
+    return "En cocina";
+  }
+  return null;
+}
+
 export function orderQueueLabel(order: ChannelOrder): string {
   const channel = orderChannelLabel(order);
-  if (order.status === "CLOSED" || order.status === "CANCELED") {
-    return channel;
-  }
-  if (order.delivery?.status === "DELIVERED") {
-    return `${channel} · Entregado`;
-  }
-  if (order.delivery?.status === "DISPATCHED") {
-    return `${channel} · En camino`;
-  }
-  return channel;
+  const progress = orderProgressLabel(order);
+  return progress ? `${channel} · ${progress}` : channel;
 }
