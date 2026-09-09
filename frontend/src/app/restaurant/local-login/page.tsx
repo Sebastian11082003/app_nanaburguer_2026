@@ -1,18 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { AuthShell } from "@/src/components/brand/auth-shell";
 import { BrandMark } from "@/src/components/brand/brand-mark";
+import { PLATFORM_BRAND } from "@/src/config/platform-brand";
+import { useRestaurantBrandingLookup } from "@/src/hooks/use-restaurant-branding-lookup";
 import { getErrorMessage } from "@/src/lib/get-error-message";
-import {
-  RestaurantBranding,
-  restaurantAuthService,
-} from "@/src/services/restaurant-auth.service";
+import { restaurantAuthService } from "@/src/services/restaurant-auth.service";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
-
-const BRANDING_LOOKUP_DEBOUNCE_MS = 400;
 
 /** Tenant (restaurant) credentials — not staff. Staff uses /restaurant/login. */
 export default function RestaurantLocalLoginPage() {
@@ -25,28 +22,8 @@ export default function RestaurantLocalLoginPage() {
     email: "",
     password: "",
   });
-  const [branding, setBranding] = useState<RestaurantBranding | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-
-    if (!form.slug.trim()) {
-      setBranding(null);
-      return;
-    }
-
-    debounceRef.current = setTimeout(() => {
-      restaurantAuthService
-        .getBranding(form.slug)
-        .then(setBranding)
-        .catch(() => setBranding(null));
-    }, BRANDING_LOOKUP_DEBOUNCE_MS);
-
-    return () => clearTimeout(debounceRef.current);
-  }, [form.slug]);
+  const { branding, status } = useRestaurantBrandingLookup(form.slug);
+  const identified = status === "found" && branding;
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -58,7 +35,10 @@ export default function RestaurantLocalLoginPage() {
     try {
       setLoading(true);
       setError("");
-      const response = await restaurantAuthService.login(form);
+      const response = await restaurantAuthService.login({
+        ...form,
+        slug: form.slug.trim().toLowerCase(),
+      });
       setRestaurantAuth(response.accessToken, response.restaurant);
       router.push("/restaurant/login");
     } catch (err: unknown) {
@@ -71,12 +51,12 @@ export default function RestaurantLocalLoginPage() {
   return (
     <AuthShell
       eyebrow="Acceso del local"
-      title={branding?.name ?? "Restaurante"}
+      title={identified ? branding.name : PLATFORM_BRAND.name}
       description="Credenciales del restaurante (slug), no las de un mesero o cajero."
       footerHref="/restaurant/login"
       footerLabel="Soy personal del local"
       brand={
-        branding ? (
+        identified ? (
           <BrandMark size={88} name={branding.name} logoUrl={branding.logoUrl} />
         ) : undefined
       }
@@ -89,7 +69,13 @@ export default function RestaurantLocalLoginPage() {
           onChange={handleChange}
           className="field-input"
           required
+          autoCapitalize="none"
         />
+        {status === "missing" && (
+          <p className="text-sm text-danger">
+            No hay un restaurante activo con ese slug
+          </p>
+        )}
         <input
           type="email"
           name="email"

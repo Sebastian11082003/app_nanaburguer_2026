@@ -57,11 +57,12 @@ export class RestaurantAuthService {
 
   /** See `RestaurantAuthController#getBranding` for why this is public and this narrow. */
   async getBranding(slug?: string) {
-    if (!slug) return null;
+    const normalized = slug?.trim().toLowerCase();
+    if (!normalized) return null;
 
     const restaurant = await this.prisma.restaurant.findFirst({
-      where: { slug, isActive: true },
-      select: { name: true, logoUrl: true },
+      where: { slug: { equals: normalized, mode: 'insensitive' }, isActive: true },
+      select: { name: true, slug: true, logoUrl: true },
     });
 
     return restaurant;

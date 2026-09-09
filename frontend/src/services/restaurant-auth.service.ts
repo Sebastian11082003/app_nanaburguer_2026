@@ -15,6 +15,7 @@ interface RestaurantLoginResponse {
 /** Public branding preview for a slug — see backend `getBranding` docs for why this is intentionally narrow. */
 export interface RestaurantBranding {
   name: string;
+  slug: string;
   logoUrl: string | null;
 }
 
@@ -29,8 +30,14 @@ export const restaurantAuthService = {
   async getBranding(slug: string): Promise<RestaurantBranding | null> {
     if (!slug.trim()) return null;
     const response = await api.get("/restaurant-auth/branding", {
-      params: { slug: slug.trim() },
+      params: { slug: slug.trim().toLowerCase() },
     });
-    return response.data;
+    const data = response.data as RestaurantBranding | null;
+    if (!data?.name) return null;
+    return {
+      name: data.name,
+      slug: data.slug ?? slug.trim().toLowerCase(),
+      logoUrl: data.logoUrl ?? null,
+    };
   },
 };

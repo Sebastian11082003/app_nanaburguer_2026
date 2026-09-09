@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { RestaurantAuthShell } from "@/src/components/brand/restaurant-auth-shell";
-import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
+import { AuthShell } from "@/src/components/brand/auth-shell";
+import { BrandMark } from "@/src/components/brand/brand-mark";
+import { PLATFORM_BRAND } from "@/src/config/platform-brand";
+import { useRestaurantBrandingLookup } from "@/src/hooks/use-restaurant-branding-lookup";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { homeForRole, userAuthService } from "@/src/services/user-auth.service";
 import { useAuthStore } from "@/src/store/auth.store";
@@ -15,14 +17,21 @@ export default function StaffLoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
   const setTenantPreview = useRestaurantStore((s) => s.setTenantPreview);
-  const { restaurant } = useHydratedRestaurant();
+  const [slug, setSlug] = useState("");
+  const { branding, status } = useRestaurantBrandingLookup(slug);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const identified = status === "found" && branding;
+
   async function loginWith(form: HTMLFormElement) {
+    if (!identified) {
+      setError("Identifica el local con su slug antes de ingresar");
+      return;
+    }
     const data = new FormData(form);
     const nextEmail = String(data.get("email") ?? "").trim();
     const nextPassword = String(data.get("password") ?? "");
@@ -33,6 +42,13 @@ export default function StaffLoginPage() {
         email: nextEmail,
         password: nextPassword,
       });
+      if (
+        response.restaurant.slug.trim().toLowerCase() !==
+        (branding.slug ?? slug).trim().toLowerCase()
+      ) {
+        setError("Ese correo no pertenece a este local");
+        return;
+      }
       setAuth(response.accessToken, response.user);
       setTenantPreview(response.restaurant);
       void remember;
@@ -45,13 +61,24 @@ export default function StaffLoginPage() {
   }
 
   return (
-    <RestaurantAuthShell
-      changeLocal
-      title={restaurant?.name ?? "Bienvenido"}
+    <AuthShell
+      eyebrow={identified ? "Personal del local" : "Personal"}
+      title={identified ? branding.name : PLATFORM_BRAND.name}
       description={
-        restaurant
+        identified
           ? "El mismo acceso para mesero, caja y domicilio. El rol decide el menú."
-          : "El mismo acceso para mesero, caja y domicilio. Lo que cambia después es el menú, no el login."
+          : "Escribe el slug del restaurante. Nombre y logo aparecen cuando el local existe."
+      }
+      footerHref="/restaurant/local-login"
+      footerLabel="Acceso del local (correo del restaurante)"
+      brand={
+        identified ? (
+          <BrandMark
+            size={88}
+            name={branding.name}
+            logoUrl={branding.logoUrl}
+          />
+        ) : undefined
       }
     >
       <form
@@ -61,6 +88,24 @@ export default function StaffLoginPage() {
         }}
         className="space-y-4"
       >
+        <input
+          name="slug"
+          placeholder="Slug del restaurante"
+          value={slug}
+          onChange={(e) => {
+            setSlug(e.target.value);
+            setError("");
+          }}
+          className="field-input"
+          required
+          autoComplete="organization"
+          autoCapitalize="none"
+        />
+        {status === "missing" && (
+          <p className="text-sm text-danger">
+            No hay un restaurante activo con ese slug
+          </p>
+        )}
         <input
           type="email"
           name="email"
@@ -92,8 +137,8 @@ export default function StaffLoginPage() {
         {error && <p className="text-sm text-danger">{error}</p>}
         <button
           type="button"
-          disabled={loading}
-          className="btn-primary w-full"
+          disabled={loading || !identified}
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:transform-none disabled:hover:shadow-none"
           onClick={(e) => {
             const form = e.currentTarget.form;
             if (!form || !form.reportValidity()) return;
@@ -108,6 +153,6 @@ export default function StaffLoginPage() {
           </Link>
         </p>
       </form>
-    </RestaurantAuthShell>
+    </AuthShell>
   );
 }
