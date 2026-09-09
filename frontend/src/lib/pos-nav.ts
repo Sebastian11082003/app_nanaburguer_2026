@@ -4,6 +4,7 @@ export type PosNavKey =
   | "dashboard"
   | "sell"
   | "sales"
+  | "receipts"
   | "products"
   | "delivery"
   | "cash"
@@ -27,6 +28,7 @@ const ALL_NAV: PosNavItem[] = [
   { key: "dashboard", label: "Mesas", href: "/restaurant/app" },
   { key: "sell", label: "Vender", href: "/restaurant/cashier/pos" },
   { key: "sales", label: "Ventas", href: "/restaurant/admin/orders" },
+  { key: "receipts", label: "Recibos", href: "/restaurant/cashier/invoices" },
   { key: "products", label: "Productos", href: "/restaurant/admin/menu/items" },
   { key: "delivery", label: "Domicilios", href: "/restaurant/delivery/orders" },
   { key: "cash", label: "Caja", href: "/restaurant/cashier/cash" },
@@ -39,13 +41,14 @@ const VISIBLE: Record<UserRole, PosNavKey[]> = {
     "dashboard",
     "sell",
     "sales",
+    "receipts",
     "products",
     "delivery",
     "cash",
     "reports",
     "settings",
   ],
-  CASHIER: ["dashboard", "sell", "sales", "delivery", "cash"],
+  CASHIER: ["dashboard", "sell", "sales", "receipts", "delivery", "cash"],
   WAITER: ["dashboard"],
   DELIVERY: ["dashboard", "delivery"],
   KITCHEN: ["dashboard"],
@@ -77,8 +80,8 @@ export function isPosNavActive(item: PosNavItem, pathname: string): boolean {
       pathname.startsWith("/restaurant/waiter/tables")
     );
   }
-  if (item.key === "sell") {
-    return pathname.startsWith("/restaurant/cashier/pos");
+  if (item.key === "receipts") {
+    return pathname.startsWith("/restaurant/cashier/invoices");
   }
   if (item.key === "delivery") {
     return (
