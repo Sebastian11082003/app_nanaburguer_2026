@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Liberar ticket vacío post-cocina (v0.4.56)
+
+- Cancelar todas las líneas ya no deja la mesa ocupada: Liberar mesa vale en cualquier estado abierto sin productos vivos. KDS no muestra esos tickets. Caja puede transferir mesa. Cobro rechaza $0.
+
 ### Huecos del turno de revisión (v0.4.55)
 
 - Detalle admin de mesa: Liberar mesa vacía y cancelar ítem, sin saltar a crear orden.

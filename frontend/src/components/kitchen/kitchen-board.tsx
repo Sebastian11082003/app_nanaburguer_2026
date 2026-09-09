@@ -44,7 +44,12 @@ export function KitchenBoard({
           setError("");
         }
         const data = await ordersService.getAll({ status });
-        setOrders(data);
+        // Canceled-all tickets stay OPEN until Liberar; they must not clog KDS.
+        setOrders(
+          data.filter((row) =>
+            (row.items ?? []).some((item) => !item.canceledAt),
+          ),
+        );
         if (opts?.silent) setError("");
       } catch (err: unknown) {
         if (!opts?.silent) {

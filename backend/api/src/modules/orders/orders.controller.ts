@@ -122,7 +122,7 @@ export class OrdersController {
 
   // 🟢 TRANSFERIR MESA
   @Patch(':id/transfer')
-  @Roles(UserRole.ADMIN, UserRole.WAITER)
+  @Roles(UserRole.ADMIN, UserRole.WAITER, UserRole.CASHIER)
   transferTable(
     @Param('id') id: string,
     @Body() dto: TransferTableDto,

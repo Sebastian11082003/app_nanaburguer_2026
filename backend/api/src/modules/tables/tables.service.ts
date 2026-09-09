@@ -2,23 +2,21 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 
 import { ACTIVE_ORDER_STATUSES } from '../../common/constants/order-status.constants';
+import { hasLiveOrderLines } from '../../common/order-lines';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 
 /**
- * Llevar/Domicilios stay listable as CREATED drafts after leaving the
- * screen (customer name already captured). Those empty tickets must not
- * paint the floor card red — staff discard them from POS, not from Mesas.
+ * Llevar/Domicilios stay listable after leaving the screen. Empty tickets
+ * (no live lines, including post-kitchen voids) must not paint the channel
+ * card red — staff discard/liberar them from POS, not from Mesas.
  */
 export function occupiesFloorChannel(order: {
-  status: OrderStatus | string;
+  status?: OrderStatus | string;
   items: Array<{ canceledAt?: Date | string | null }>;
 }): boolean {
-  if (order.status !== OrderStatus.CREATED) {
-    return true;
-  }
-  return order.items.some((line) => !line.canceledAt);
+  return hasLiveOrderLines(order.items);
 }
 
 /**

@@ -8,7 +8,8 @@ import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
 import {
   clearEmptyTicketReleaser,
-  isEmptyCreatedDraft,
+  hasLiveLines,
+  isEmptyOpenTicket,
   releaseEmptyTicketIfNeeded,
 } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
@@ -232,7 +233,7 @@ function DeliveryCreateOrderPage() {
   }
 
   async function handleDiscard() {
-    if (!order || !isEmptyCreatedDraft(order)) return;
+    if (!order || !isEmptyOpenTicket(order)) return;
     if (!window.confirm("¿Descartar este pedido? No hay productos.")) return;
     clearEmptyTicketReleaser();
     try {
@@ -270,11 +271,12 @@ function DeliveryCreateOrderPage() {
     }
   }
 
-  const canDiscard = isEmptyCreatedDraft(order);
+  const canDiscard = isEmptyOpenTicket(order);
   const chargeDisabled =
     busy ||
     !order ||
-    !order.items?.length ||
+    !hasLiveLines(order) ||
+    order.totalCents <= 0 ||
     order.status === "CLOSED" ||
     order.status === "CANCELED";
   const afterCreateHref =

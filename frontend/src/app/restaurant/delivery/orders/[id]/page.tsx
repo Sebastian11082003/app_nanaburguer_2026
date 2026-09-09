@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { hasLiveLines } from "@/src/lib/empty-ticket-leave";
 import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
@@ -220,7 +221,8 @@ export default function DeliveryOrderDetailPage() {
           {canCharge &&
             order.status !== "CLOSED" &&
             order.status !== "CANCELED" &&
-            (order.items?.length ?? 0) > 0 && (
+            hasLiveLines(order) &&
+            order.totalCents > 0 && (
               <button
                 type="button"
                 disabled={busy}
