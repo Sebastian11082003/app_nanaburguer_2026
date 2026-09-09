@@ -4,8 +4,13 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import {
+  formatPickupAt,
+  toDatetimeLocalValue,
+} from "@/src/lib/format-pickup-at";
 import {
   clearEmptyTicketReleaser,
   isEmptyCreatedDraft,
@@ -14,7 +19,6 @@ import {
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderProgressLabel } from "@/src/lib/order-channel-label";
-import { orderLineLabel } from "@/src/lib/order-line-label";
 import { menuService } from "@/src/services/menu.service";
 import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
@@ -179,6 +183,36 @@ export default function CashierPosPage() {
     }
   }
 
+  async function handleCancelItem(itemId: string) {
+    if (!order) return;
+    if (order.status === "CREATED") {
+      try {
+        setBusy(true);
+        setError("");
+        const updated = await ordersService.removeItem(order.id, itemId);
+        setOrder(updated);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "No se pudo quitar el producto"));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    const reason = window.prompt("Motivo de cancelación", "Error de digitación");
+    if (reason == null) return;
+    try {
+      setBusy(true);
+      setError("");
+      const updated = await ordersService.cancelItem(order.id, itemId, reason);
+      setOrder(updated);
+      setMessage("Ítem cancelado");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cancelar el ítem"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function resumePickup(open: Order) {
     try {
       setBusy(true);
@@ -188,6 +222,7 @@ export default function CashierPosPage() {
       setOrder(fresh);
       setCustomerName(fresh.delivery?.customerName || "Mostrador");
       setCustomerPhone(fresh.delivery?.phone ?? "");
+      setPickupAt(toDatetimeLocalValue(fresh.pickupAt));
       setMessage(`Continuando #${fresh.orderNumber}`);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo retomar el pedido"));
@@ -251,6 +286,9 @@ export default function CashierPosPage() {
                 #{open.orderNumber} ·{" "}
                 {open.delivery?.customerName ?? open.status}
                 {progress ? ` · ${progress}` : ""}
+                {formatPickupAt(open.pickupAt)
+                  ? ` · ${formatPickupAt(open.pickupAt)}`
+                  : ""}
               </span>
               <span className="text-sm font-bold tabular-nums">
                 {formatCents(open.totalCents)}
@@ -323,16 +361,35 @@ export default function CashierPosPage() {
         <aside className="h-fit space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
           <h2 className="text-2xl font-bold">Resumen</h2>
           <p className="text-sm text-zinc-400">
-            {order ? `#${order.orderNumber} · ${order.status}` : "Sin orden"}
+            {order
+              ? `#${order.orderNumber} · ${order.status}${
+                  formatPickupAt(order.pickupAt)
+                    ? ` · Recoge ${formatPickupAt(order.pickupAt)}`
+                    : ""
+                }`
+              : "Sin orden"}
           </p>
-          <ul className="space-y-2 text-sm">
+          <ul className="space-y-2">
             {(order?.items ?? []).map((line) => (
-              <li key={line.id} className="flex justify-between gap-3">
-                <span>{orderLineLabel(line)}</span>
-                <span>{formatCents(line.lineTotalCents)}</span>
-              </li>
+              <OrderItemRow
+                key={line.id}
+                item={line}
+                busy={busy}
+                onCancel={
+                  order && order.status !== "CLOSED" && order.status !== "CANCELED"
+                    ? handleCancelItem
+                    : undefined
+                }
+                cancelLabel={order?.status === "CREATED" ? "Quitar" : "Cancelar"}
+              />
             ))}
           </ul>
+          {(order?.taxCents ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-zinc-400">
+              <span>Servicio 5%</span>
+              <span>{formatCents(order?.taxCents ?? 0)}</span>
+            </div>
+          )}
           <div className="flex justify-between border-t border-zinc-800 pt-3 font-bold">
             <span>Total</span>
             <span>{formatCents(order?.totalCents ?? 0)}</span>
@@ -405,6 +462,9 @@ export default function CashierPosPage() {
       <ClosePayModal
         open={payOpen}
         totalCents={order?.totalCents ?? 0}
+        subtotalCents={order?.subtotalCents}
+        discountCents={order?.discountCents}
+        taxCents={order?.taxCents}
         busy={busy}
         onClose={() => setPayOpen(false)}
         onConfirm={handlePay}

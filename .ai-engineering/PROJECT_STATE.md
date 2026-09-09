@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Superficies POS para revisión (v0.4.54)
+
+- Cancelar ítem en Ventas, POS llevar y detalle de domicilio. Hora de recoger en cocina, comanda y listas. Modal de cobro con Servicio 5%. Piso con poll. Recibo: propina solo si hay; el 5% de mesa no es propina.
+
 ### Pulido de ticket para revisión (v0.4.53)
 
 - Cocina y comanda muestran `CANCELADO` en la línea anulada (no la cuentan como ítem vivo). Recibo y reporte de productos ignoran esas líneas. Servicio 5% vive en `service-fee.ts`.

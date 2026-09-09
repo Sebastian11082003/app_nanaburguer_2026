@@ -466,8 +466,7 @@ export class OrdersService {
    * CREATED, i.e. never sent to kitchen). This is a hard delete — safe
    * only at this stage because nothing downstream (kitchen ticket, sales
    * report) has seen the item yet. Once the order leaves CREATED, use
-   * the future per-item "cancel" flow instead (keeps an audit trail),
-   * not this one.
+   * `cancelItem` (audit trail), not this one.
    */
   async removeItem(
     orderId: string,

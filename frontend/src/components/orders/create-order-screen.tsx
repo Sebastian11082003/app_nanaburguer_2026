@@ -808,6 +808,9 @@ export function CreateOrderScreen({
         <ClosePayModal
           open={payOpen}
           totalCents={order?.totalCents ?? 0}
+          subtotalCents={order?.subtotalCents}
+          discountCents={order?.discountCents}
+          taxCents={order?.taxCents}
           busy={busy}
           onClose={() => setPayOpen(false)}
           onConfirm={handleCloseAndPay}

@@ -69,7 +69,10 @@ function ChannelCard({
 
 /**
  * Loggro-style occupancy board: tables + Llevar + Domicilios.
+ * Poll like KDS so caja sees a mesa turn red without a refresh.
  */
+const FLOOR_POLL_MS = 8000;
+
 export function FloorBoard() {
   const router = useRouter();
   const role = useAuthStore((s) => s.user?.role);
@@ -79,23 +82,33 @@ export function FloorBoard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setLoading(true);
-      setError("");
+      if (!opts?.silent) {
+        setLoading(true);
+        setError("");
+      }
       const data = await tablesService.getFloor();
       setTables(data.tables.filter((table) => table.isActive));
       setPickup(data.pickup);
       setDelivery(data.delivery);
+      if (opts?.silent) setError("");
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudo cargar el piso"));
+      if (!opts?.silent) {
+        setError(getErrorMessage(err, "No se pudo cargar el piso"));
+      }
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load();
+    void load();
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "hidden") return;
+      void load({ silent: true });
+    }, FLOOR_POLL_MS);
+    return () => window.clearInterval(id);
   }, [load]);
 
   function openTable(table: Table) {

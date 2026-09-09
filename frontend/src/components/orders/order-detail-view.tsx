@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
-import { orderLineLabel } from "@/src/lib/order-line-label";
+import { orderChannelLabel } from "@/src/lib/order-channel-label";
+import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { useAuthStore } from "@/src/store/auth.store";
@@ -84,6 +87,14 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
     !isClosed &&
     !isCanceled &&
     (role === "admin" || hasPermission(currentUser, "ORDERS_CANCEL"));
+  const canCancelItem =
+    !!order &&
+    !isClosed &&
+    !isCanceled &&
+    order.status !== "CREATED" &&
+    (role === "admin" ||
+      role === "cashier" ||
+      hasPermission(currentUser, "ORDERS_CANCEL"));
   const canResumeFromTable =
     !!order &&
     (role === "waiter" || role === "admin" || role === "cashier") &&
@@ -130,6 +141,24 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
     }
   }
 
+  async function handleCancelItem(itemId: string) {
+    if (!order) return;
+    const reason = window.prompt("Motivo de cancelación", "Error de digitación");
+    if (reason == null) return;
+
+    try {
+      setBusy(true);
+      setError("");
+      const updated = await ordersService.cancelItem(order.id, itemId, reason);
+      setOrder(updated);
+      setMessage("Ítem cancelado");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cancelar el ítem"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return <main className="p-4 sm:p-8">Cargando orden...</main>;
   }
@@ -153,9 +182,10 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
             Orden #{order.orderNumber}
           </h1>
           <p className="text-zinc-400">
-            {order.type}
-            {order.table ? ` · Mesa ${order.table.label}` : ""} ·{" "}
-            {order.status}
+            {orderChannelLabel(order)} · {orderStatusLabel(order.status)}
+            {formatPickupAt(order.pickupAt)
+              ? ` · Recoge ${formatPickupAt(order.pickupAt)}`
+              : ""}
           </p>
         </div>
         <Link
@@ -211,15 +241,14 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
 
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
         <h2 className="text-lg font-bold">Productos</h2>
-        <ul className="mt-3 space-y-2 text-sm">
+        <ul className="mt-3 space-y-2">
           {order.items.map((item) => (
-            <li key={item.id} className="flex justify-between">
-              <span>
-                {orderLineLabel(item)}
-                {item.notes ? ` · ${item.notes}` : ""}
-              </span>
-              <span>{formatCents(item.lineTotalCents)}</span>
-            </li>
+            <OrderItemRow
+              key={item.id}
+              item={item}
+              busy={busy}
+              onCancel={canCancelItem ? handleCancelItem : undefined}
+            />
           ))}
         </ul>
 
@@ -227,9 +256,27 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
           <p className="mt-2 text-sm text-zinc-500">Sin productos</p>
         )}
 
-        <div className="mt-4 flex justify-between border-t border-zinc-800 pt-4 font-bold">
-          <span>Total</span>
-          <span>{formatCents(order.totalCents)}</span>
+        <div className="mt-4 space-y-1 border-t border-zinc-800 pt-4 text-sm">
+          <div className="flex justify-between text-zinc-400">
+            <span>Subtotal</span>
+            <span>{formatCents(order.subtotalCents)}</span>
+          </div>
+          {(order.discountCents ?? 0) > 0 && (
+            <div className="flex justify-between text-amber-400">
+              <span>Descuento</span>
+              <span>-{formatCents(order.discountCents ?? 0)}</span>
+            </div>
+          )}
+          {(order.taxCents ?? 0) > 0 && (
+            <div className="flex justify-between text-zinc-400">
+              <span>Servicio 5%</span>
+              <span>{formatCents(order.taxCents)}</span>
+            </div>
+          )}
+          <div className="flex justify-between font-bold">
+            <span>Total</span>
+            <span>{formatCents(order.totalCents)}</span>
+          </div>
         </div>
       </div>
 
@@ -284,6 +331,9 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
       <ClosePayModal
         open={payOpen}
         totalCents={order.totalCents}
+        subtotalCents={order.subtotalCents}
+        discountCents={order.discountCents}
+        taxCents={order.taxCents}
         busy={busy}
         onClose={() => setPayOpen(false)}
         onConfirm={handleCloseAndPay}

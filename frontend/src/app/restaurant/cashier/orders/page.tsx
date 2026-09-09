@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderQueueLabel } from "@/src/lib/order-channel-label";
+import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { FindOrdersParams, ordersService } from "@/src/services/orders.service";
 import { Order } from "@/src/types/order";
 
@@ -98,7 +100,10 @@ export default function CashierOrdersPage() {
                 <div>
                   <h2 className="text-xl font-bold">#{order.orderNumber}</h2>
                   <p className="text-sm text-zinc-400">
-                    {order.status} · {orderQueueLabel(order)}
+                    {orderStatusLabel(order.status)} · {orderQueueLabel(order)}
+                    {formatPickupAt(order.pickupAt)
+                      ? ` · Recoge ${formatPickupAt(order.pickupAt)}`
+                      : ""}
                   </p>
                 </div>
                 <p className="font-bold">{formatCents(order.totalCents)}</p>
