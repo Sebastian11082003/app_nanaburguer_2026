@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.45
+
+- Piso: el rol `DELIVERY` ya no ve la tarjeta Llevar. Su canal es Domicilios (`/restaurant/delivery/active`).
+
 ## v0.4.44
 
 - Despacho de domicilio: el pedido pasa a `OUT_FOR_DELIVERY` (si no está cobrado). Cocina deja de ver el ticket; el rider marca entregado solo en `Delivery` para no sacar el pedido de la cola activa antes del cobro.

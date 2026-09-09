@@ -101,7 +101,8 @@ export function canOpenTable(role: UserRole | null | undefined): boolean {
 
 export function pickupHref(role: UserRole | null | undefined): string | null {
   if (role === "CASHIER" || role === "ADMIN") return "/restaurant/cashier/pos";
-  if (role === "DELIVERY") return "/restaurant/delivery/orders";
+  // Rider occupancy is Domicilios. Sending DELIVERY to the create-order
+  // screen from a Llevar card looked like a pickup channel they do not run.
   return null;
 }
 

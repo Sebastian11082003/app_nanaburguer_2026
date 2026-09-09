@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Rider sin tarjeta Llevar (v0.4.45)
+
+- El piso de `DELIVERY` solo ofrece Domicilios. Llevar seguía abriendo el alta de pedido y parecía un canal de mostrador.
+
 ### Despacho saca el ticket de cocina (v0.4.44)
 
 - `POST /deliveries/:id/dispatch` mueve el pedido a `OUT_FOR_DELIVERY` salvo `CLOSED`/`CANCELED`. El KDS filtra por `order.status`; un domicilio en moto ya no queda en Cola/Listas. Entregado del rider no cambia el pedido (sigue activo hasta cobro).
