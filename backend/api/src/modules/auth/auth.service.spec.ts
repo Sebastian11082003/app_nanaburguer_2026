@@ -205,6 +205,7 @@ describe('AuthService', () => {
         name: 'Nana',
         slug: 'nana',
         logoUrl: '/logo/nana-logo.jpeg',
+        isActive: true,
       });
 
       const result = await service.staffLogin('cashier@nana.test', 'secret123');
@@ -232,6 +233,7 @@ describe('AuthService', () => {
           name: 'Nanaburguer',
           slug: 'nanaburguer',
           logoUrl: null,
+          isActive: true,
         });
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (prisma.role as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
@@ -256,6 +258,30 @@ describe('AuthService', () => {
       expect(result.user.role).toBe(UserRole.ADMIN);
       expect(result.restaurant.slug).toBe('nanaburguer');
       expect((prisma.user as { create: jest.Mock }).create).toHaveBeenCalled();
+    });
+
+    it('rejects staff when the platform turned the restaurant off', async () => {
+      (prisma.user as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'user-1',
+        email: 'cashier@nana.test',
+        passwordHash: 'hashed',
+        role: UserRole.CASHIER,
+        restaurantId: 'restaurant-1',
+        fullName: 'Cajero',
+        isActive: true,
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (prisma.restaurant as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'restaurant-1',
+        name: 'Nana',
+        slug: 'nana',
+        logoUrl: null,
+        isActive: false,
+      });
+
+      await expect(
+        service.staffLogin('cashier@nana.test', 'secret123'),
+      ).rejects.toThrow('Restaurant disabled');
     });
 
     it('rejects invalid credentials', async () => {

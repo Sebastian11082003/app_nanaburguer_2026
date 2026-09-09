@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 
 import { PlatformService } from './platform.service';
 
 import { PlatformLoginDto } from './dto/platform-login.dto';
 
 import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+
+import { UpdateRestaurantStatusDto } from './dto/update-restaurant-status.dto';
 
 import { PlatformJwtGuard } from './guards/platform-jwt.guard';
 
@@ -27,6 +29,15 @@ export class PlatformController {
   @Get('restaurants')
   getRestaurants() {
     return this.platformService.getRestaurants();
+  }
+
+  @UseGuards(PlatformJwtGuard)
+  @Patch('restaurants/:id')
+  setRestaurantActive(
+    @Param('id') id: string,
+    @Body() dto: UpdateRestaurantStatusDto,
+  ) {
+    return this.platformService.setRestaurantActive(id, dto.isActive);
   }
 
   @UseGuards(PlatformJwtGuard)

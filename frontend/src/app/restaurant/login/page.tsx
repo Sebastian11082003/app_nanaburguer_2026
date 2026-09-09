@@ -49,6 +49,8 @@ export default function StaffLoginPage() {
           ? "Correo o contraseña incorrectos"
           : raw === "Restaurant not found"
             ? "No se encontró el restaurante de ese correo"
+            : raw === "Restaurant disabled"
+              ? "Este local está inhabilitado. Contacta a la plataforma."
             : raw,
       );
     } finally {

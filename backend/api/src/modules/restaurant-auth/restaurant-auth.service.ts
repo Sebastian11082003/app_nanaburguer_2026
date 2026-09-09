@@ -13,17 +13,23 @@ export class RestaurantAuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(slug: string, email: string, password: string) {
+  /**
+   * Tenant contact email identifies the restaurant. Slug is only branding
+   * on the form; it must not block the Gmail created with the tenant.
+   */
+  async login(_slug: string, email: string, password: string) {
     const restaurant = await this.prisma.restaurant.findFirst({
       where: {
-        slug: { equals: slug.trim().toLowerCase(), mode: 'insensitive' },
         email: { equals: email.trim().toLowerCase(), mode: 'insensitive' },
-        isActive: true,
       },
     });
 
     if (!restaurant) {
       throw new UnauthorizedException('Restaurant not found');
+    }
+
+    if (!restaurant.isActive) {
+      throw new UnauthorizedException('Restaurant disabled');
     }
 
     const validPassword = await bcrypt.compare(
@@ -61,7 +67,10 @@ export class RestaurantAuthService {
     if (!normalized) return null;
 
     const restaurant = await this.prisma.restaurant.findFirst({
-      where: { slug: { equals: normalized, mode: 'insensitive' }, isActive: true },
+      where: {
+        slug: { equals: normalized, mode: 'insensitive' },
+        isActive: true,
+      },
       select: { name: true, slug: true, logoUrl: true },
     });
 

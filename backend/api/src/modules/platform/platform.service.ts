@@ -196,6 +196,23 @@ export class PlatformService {
     };
   }
 
+  async setRestaurantActive(id: string, isActive: boolean) {
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!restaurant) {
+      throw new BadRequestException('Restaurant not found');
+    }
+
+    return this.prisma.restaurant.update({
+      where: { id },
+      data: { isActive },
+      select: SAFE_RESTAURANT_SELECT,
+    });
+  }
+
   async getRestaurants() {
     return this.prisma.restaurant.findMany({
       orderBy: {
