@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsEmail,
   IsOptional,
   IsString,
   IsUUID,
@@ -7,6 +8,10 @@ import {
 } from 'class-validator';
 
 export class UpdateUserDto {
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
   @IsOptional()
   @IsString()
   fullName?: string;

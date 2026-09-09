@@ -70,6 +70,8 @@ function ChannelCard({
 /**
  * Loggro-style occupancy board: tables + Llevar + Domicilios.
  * Poll like KDS so caja sees a mesa turn red without a refresh.
+ * Empty CREATED pickup/delivery drafts are omitted by the floor API so
+ * opening Llevar by mistake does not leave the channel card occupied.
  */
 const FLOOR_POLL_MS = 8000;
 

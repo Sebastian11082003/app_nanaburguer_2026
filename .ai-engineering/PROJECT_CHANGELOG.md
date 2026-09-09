@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.55
+
+- Turno de revisión: Liberar mesa vacía desde el detalle admin; cancelar ítem ahí mismo. El piso no pinta Llevar/Domicilios por un borrador CREATED vacío. Admin puede cambiar el correo del personal (si es el Gmail del local, también actualiza el contacto del restaurante). Desactivar sigue siendo el “borrado” (se conserva el historial).
+
 ## v0.4.54
 
 - Revisión POS: cancelar ítem desde Ventas, Llevar y domicilio; hora de recoger visible en cocina/comanda/listas; cobro muestra Servicio 5%; piso se actualiza solo; recibo no pone propina $0 junto al recargo.

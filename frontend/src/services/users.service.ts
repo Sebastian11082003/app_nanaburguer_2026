@@ -54,6 +54,7 @@ export const usersService = {
   async update(
     id: string,
     payload: {
+      email?: string;
       fullName?: string;
       isActive?: boolean;
       roleId?: string;

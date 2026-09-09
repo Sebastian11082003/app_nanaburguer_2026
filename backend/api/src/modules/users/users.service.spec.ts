@@ -70,6 +70,86 @@ describe('UsersService', () => {
     expect((prisma.user as Delegate).create).toHaveBeenCalledTimes(3);
   });
 
+  it('updates email when it is free', async () => {
+    (prisma.user as Delegate).findFirst
+      .mockResolvedValueOnce({
+        id: 'u1',
+        email: 'old@nana.test',
+        role: UserRole.CASHIER,
+        roleId: 'role-1',
+      })
+      .mockResolvedValueOnce(null);
+    (prisma.restaurant as Delegate).findFirst.mockResolvedValue({
+      email: 'nanaburguer-neiva@gmail.com',
+    });
+    (prisma.user as Delegate).update.mockResolvedValue({
+      id: 'u1',
+      email: 'caja@nana.test',
+    });
+
+    await service.update(
+      'u1',
+      { email: 'Caja@nana.test' },
+      'r1',
+      'actor-1',
+    );
+
+    expect((prisma.user as Delegate).update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ email: 'caja@nana.test' }),
+      }),
+    );
+    expect((prisma.restaurant as Delegate).update).not.toHaveBeenCalled();
+  });
+
+  it('rejects a taken email', async () => {
+    (prisma.user as Delegate).findFirst
+      .mockResolvedValueOnce({
+        id: 'u1',
+        email: 'old@nana.test',
+        role: UserRole.CASHIER,
+        roleId: 'role-1',
+      })
+      .mockResolvedValueOnce({ id: 'other' });
+
+    await expect(
+      service.update('u1', { email: 'taken@nana.test' }, 'r1', 'actor-1'),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('keeps restaurant Gmail in sync when that admin email changes', async () => {
+    (prisma.user as Delegate).findFirst
+      .mockResolvedValueOnce({
+        id: 'u1',
+        email: 'nanaburguer-neiva@gmail.com',
+        role: UserRole.ADMIN,
+        roleId: 'role-1',
+      })
+      .mockResolvedValueOnce(null);
+    (prisma.restaurant as Delegate).findFirst.mockResolvedValue({
+      email: 'nanaburguer-neiva@gmail.com',
+    });
+    (prisma.user as Delegate).update.mockResolvedValue({
+      id: 'u1',
+      email: 'nuevo@nana.test',
+    });
+    (prisma.restaurant as Delegate).update.mockResolvedValue({
+      email: 'nuevo@nana.test',
+    });
+
+    await service.update(
+      'u1',
+      { email: 'nuevo@nana.test' },
+      'r1',
+      'actor-1',
+    );
+
+    expect((prisma.restaurant as Delegate).update).toHaveBeenCalledWith({
+      where: { id: 'r1' },
+      data: { email: 'nuevo@nana.test' },
+    });
+  });
+
   it('refuses a station email that already exists globally', async () => {
     (prisma.restaurant as Delegate).findFirst.mockResolvedValue({
       slug: 'nana-neiva',
