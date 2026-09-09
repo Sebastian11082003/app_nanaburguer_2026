@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Cocina nombra Llevar y domicilio (v0.4.41)
+
+- KDS y comanda dejan de pintar `Mesa —` en tickets sin mesa. Mismo criterio que Ventas.
+
 ### Caja ve domicilio despachado o entregado (v0.4.40)
 
 - El piso sigue ocupado hasta cobrar. Despacho ya no es solo PENDING: En camino / Entregado con Cobrar.

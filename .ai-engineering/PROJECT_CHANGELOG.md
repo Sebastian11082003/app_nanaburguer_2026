@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.41
+
+- Cocina (cola/comanda): Llevar/Domicilio con nombre, no Mesa —.
+
 ## v0.4.40
 
 - Domicilios de caja lista PENDING/DISPATCHED/DELIVERED mientras la orden sigue abierta (Cobrar tras despachar).

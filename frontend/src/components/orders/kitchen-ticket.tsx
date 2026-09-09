@@ -1,5 +1,6 @@
 "use client";
 
+import { orderChannelLabel } from "@/src/lib/order-channel-label";
 import { orderLineLabel } from "@/src/lib/order-line-label";
 import { Order } from "@/src/types/order";
 
@@ -9,7 +10,7 @@ interface Props {
 }
 
 /**
- * Printable kitchen ticket ("comanda") for a DINE_IN/PICKUP order.
+ * Printable kitchen ticket ("comanda") for dine-in, pickup or delivery.
  *
  * This is deliberately NOT a receipt/invoice: no prices, no totals, no
  * legal text — just what the kitchen needs (table, order #, items,
@@ -34,7 +35,7 @@ export function KitchenTicket({ order, onClose }: Props) {
 
         <div className="mt-4 border-t border-dashed border-zinc-400 pt-4 text-sm">
           <p className="text-2xl font-black">
-            {order.table ? `Mesa ${order.table.label}` : order.type}
+            {orderChannelLabel(order)}
           </p>
           <p className="text-zinc-600">Orden #{order.orderNumber}</p>
         </div>

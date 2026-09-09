@@ -6,6 +6,7 @@ import { BrandMark } from "@/src/components/brand/brand-mark";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
+import { orderChannelLabel } from "@/src/lib/order-channel-label";
 import { ordersService } from "@/src/services/orders.service";
 import { Order, OrderStatus } from "@/src/types/order";
 
@@ -101,7 +102,7 @@ export function KitchenBoard({
                 <div>
                   <h2 className="text-2xl font-bold">#{order.orderNumber}</h2>
                   <p className="text-zinc-400">
-                    Mesa {order.table?.label ?? "—"} ·{" "}
+                    {orderChannelLabel(order)} ·{" "}
                     {order.items?.length ?? 0} ítems ·{" "}
                     {formatCents(order.totalCents)}
                   </p>
