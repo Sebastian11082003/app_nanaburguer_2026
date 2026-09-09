@@ -12,6 +12,8 @@ import { categoryColor } from "@/src/lib/category-color";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
 import {
   clearEmptyTicketReleaser,
+  hasLiveLines,
+  isEmptyOpenDineIn,
   releaseEmptyTicketIfNeeded,
 } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
@@ -390,7 +392,7 @@ export function CreateOrderScreen({
     !!order &&
     order.status !== "CLOSED" &&
     order.status !== "CANCELED" &&
-    (order?.items?.length ?? 0) > 0 &&
+    hasLiveLines(order) &&
     order.totalCents > 0 &&
     (role === "admin" ||
       role === "cashier" ||
@@ -407,9 +409,7 @@ export function CreateOrderScreen({
   // Opening a table creates a CREATED ticket immediately. Without this,
   // going back leaves the floor red at $0 and waiters cannot cancel.
   const canReleaseEmptyTable =
-    !!order &&
-    order.status === "CREATED" &&
-    (order.items ?? []).every((line) => line.canceledAt) &&
+    isEmptyOpenDineIn(order) &&
     (role === "admin" ||
       role === "cashier" ||
       role === "waiter" ||
@@ -439,7 +439,7 @@ export function CreateOrderScreen({
   const kitchenDisabled =
     busy ||
     !order ||
-    !order.items?.length ||
+    !hasLiveLines(order) ||
     order.status === "CLOSED" ||
     order.status === "CANCELED";
 

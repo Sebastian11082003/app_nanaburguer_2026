@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.56
+
+- Tras cancelar todas las líneas, caja/mesero pueden Liberar mesa (ya no queda roja a $0). Cocina oculta esos tickets vacíos. Transferir mesa también desde caja. No se cobra un ticket sin productos vivos.
+
 ## v0.4.55
 
 - Turno de revisión: Liberar mesa vacía desde el detalle admin; cancelar ítem ahí mismo. El piso no pinta Llevar/Domicilios por un borrador CREATED vacío. Admin puede cambiar el correo del personal (si es el Gmail del local, también actualiza el contacto del restaurante). Desactivar sigue siendo el “borrado” (se conserva el historial).

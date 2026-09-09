@@ -7,6 +7,10 @@ import { useCallback, useEffect, useState } from "react";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import {
+  hasLiveLines,
+  isEmptyOpenDineIn,
+} from "@/src/lib/empty-ticket-leave";
 import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
@@ -71,6 +75,8 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
     !!order &&
     !isClosed &&
     !isCanceled &&
+    hasLiveLines(order) &&
+    order.totalCents > 0 &&
     (role === "cashier" ||
       role === "admin" ||
       hasPermission(currentUser, "ORDERS_CLOSE_PAY")) &&
@@ -101,6 +107,9 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
     !isClosed &&
     !isCanceled &&
     order.table?.id;
+  const canReleaseEmpty =
+    isEmptyOpenDineIn(order) &&
+    (role === "admin" || role === "cashier" || role === "waiter");
 
   /** Cashier/admin: close the order and record payment with the chosen method. */
   async function handleCloseAndPay(payload: {
@@ -136,6 +145,25 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
       await load();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo cancelar la orden"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleReleaseTable() {
+    if (!order) return;
+    if (!window.confirm("¿Liberar la mesa? No hay productos en el ticket.")) {
+      return;
+    }
+
+    try {
+      setBusy(true);
+      setError("");
+      await ordersService.updateStatus(order.id, "CANCELED");
+      setMessage("Mesa liberada");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo liberar la mesa"));
     } finally {
       setBusy(false);
     }
@@ -316,7 +344,16 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
           </button>
         )}
 
-        {canCancel && (
+        {canReleaseEmpty ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleReleaseTable}
+            className="min-h-11 w-full rounded-xl border border-white/20 px-5 py-3 text-sm font-bold transition hover:bg-white/5 disabled:opacity-50 sm:w-auto"
+          >
+            Liberar mesa
+          </button>
+        ) : canCancel ? (
           <button
             type="button"
             disabled={busy}
@@ -325,7 +362,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
           >
             Cancelar orden
           </button>
-        )}
+        ) : null}
       </div>
 
       <ClosePayModal

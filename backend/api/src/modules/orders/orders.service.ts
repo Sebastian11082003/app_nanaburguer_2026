@@ -11,6 +11,7 @@ import { OrderStatus, OrderType, PaymentMethod, Prisma, UserRole } from '@prisma
 
 import { ACTIVE_ORDER_STATUSES } from '../../common/constants/order-status.constants';
 import { SERVICE_FEE_RATE } from '../../common/constants/service-fee';
+import { hasLiveOrderLines } from '../../common/order-lines';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AddItemDto } from './dto/add-item.dto';
 import { TransferTableDto } from './dto/transfer-table.dto';
@@ -582,8 +583,9 @@ export class OrdersService {
    * Moves an order to a new lifecycle status (e.g. SENT_TO_KITCHEN →
    * IN_PREPARATION → READY). `@Roles` on the controller is who may call
    * the endpoint. Cancel is extra-gated here: only ADMIN may void a
-   * ticket that already has products. Waiter/cashier can only release
-   * an empty CREATED ticket so a table is not stuck red at $0.
+   * ticket that still has live products. Waiter/cashier can release any
+   * empty ticket (CREATED or after cancel-all) so the table is not stuck
+   * red at $0. Kitchen cannot advance a ticket with no live lines.
    */
   async updateStatus(
     orderId: string,
@@ -608,13 +610,20 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
+    const live = hasLiveOrderLines(order.items);
+
     if (status === OrderStatus.CANCELED && role && role !== UserRole.ADMIN) {
-      const hasProducts = order.items.some((line) => !line.canceledAt);
-      if (order.status !== OrderStatus.CREATED || hasProducts) {
+      if (live) {
         throw new ForbiddenException(
           'Solo un ticket vacío se puede liberar sin ser admin',
         );
       }
+    } else if (
+      status !== OrderStatus.CANCELED &&
+      status !== OrderStatus.CLOSED &&
+      !live
+    ) {
+      throw new BadRequestException('No live items on this ticket');
     }
 
     return this.prisma.order.update({
@@ -720,6 +729,7 @@ export class OrdersService {
         include: {
           sale: true,
           delivery: true,
+          items: { select: { canceledAt: true } },
         },
       });
 
@@ -729,6 +739,16 @@ export class OrdersService {
 
       if (order.status === OrderStatus.CLOSED) {
         throw new BadRequestException('Already closed');
+      }
+
+      if (order.status === OrderStatus.CANCELED) {
+        throw new BadRequestException('Order is canceled');
+      }
+
+      if (!hasLiveOrderLines(order.items) || order.totalCents <= 0) {
+        throw new BadRequestException(
+          'Cannot close a ticket with no live items',
+        );
       }
 
       const items =

@@ -27,13 +27,19 @@ describe('occupiesFloorChannel', () => {
     ).toBe(true);
   });
 
-  it('counts anything already sent to kitchen', () => {
+  it('ignores kitchen tickets whose lines were all canceled', () => {
     expect(
       occupiesFloorChannel({
         status: OrderStatus.SENT_TO_KITCHEN,
         items: [],
       }),
-    ).toBe(true);
+    ).toBe(false);
+    expect(
+      occupiesFloorChannel({
+        status: OrderStatus.SENT_TO_KITCHEN,
+        items: [{ canceledAt: new Date() }],
+      }),
+    ).toBe(false);
   });
 });
 

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
-import { isEmptyCreatedTicket } from "@/src/lib/empty-ticket-leave";
+import { isEmptyOpenDineIn } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderStatusLabel } from "@/src/lib/order-status-label";
@@ -149,7 +149,7 @@ export default function AdminTableDetailPage() {
   }
 
   const order = table.activeOrder;
-  const canReleaseEmpty = isEmptyCreatedTicket(order);
+  const canReleaseEmpty = isEmptyOpenDineIn(order);
   const canEditLines =
     !!order && order.status !== "CLOSED" && order.status !== "CANCELED";
   const removeWhileCreated = order?.status === "CREATED";

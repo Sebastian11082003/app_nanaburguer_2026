@@ -13,7 +13,8 @@ import {
 } from "@/src/lib/format-pickup-at";
 import {
   clearEmptyTicketReleaser,
-  isEmptyCreatedDraft,
+  hasLiveLines,
+  isEmptyOpenTicket,
   releaseEmptyTicketIfNeeded,
 } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
@@ -164,7 +165,7 @@ export default function CashierPosPage() {
   }
 
   async function handleDiscard() {
-    if (!order || !isEmptyCreatedDraft(order)) return;
+    if (!order || !isEmptyOpenTicket(order)) return;
     if (!window.confirm("¿Descartar este pedido? No hay productos.")) return;
     clearEmptyTicketReleaser();
     try {
@@ -232,10 +233,15 @@ export default function CashierPosPage() {
   }
 
   const canEdit = !order || order.status === "CREATED";
-  const canDiscard = isEmptyCreatedDraft(order);
-  const kitchenDisabled = busy || !order || order.status !== "CREATED";
+  const canDiscard = isEmptyOpenTicket(order);
+  const kitchenDisabled =
+    busy || !order || order.status !== "CREATED" || !hasLiveLines(order);
   const chargeDisabled =
-    busy || !order || !order.items?.length || order.status === "CLOSED";
+    busy ||
+    !order ||
+    !hasLiveLines(order) ||
+    order.totalCents <= 0 ||
+    order.status === "CLOSED";
 
   return (
     <main className="relative mx-auto max-w-6xl space-y-6 overflow-x-hidden pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0">
