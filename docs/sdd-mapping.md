@@ -23,7 +23,7 @@ Nada de lo listado aquí se movió en este incremento. Los documentos nuevos sí
 | 12-ux-ui | parcial | Login único. Cancelar ítem en mesa, Ventas, Llevar, domicilio y detalle admin de mesa. Liberar mesa vacía también después de cocina. Recoge visible en KDS/comanda/listas. Cobro con Servicio 5%. Piso omite tickets sin líneas vivas. Recibo distingue recargo de propina. Correo de personal editable. Caja puede transferir mesa. |
 | 13-operations | parcial | Runbook MVP + HTTPS/Caddy + secretos, volume de logos y backup/restore en [10-devops/local-setup.md](10-devops/local-setup.md). Lista de salida a producción en [mvp-production-readiness.md](mvp-production-readiness.md). Sin AWS. |
 | 14-training | parcial | Setup en [README.md](../README.md). No hay onboarding técnico aparte. |
-| 15-project-control | mapeado | `.ai-engineering/PROJECT_STATE.md`, `PROJECT_DECISIONS.md`, `PROJECT_CHANGELOG.md` |
+| 15-project-control | mapeado | `.ai-engineering/PROJECT_STATE.md`, `PROJECT_DECISIONS.md`, `PROJECT_CHANGELOG.md`, [BACKLOG.md](../.ai-engineering/BACKLOG.md). GitHub Projects todavía no está creado (token del agente es solo lectura). |
 | 99-archive | no aplica aún | No se ha deprecado documentación. |
 
 ## Living-docs

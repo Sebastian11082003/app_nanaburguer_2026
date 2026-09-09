@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { adminReceiptHref } from "@/src/lib/invoice-href";
 import { isEmptyOpenDineIn } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
@@ -129,8 +130,17 @@ export default function AdminTableDetailPage() {
       setBusy(true);
       setError("");
       setMessage("");
-      await closeAndPayOrder(table.activeOrder.id, payload);
+      const paid = await closeAndPayOrder(table.activeOrder.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(
+          adminReceiptHref(
+            paid.invoiceId,
+            `/restaurant/admin/tables/${table.id}`,
+          ),
+        );
+        return;
+      }
       setMessage("Orden cerrada y cobrada");
       await load();
     } catch (err: unknown) {

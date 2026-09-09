@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Recibo, hora de recoger y aviso de caja (v0.4.57)
+
+- PATCH pickup-at en Llevar abierto. Cobro abre el comprobante. Modal de cobro avisa si no hay sesión de caja. Backlog en `.ai-engineering/BACKLOG.md`.
+
 ### Liberar ticket vacío post-cocina (v0.4.56)
 
 - Cancelar todas las líneas ya no deja la mesa ocupada: Liberar mesa vale en cualquier estado abierto sin productos vivos. KDS no muestra esos tickets. Caja puede transferir mesa. Cobro rechaza $0.

@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.57
+
+- Hora de recoger se puede corregir con el Llevar ya en cocina. Tras cobrar se abre el recibo para imprimir. El cobro avisa si no hay turno de caja abierto (no bloquea). Backlog vivo en `.ai-engineering/BACKLOG.md` (GitHub Projects aún no existe en la cuenta).
+
 ## v0.4.56
 
 - Tras cancelar todas las líneas, caja/mesero pueden Liberar mesa (ya no queda roja a $0). Cocina oculta esos tickets vacíos. Transferir mesa también desde caja. No se cobra un ticket sin productos vivos.

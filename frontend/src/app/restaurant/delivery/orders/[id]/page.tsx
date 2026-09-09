@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { posReceiptHref } from "@/src/lib/invoice-href";
 import { hasLiveLines } from "@/src/lib/empty-ticket-leave";
 import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { getErrorMessage } from "@/src/lib/get-error-message";
@@ -21,6 +22,7 @@ import { Order } from "@/src/types/order";
 
 export default function DeliveryOrderDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const orderId = params.id;
   const role = useAuthStore((s) => s.user?.role);
   const canCharge = role === "ADMIN" || role === "CASHIER";
@@ -76,8 +78,12 @@ export default function DeliveryOrderDetailPage() {
     try {
       setBusy(true);
       setError("");
-      await closeAndPayOrder(order.id, payload);
+      const paid = await closeAndPayOrder(order.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(posReceiptHref(paid.invoiceId, backHref));
+        return;
+      }
       setMessage("Pedido cobrado");
       await load();
     } catch (err: unknown) {

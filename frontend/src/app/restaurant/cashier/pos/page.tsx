@@ -7,6 +7,7 @@ import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { posReceiptHref } from "@/src/lib/invoice-href";
 import {
   formatPickupAt,
   toDatetimeLocalValue,
@@ -150,8 +151,12 @@ export default function CashierPosPage() {
     try {
       setBusy(true);
       setError("");
-      await closeAndPayOrder(order.id, payload);
+      const paid = await closeAndPayOrder(order.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(posReceiptHref(paid.invoiceId, "/restaurant/cashier/pos"));
+        return;
+      }
       setMessage(`Orden #${order.orderNumber} cobrada`);
       setOrder(null);
       setCustomerName("Mostrador");
@@ -233,6 +238,8 @@ export default function CashierPosPage() {
   }
 
   const canEdit = !order || order.status === "CREATED";
+  const canEditPickup =
+    !order || (order.status !== "CLOSED" && order.status !== "CANCELED");
   const canDiscard = isEmptyOpenTicket(order);
   const kitchenDisabled =
     busy || !order || order.status !== "CREATED" || !hasLiveLines(order);
@@ -332,7 +339,21 @@ export default function CashierPosPage() {
                 className="mt-1 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-base text-paper"
                 value={pickupAt}
                 onChange={(e) => setPickupAt(e.target.value)}
-                disabled={!canEdit}
+                onBlur={() => {
+                  if (!order || !canEditPickup) return;
+                  void ordersService
+                    .setPickupAt(
+                      order.id,
+                      pickupAt ? new Date(pickupAt).toISOString() : null,
+                    )
+                    .then(setOrder)
+                    .catch((err: unknown) =>
+                      setError(
+                        getErrorMessage(err, "No se pudo guardar la hora"),
+                      ),
+                    );
+                }}
+                disabled={!canEditPickup}
               />
             </label>
             {!order && (
