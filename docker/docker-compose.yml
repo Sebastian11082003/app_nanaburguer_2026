@@ -51,6 +51,11 @@ services:
       db:
         condition: service_healthy
 
+    volumes:
+      # Logos live on disk under /app/uploads. Without this volume a
+      # recreate of nanaburguer_api wipes every tenant logo.
+      - api_uploads:/app/uploads
+
     healthcheck:
       test:
         [
@@ -92,6 +97,7 @@ services:
 
 volumes:
   postgres_data:
+  api_uploads:
 
 networks:
   nanaburguer_net:

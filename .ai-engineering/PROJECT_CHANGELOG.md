@@ -282,6 +282,11 @@
 - Login único de personal (correo + contraseña) y recuperar acceso.
 - Piso de mesas compartido; nav filtrada por rol (mesero/caja/domicilio).
 
+## v0.4.13
+
+- Volume Docker `api_uploads` para `/app/uploads` (logos).
+- Scripts `docker/backup.sh` y `restore.sh`; runbook de backup/restore.
+
 ## v0.4.12
 
 - KDS: líneas del pedido en cola/preparando/listas y poll cada 8s (pausa con la pestaña oculta).
