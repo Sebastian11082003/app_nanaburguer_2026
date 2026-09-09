@@ -17,11 +17,20 @@ export default function CashierDeliveryPage() {
       setLoading(true);
       setError("");
       const data = await deliveryService.getAll();
+      // Floor Domicilios stays occupied until the order closes. After
+      // dispatch the old PENDING-only list went empty, so tapping the
+      // red card had no Cobrar.
       setDeliveries(
-        data.filter(
-          (d) =>
-            d.status === "PENDING" && d.order?.status !== "CANCELED",
-        ),
+        data.filter((d) => {
+          const orderStatus = d.order?.status;
+          if (!orderStatus || orderStatus === "CANCELED") return false;
+          if (orderStatus === "CLOSED") return d.status === "PENDING";
+          return (
+            d.status === "PENDING" ||
+            d.status === "DISPATCHED" ||
+            d.status === "DELIVERED"
+          );
+        }),
       );
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudieron cargar pedidos"));
@@ -55,10 +64,10 @@ export default function CashierDeliveryPage() {
             Caja
           </p>
           <h1 className="mt-2 font-display text-2xl sm:text-4xl">
-            Despachar domicilios
+            Domicilios
           </h1>
           <p className="mt-2 text-sm text-muted sm:text-base">
-            Asigna repartidor a los pedidos pendientes.
+            Despacha y cobra los que siguen en el canal.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -87,7 +96,20 @@ export default function CashierDeliveryPage() {
             const orderStatus = delivery.order?.status;
             const assembling = orderStatus === "CREATED";
             const paid = orderStatus === "CLOSED";
-            const canDispatch = !!orderStatus && !assembling && orderStatus !== "CANCELED";
+            const pending = delivery.status === "PENDING";
+            const canDispatch =
+              pending &&
+              !!orderStatus &&
+              !assembling &&
+              orderStatus !== "CANCELED";
+            const progress =
+              delivery.status === "DELIVERED"
+                ? "Entregado"
+                : delivery.status === "DISPATCHED"
+                  ? "En camino"
+                  : paid
+                    ? "Pagado"
+                    : null;
             return (
             <div key={delivery.id} className="panel-surface p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -98,7 +120,7 @@ export default function CashierDeliveryPage() {
                   <p className="text-sm text-muted">
                     {delivery.address ?? "Pickup"} · {delivery.phone}
                     {orderStatus ? ` · ${orderStatus}` : ""}
-                    {paid ? " · Pagado" : ""}
+                    {progress ? ` · ${progress}` : ""}
                   </p>
                 </div>
                 <div className="flex w-full flex-wrap gap-2 sm:w-auto">
@@ -121,6 +143,7 @@ export default function CashierDeliveryPage() {
                       Cobrar
                     </Link>
                   ) : null}
+                {pending ? (
                 <button
                   type="button"
                   disabled={busyId === delivery.id || !canDispatch}
@@ -129,13 +152,14 @@ export default function CashierDeliveryPage() {
                 >
                   {busyId === delivery.id ? "..." : "Despachar"}
                 </button>
+                ) : null}
                 </div>
               </div>
             </div>
             );
           })}
           {deliveries.length === 0 && (
-            <p className="text-muted">No hay pedidos pendientes por despachar</p>
+            <p className="text-muted">No hay domicilios abiertos</p>
           )}
         </div>
       )}

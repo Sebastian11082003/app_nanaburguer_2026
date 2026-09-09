@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Caja ve domicilio despachado o entregado (v0.4.40)
+
+- El piso sigue ocupado hasta cobrar. Despacho ya no es solo PENDING: En camino / Entregado con Cobrar.
+
 ### Ventas marca domicilio en camino / entregado (v0.4.39)
 
 - Si el ticket sigue abierto, la fila dice En camino o Entregado según `Delivery.status`. Caja ve qué cobro COD ya salió.
