@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import {
@@ -12,7 +12,17 @@ import {
 import { usersService } from "@/src/services/users.service";
 
 export default function CreateUserPage() {
+  return (
+    <Suspense fallback={<p>Cargando...</p>}>
+      <CreateUserForm />
+    </Suspense>
+  );
+}
+
+function CreateUserForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const stationHint = searchParams.get("station");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [roles, setRoles] = useState<RestaurantRole[]>([]);
@@ -29,16 +39,19 @@ export default function CreateUserPage() {
       .then((rows) => {
         const active = rows.filter((r) => r.isActive);
         setRoles(active);
+        const hinted = stationHint
+          ? active.find((r) => r.systemKey === stationHint || r.stationKey === stationHint)
+          : undefined;
         const waiter = active.find((r) => r.systemKey === "WAITER");
         setForm((prev) => ({
           ...prev,
-          roleId: waiter?.id ?? active[0]?.id ?? "",
+          roleId: hinted?.id ?? waiter?.id ?? active[0]?.id ?? "",
         }));
       })
       .catch((err: unknown) => {
         setError(getErrorMessage(err, "No se pudieron cargar los roles"));
       });
-  }, []);
+  }, [stationHint]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();

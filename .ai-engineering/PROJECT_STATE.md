@@ -226,6 +226,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 - `from`/`to` (días UTC) en summary, ventas, productos, medios de pago y canales.
 - `GET /reports/orders-by-status` (HU-023). Domicilio y pickup separados.
 
+### Personal de estación (v0.4.15)
+
+- Al crear un tenant se crean cajero/mesero/cocina/domicilio (`rol@slug.test`, misma clave que el admin).
+- Admin puede completar estaciones faltantes (`POST /users/station-staff`).
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.

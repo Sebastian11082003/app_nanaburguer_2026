@@ -1,3 +1,16 @@
+export interface PlatformRestaurantUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  isActive: boolean;
+}
+
+export interface StationLoginHint {
+  role: string;
+  email: string;
+}
+
 export interface PlatformRestaurant {
   id: string;
 
@@ -16,6 +29,12 @@ export interface PlatformRestaurant {
   isActive: boolean;
 
   createdAt: string;
+
+  users?: PlatformRestaurantUser[];
+
+  stationLogins?: StationLoginHint[];
+
+  stationStaffCreated?: number;
 }
 export interface CreateRestaurantDto {
   name: string;

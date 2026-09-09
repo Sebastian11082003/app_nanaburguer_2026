@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 import { BrandMark } from "@/src/components/brand/brand-mark";
 import {
@@ -10,6 +10,8 @@ import {
   MobileNavTrigger,
 } from "@/src/components/layaout/mobile-nav-drawer";
 import { restaurantAdminNavigation } from "@/src/config/restaurant-navigation";
+import { useAuthHydrated } from "@/src/hooks/use-store-hydration";
+import { STATION_BY_ROLE } from "@/src/lib/stations";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 
@@ -56,11 +58,19 @@ export default function RestaurantAdminLayout({
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthHydrated();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    if (!hydrated || !user) return;
+    if (user.role !== "ADMIN") {
+      router.replace(STATION_BY_ROLE[user.role]?.homeHref ?? "/restaurant/login");
+    }
+  }, [hydrated, user, router]);
 
   function handleLogout() {
     logout();
-    router.push("/restaurant/admin/login");
+    router.push("/restaurant/login");
   }
 
   /** A nav item is "active" on its own route or any of its sub-routes (except the dashboard root). */

@@ -18,6 +18,8 @@ import { UserRole } from '@prisma/client';
 
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 import { RolesService } from '../roles/roles.service';
+import { UsersService } from '../users/users.service';
+import { STATION_STAFF, stationStaffEmail } from '../users/station-staff';
 
 const SAFE_RESTAURANT_SELECT = {
   id: true,
@@ -43,6 +45,8 @@ export class PlatformService {
     private paymentMethodsService: PaymentMethodsService,
 
     private rolesService: RolesService,
+
+    private usersService: UsersService,
   ) {}
 
   async login(dto: PlatformLoginDto) {
@@ -178,10 +182,24 @@ export class PlatformService {
       return createdRestaurant;
     });
 
-    return this.prisma.restaurant.findUniqueOrThrow({
+    const staff = await this.usersService.provisionStationStaff(
+      restaurant.id,
+      dto.adminPassword,
+    );
+
+    const created = await this.prisma.restaurant.findUniqueOrThrow({
       where: { id: restaurant.id },
       select: SAFE_RESTAURANT_SELECT,
     });
+
+    return {
+      ...created,
+      stationLogins: STATION_STAFF.map((station) => ({
+        role: station.role,
+        email: stationStaffEmail(station.prefix, created.slug),
+      })),
+      stationStaffCreated: staff.created.length,
+    };
   }
 
   async getRestaurants() {

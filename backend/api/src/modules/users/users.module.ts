@@ -12,5 +12,6 @@ import { UsersService } from './users.service';
   imports: [PrismaModule, AuthModule, RolesModule],
   controllers: [UsersController],
   providers: [UsersService, RolesGuard, PermissionsGuard],
+  exports: [UsersService],
 })
 export class UsersModule {}

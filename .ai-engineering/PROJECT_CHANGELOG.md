@@ -282,6 +282,11 @@
 - Login único de personal (correo + contraseña) y recuperar acceso.
 - Piso de mesas compartido; nav filtrada por rol (mesero/caja/domicilio).
 
+## v0.4.15
+
+- Personal de estación al crear restaurante (cajero/mesero/cocina/domicilio) + botón para tenants que solo tienen admin.
+- `POST /users/station-staff` completa estaciones faltantes.
+
 ## v0.4.14
 
 - Reportes: filtro de fechas UTC + órdenes por estado + split domicilio/pickup.
@@ -306,7 +311,6 @@
 - Auditoría MVP vs producción: `docs/mvp-production-readiness.md`.
 - Inventario confirmado fuera de alcance (sin modelo/API/UI).
 - Huecos reales del contrato: cierre de caja de turno, persistencia de logos, poll de cocina, HUs 014/017/023/012 incompletas.
-
 ## v0.4.9
 
 - Cierre de huecos operativos: detalle de usuario (activar/rol/password), 86 de producto, POS mostrador, despacho de domicilios en el hub de caja.
