@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderChannelLabel } from "@/src/lib/order-channel-label";
 import { orderLineLabel } from "@/src/lib/order-line-label";
+import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { ordersService } from "@/src/services/orders.service";
 import { Order, OrderStatus } from "@/src/types/order";
 
@@ -130,6 +131,9 @@ export function KitchenBoard({
                     {orderChannelLabel(order)} ·{" "}
                     {activeCount} ítems ·{" "}
                     {formatCents(order.totalCents)}
+                    {formatPickupAt(order.pickupAt)
+                      ? ` · Recoge ${formatPickupAt(order.pickupAt)}`
+                      : ""}
                   </p>
                 </div>
 

@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.54
+
+- Revisión POS: cancelar ítem desde Ventas, Llevar y domicilio; hora de recoger visible en cocina/comanda/listas; cobro muestra Servicio 5%; piso se actualiza solo; recibo no pone propina $0 junto al recargo.
+
 ## v0.4.53
 
 - Ticket: recargo de servicio 5% en constante; cocina y comanda marcan ítems CANCELADO; el recibo y el top de productos no cuentan líneas anuladas. Órdenes admin filtra preparando / en camino / anuladas.

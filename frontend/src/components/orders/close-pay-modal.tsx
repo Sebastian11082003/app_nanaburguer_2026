@@ -13,6 +13,9 @@ import { PaymentMethod } from "@/src/services/payment.service";
 type Props = {
   open: boolean;
   totalCents: number;
+  subtotalCents?: number;
+  discountCents?: number;
+  taxCents?: number;
   busy?: boolean;
   onClose: () => void;
   onConfirm: (payload: {
@@ -28,6 +31,9 @@ type Props = {
 export function ClosePayModal({
   open,
   totalCents,
+  subtotalCents,
+  discountCents,
+  taxCents,
   busy = false,
   onClose,
   onConfirm,
@@ -97,12 +103,30 @@ export function ClosePayModal({
         <h2 id="close-pay-title" className="text-xl font-bold">
           Cerrar y cobrar
         </h2>
-        <p className="mt-1 text-sm text-zinc-400">
-          Total a cobrar:{" "}
-          <span className="font-semibold text-white">
-            {formatCents(totalCents)}
-          </span>
-        </p>
+        <div className="mt-3 space-y-1 text-sm text-zinc-400">
+          {typeof subtotalCents === "number" && (
+            <p className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{formatCents(subtotalCents)}</span>
+            </p>
+          )}
+          {(discountCents ?? 0) > 0 && (
+            <p className="flex justify-between text-amber-400">
+              <span>Descuento</span>
+              <span>-{formatCents(discountCents ?? 0)}</span>
+            </p>
+          )}
+          {(taxCents ?? 0) > 0 && (
+            <p className="flex justify-between">
+              <span>Servicio 5%</span>
+              <span>{formatCents(taxCents ?? 0)}</span>
+            </p>
+          )}
+          <p className="flex justify-between text-base font-semibold text-white">
+            <span>Total a cobrar</span>
+            <span>{formatCents(totalCents)}</span>
+          </p>
+        </div>
 
         {loadError && <p className="mt-3 text-sm text-red-400">{loadError}</p>}
         {loadingMethods && (

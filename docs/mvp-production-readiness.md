@@ -17,7 +17,7 @@ No es una propuesta de features nuevas. Es qué falta **respecto de lo ya promet
 
 El vertical operativo del MVP **existe**: login por rol, mesas, menú, órdenes DINE_IN / DELIVERY / PICKUP, cocina, cobro, factura POS (snapshot), domicilios, usuarios/roles, dashboard/reportes básicos, movimientos de caja, compose local + overlay HTTPS.
 
-**Actualizado en `dev` (v0.4.53):** cierre de turno (`CashSession`), poll de cocina 8s con líneas, volume `uploads/` + `docker/backup.sh`, recargo de servicio 5% en mesa, cancelar ítem con motivo, hora de pickup, reportes con rango de fechas y por estado, un solo login de personal. Lo que sigue abajo describía `dev` @ v0.4.9; no uses esas filas P0/P1 como lista de trabajo actual.
+**Actualizado en `dev` (v0.4.54):** cierre de turno, poll de cocina y de piso, cancelar ítem también desde Ventas/Llevar/domicilio, hora de pickup visible, cobro con Servicio 5%, volume uploads, un solo login. Lo que sigue abajo describía `dev` @ v0.4.9.
 
 Eso es un **MVP de piloto local**, no un **SaaS listo para producción pública**.
 

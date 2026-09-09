@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { orderQueueLabel } from "@/src/lib/order-channel-label";
+import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { formatCents } from "@/src/lib/money";
 import { ordersService } from "@/src/services/orders.service";
 import { Order, OrderStatus } from "@/src/types/order";
@@ -85,8 +87,12 @@ export default function AdminOrdersPage() {
                   #{order.orderNumber} · {orderQueueLabel(order)}
                 </p>
                 <p className="text-sm text-zinc-500">
+                  {orderStatusLabel(order.status)} ·{" "}
                   {order.items?.length ?? 0} items ·{" "}
                   {new Date(order.createdAt).toLocaleString()}
+                  {formatPickupAt(order.pickupAt)
+                    ? ` · Recoge ${formatPickupAt(order.pickupAt)}`
+                    : ""}
                 </p>
                 <p className="text-sm text-zinc-500">
                   Creada por {order.createdBy?.fullName ?? "—"}

@@ -5,10 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
-import { orderLineLabel } from "@/src/lib/order-line-label";
+import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { Table, tablesService } from "@/src/services/tables.service";
 
@@ -158,22 +159,27 @@ export default function AdminTableDetailPage() {
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
           <h2 className="text-xl font-bold">Orden activa</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Estado: {order.status} · Creada:{" "}
+            Estado: {orderStatusLabel(order.status)} · Creada:{" "}
             {new Date(order.createdAt).toLocaleString()}
           </p>
 
-          <ul className="mt-4 space-y-2 text-sm">
+          <ul className="mt-4 space-y-2">
             {order.items.map((item) => (
-              <li key={item.id} className="flex justify-between gap-3">
-                <span>{orderLineLabel(item)}</span>
-                <span>{formatCents(item.lineTotalCents)}</span>
-              </li>
+              <OrderItemRow key={item.id} item={item} />
             ))}
           </ul>
 
-          <div className="mt-4 flex justify-between border-t border-zinc-800 pt-4 font-bold">
-            <span>Total</span>
-            <span>{formatCents(order.totalCents)}</span>
+          <div className="mt-4 space-y-1 border-t border-zinc-800 pt-4 text-sm">
+            {(order.taxCents ?? 0) > 0 && (
+              <div className="flex justify-between text-zinc-400">
+                <span>Servicio 5%</span>
+                <span>{formatCents(order.taxCents)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold">
+              <span>Total</span>
+              <span>{formatCents(order.totalCents)}</span>
+            </div>
           </div>
         </div>
       )}
@@ -181,6 +187,9 @@ export default function AdminTableDetailPage() {
       <ClosePayModal
         open={payOpen}
         totalCents={order?.totalCents ?? 0}
+        subtotalCents={order?.subtotalCents}
+        discountCents={order?.discountCents}
+        taxCents={order?.taxCents}
         busy={busy}
         onClose={() => setPayOpen(false)}
         onConfirm={handleCloseAndPay}
