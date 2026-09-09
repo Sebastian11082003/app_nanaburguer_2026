@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Descartar borrador vacío Llevar/domicilio (v0.4.38)
+
+- Esos tickets ya no se auto-cancelan al cambiar de pestaña. Sin productos, **Descartar pedido** libera el canal (mismo permiso que Liberar mesa).
+
 ### No despachar borrador de domicilio (v0.4.37)
 
 - `PATCH /deliveries/:id/dispatch` rechaza CREATED/CANCELED.

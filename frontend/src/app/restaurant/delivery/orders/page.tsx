@@ -6,7 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
-import { releaseEmptyTicketIfNeeded } from "@/src/lib/empty-ticket-leave";
+import {
+  clearEmptyTicketReleaser,
+  isEmptyCreatedDraft,
+  releaseEmptyTicketIfNeeded,
+} from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderLineLabel } from "@/src/lib/order-line-label";
@@ -217,6 +221,29 @@ function DeliveryCreateOrderPage() {
     }
   }
 
+  async function handleDiscard() {
+    if (!order || !isEmptyCreatedDraft(order)) return;
+    if (!window.confirm("¿Descartar este pedido? No hay productos.")) return;
+    clearEmptyTicketReleaser();
+    try {
+      setBusy(true);
+      setError("");
+      await ordersService.updateStatus(order.id, "CANCELED");
+      setMessage(`Pedido #${order.orderNumber} descartado`);
+      setOrder(null);
+      setCustomerName("");
+      setCustomerPhone("");
+      setDeliveryAddress("");
+      setNeighborhood("");
+      await loadOpenDeliveries();
+      router.replace("/restaurant/delivery/orders");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo descartar el pedido"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function resumeOpen(open: Order) {
     try {
       setBusy(true);
@@ -233,6 +260,7 @@ function DeliveryCreateOrderPage() {
     }
   }
 
+  const canDiscard = isEmptyCreatedDraft(order);
   const chargeDisabled =
     busy ||
     !order ||
@@ -432,12 +460,33 @@ function DeliveryCreateOrderPage() {
                 Cerrar y cobrar
               </button>
             ) : null}
+            {canDiscard ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void handleDiscard()}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-white/20 text-sm font-semibold disabled:opacity-40"
+              >
+                Descartar pedido
+              </button>
+            ) : null}
           </div>
         </aside>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950/95 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
         <div className="flex gap-2">
+          {canDiscard ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void handleDiscard()}
+              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/20 text-sm font-semibold disabled:opacity-40"
+            >
+              Descartar pedido
+            </button>
+          ) : (
+            <>
           <button
             type="button"
             disabled={busy || !order || order.status !== "CREATED"}
@@ -456,6 +505,8 @@ function DeliveryCreateOrderPage() {
               Cerrar y cobrar
             </button>
           ) : null}
+            </>
+          )}
         </div>
       </div>
 

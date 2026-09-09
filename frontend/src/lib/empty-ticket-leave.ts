@@ -11,13 +11,17 @@ import { Order } from "@/src/types/order";
  */
 let releaser: (() => Promise<void>) | null = null;
 
-export function isEmptyCreatedTicket(order: Order | null | undefined): boolean {
+/** CREATED with no live lines — Liberar mesa / Descartar. */
+export function isEmptyCreatedDraft(order: Order | null | undefined): boolean {
   return (
     !!order &&
-    order.type === "DINE_IN" &&
     order.status === "CREATED" &&
     (order.items ?? []).every((line) => line.canceledAt)
   );
+}
+
+export function isEmptyCreatedTicket(order: Order | null | undefined): boolean {
+  return isEmptyCreatedDraft(order) && order?.type === "DINE_IN";
 }
 
 export function clearEmptyTicketReleaser() {

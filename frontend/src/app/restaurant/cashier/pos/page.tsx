@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
-import { releaseEmptyTicketIfNeeded } from "@/src/lib/empty-ticket-leave";
+import {
+  clearEmptyTicketReleaser,
+  isEmptyCreatedDraft,
+  releaseEmptyTicketIfNeeded,
+} from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderLineLabel } from "@/src/lib/order-line-label";
@@ -154,6 +158,26 @@ export default function CashierPosPage() {
     }
   }
 
+  async function handleDiscard() {
+    if (!order || !isEmptyCreatedDraft(order)) return;
+    if (!window.confirm("¿Descartar este pedido? No hay productos.")) return;
+    clearEmptyTicketReleaser();
+    try {
+      setBusy(true);
+      setError("");
+      await ordersService.updateStatus(order.id, "CANCELED");
+      setMessage(`Pedido #${order.orderNumber} descartado`);
+      setOrder(null);
+      setCustomerName("Mostrador");
+      setCustomerPhone("");
+      await loadOpenPickups();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo descartar el pedido"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function resumePickup(open: Order) {
     try {
       setBusy(true);
@@ -172,6 +196,7 @@ export default function CashierPosPage() {
   }
 
   const canEdit = !order || order.status === "CREATED";
+  const canDiscard = isEmptyCreatedDraft(order);
   const kitchenDisabled = busy || !order || order.status !== "CREATED";
   const chargeDisabled =
     busy || !order || !order.items?.length || order.status === "CLOSED";
@@ -324,12 +349,33 @@ export default function CashierPosPage() {
             >
               Cerrar y cobrar
             </button>
+            {canDiscard ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void handleDiscard()}
+                className="w-full rounded-xl border border-white/20 py-3 text-sm font-semibold disabled:opacity-40"
+              >
+                Descartar pedido
+              </button>
+            ) : null}
           </div>
         </aside>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-zinc-950/95 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl gap-2">
+          {canDiscard ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void handleDiscard()}
+              className="min-h-11 flex-1 rounded-xl border border-white/20 px-3 py-3 text-sm font-bold disabled:opacity-40"
+            >
+              Descartar pedido
+            </button>
+          ) : (
+            <>
           <button
             type="button"
             disabled={kitchenDisabled}
@@ -346,6 +392,8 @@ export default function CashierPosPage() {
           >
             Cerrar y cobrar
           </button>
+            </>
+          )}
         </div>
       </div>
 
