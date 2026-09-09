@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { OrderType } from '@prisma/client';
+
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { createdAtFilter, DateRange } from './report-range';
 
 @Injectable()
 export class ReportsService {
@@ -30,69 +33,49 @@ export class ReportsService {
       topProducts,
     ] = await Promise.all([
       this.revenueByRange(restaurantId, todayStart, now),
-
       this.revenueByRange(restaurantId, weekStart, now),
-
       this.revenueByRange(restaurantId, monthStart, now),
-
       this.prisma.order.count({
-        where: {
-          restaurantId,
-        },
+        where: { restaurantId },
       }),
-
       this.prisma.tableEntity.count({
         where: {
           restaurantId,
           isActive: true,
         },
       }),
-
       this.prisma.delivery.count({
         where: {
           restaurantId,
-          createdAt: {
-            gte: todayStart,
-          },
+          createdAt: { gte: todayStart },
         },
       }),
-
       this.salesByPaymentMethod(restaurantId),
-
       this.topProducts(restaurantId),
     ]);
 
     return {
       salesToday: salesToday.total,
-
       salesWeek: salesWeek.total,
-
       salesMonth: salesMonth.total,
-
       totalOrders,
-
       activeTables,
-
       deliveriesToday,
-
       topProduct: topProducts.length > 0 ? topProducts[0] : null,
-
       paymentMethods,
     };
   }
 
-  // ============================
-  // RESUMEN GENERAL
-  // ============================
-  async summary(restaurantId: string) {
+  async summary(restaurantId: string, range: DateRange = {}) {
+    const createdAt = createdAtFilter(range);
     const [sales, orders] = await Promise.all([
       this.prisma.sale.aggregate({
-        where: { restaurantId },
+        where: { restaurantId, ...(createdAt ? { createdAt } : {}) },
         _sum: { totalCents: true },
         _count: true,
       }),
       this.prisma.order.count({
-        where: { restaurantId },
+        where: { restaurantId, ...(createdAt ? { createdAt } : {}) },
       }),
     ]);
 
@@ -102,15 +85,14 @@ export class ReportsService {
       totalOrders: orders,
     };
   }
-  // ============================
-  // DELIVERY SUMMARY
-  // ============================
-  async deliverySummary(restaurantId: string) {
+
+  async deliverySummary(restaurantId: string, range: DateRange = {}) {
+    const createdAt = createdAtFilter(range);
     const deliveries = await this.prisma.delivery.findMany({
       where: {
         restaurantId,
+        ...(createdAt ? { createdAt } : {}),
       },
-
       include: {
         order: {
           include: {
@@ -120,45 +102,33 @@ export class ReportsService {
       },
     });
 
-    const totalDeliveries = deliveries.length;
+    const isPickup = (type: OrderType) => type === OrderType.PICKUP;
+    const pickups = deliveries.filter((row) => isPickup(row.order.type));
+    const homes = deliveries.filter((row) => !isPickup(row.order.type));
 
-    const totalRevenue = deliveries.reduce(
-      (acc, d) => acc + (d.order.sale?.totalCents ?? 0),
-      0,
-    );
+    const revenueOf = (rows: typeof deliveries) =>
+      rows.reduce((acc, row) => acc + (row.order.sale?.totalCents ?? 0), 0);
 
-    const cashPayments = deliveries.filter(
-      (d) => d.paymentMethod === 'CASH',
-    ).length;
-
-    const cardPayments = deliveries.filter(
-      (d) => d.paymentMethod === 'CARD',
-    ).length;
-
-    const transferPayments = deliveries.filter(
-      (d) => d.paymentMethod === 'TRANSFER',
-    ).length;
+    const paymentCounts = (rows: typeof deliveries) => ({
+      cash: rows.filter((row) => row.paymentMethod === 'CASH').length,
+      card: rows.filter((row) => row.paymentMethod === 'CARD').length,
+      transfer: rows.filter((row) => row.paymentMethod === 'TRANSFER').length,
+    });
 
     return {
-      totalDeliveries,
-      totalRevenue,
-
-      payments: {
-        cash: cashPayments,
-        card: cardPayments,
-        transfer: transferPayments,
-      },
+      totalDeliveries: homes.length,
+      totalPickups: pickups.length,
+      totalRevenue: revenueOf(homes),
+      pickupRevenue: revenueOf(pickups),
+      payments: paymentCounts(homes),
+      pickupPayments: paymentCounts(pickups),
     };
   }
 
-  // ============================
-  // VENTAS POR DÍA
-  // ============================
-  async salesByDay(restaurantId: string) {
-    // Group in process. Raw SQL used FROM sale (unquoted) which does not
-    // match the Prisma table "Sale" and 500s on Postgres.
+  async salesByDay(restaurantId: string, range: DateRange = {}) {
+    const createdAt = createdAtFilter(range);
     const sales = await this.prisma.sale.findMany({
-      where: { restaurantId },
+      where: { restaurantId, ...(createdAt ? { createdAt } : {}) },
       select: { createdAt: true, totalCents: true },
       orderBy: { createdAt: 'asc' },
     });
@@ -172,35 +142,32 @@ export class ReportsService {
     return [...byDay.entries()].map(([date, total]) => ({ date, total }));
   }
 
-  // ============================
-  // VENTAS POR MÉTODO DE PAGO
-  // ============================
-  async salesByPaymentMethod(restaurantId: string) {
+  async salesByPaymentMethod(restaurantId: string, range: DateRange = {}) {
+    const paidAt = createdAtFilter(range);
     const result = await this.prisma.payment.groupBy({
       by: ['method'],
-      where: { restaurantId },
+      where: { restaurantId, ...(paidAt ? { paidAt } : {}) },
       _sum: {
         amountCents: true,
       },
       _count: true,
     });
 
-    return result.map((r) => ({
-      method: r.method,
-      total: r._sum.amountCents ?? 0,
-      count: r._count,
+    return result.map((row) => ({
+      method: row.method,
+      total: row._sum.amountCents ?? 0,
+      count: row._count,
     }));
   }
 
-  // ============================
-  // TOP PRODUCTOS
-  // ============================
-  async topProducts(restaurantId: string) {
+  async topProducts(restaurantId: string, range: DateRange = {}) {
+    const createdAt = createdAtFilter(range);
     const result = await this.prisma.orderItem.groupBy({
       by: ['menuItemId'],
       where: {
         order: {
           restaurantId,
+          ...(createdAt ? { sale: { createdAt } } : {}),
         },
       },
       _sum: {
@@ -216,7 +183,7 @@ export class ReportsService {
 
     const items = await this.prisma.menuItem.findMany({
       where: {
-        id: { in: result.map((r) => r.menuItemId) },
+        id: { in: result.map((row) => row.menuItemId) },
       },
       select: {
         id: true,
@@ -224,19 +191,33 @@ export class ReportsService {
       },
     });
 
-    return result.map((r) => {
-      const item = items.find((i) => i.id === r.menuItemId);
+    return result.map((row) => {
+      const item = items.find((menuItem) => menuItem.id === row.menuItemId);
 
       return {
-        menuItemId: r.menuItemId,
+        menuItemId: row.menuItemId,
         name: item?.name ?? 'Unknown',
-        quantity: r._sum.quantity ?? 0,
+        quantity: row._sum.quantity ?? 0,
       };
     });
   }
-  // ============================
-  // INGRESOS POR RANGO DE FECHAS
-  // ============================
+
+  async ordersByStatus(restaurantId: string, range: DateRange = {}) {
+    const createdAt = createdAtFilter(range);
+    const rows = await this.prisma.order.groupBy({
+      by: ['status'],
+      where: { restaurantId, ...(createdAt ? { createdAt } : {}) },
+      _count: true,
+    });
+
+    return rows
+      .map((row) => ({
+        status: row.status,
+        count: row._count,
+      }))
+      .sort((a, b) => b.count - a.count);
+  }
+
   async revenueByRange(restaurantId: string, start: Date, end: Date) {
     const result = await this.prisma.sale.aggregate({
       where: {

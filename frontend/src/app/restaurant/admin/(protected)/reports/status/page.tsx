@@ -5,12 +5,16 @@ import { useEffect, useState } from "react";
 
 import { ReportRangeBar } from "@/src/components/reports/report-range-bar";
 import { getErrorMessage } from "@/src/lib/get-error-message";
+import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { defaultReportRange, ReportRange } from "@/src/lib/report-range";
-import { reportsService, TopProduct } from "@/src/services/reports.service";
+import {
+  OrdersByStatus,
+  reportsService,
+} from "@/src/services/reports.service";
 
-export default function ProductsReportPage() {
+export default function OrdersByStatusPage() {
   const [range, setRange] = useState<ReportRange>(defaultReportRange);
-  const [rows, setRows] = useState<TopProduct[]>([]);
+  const [rows, setRows] = useState<OrdersByStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -19,9 +23,9 @@ export default function ProductsReportPage() {
       try {
         setLoading(true);
         setError("");
-        setRows(await reportsService.topProducts(range));
+        setRows(await reportsService.ordersByStatus(range));
       } catch (err: unknown) {
-        setError(getErrorMessage(err, "No se pudieron cargar los productos"));
+        setError(getErrorMessage(err, "No se pudieron cargar los estados"));
       } finally {
         setLoading(false);
       }
@@ -29,6 +33,8 @@ export default function ProductsReportPage() {
 
     load();
   }, [range]);
+
+  const total = rows.reduce((acc, row) => acc + row.count, 0);
 
   return (
     <div className="space-y-6">
@@ -39,9 +45,9 @@ export default function ProductsReportPage() {
         >
           ← Reportes
         </Link>
-        <h1 className="mt-2 text-4xl font-black">Productos</h1>
+        <h1 className="mt-2 text-4xl font-black">Órdenes por estado</h1>
         <p className="text-zinc-400">
-          Top 10 por cantidad en ventas cobradas del rango
+          Órdenes creadas en el rango, agrupadas por estado actual
         </p>
       </div>
 
@@ -52,19 +58,22 @@ export default function ProductsReportPage() {
         <p>Cargando...</p>
       ) : (
         <div className="space-y-2">
-          {rows.map((row, index) => (
+          {rows.map((row) => (
             <div
-              key={row.menuItemId}
+              key={row.status}
               className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 px-5 py-4"
             >
-              <p className="font-bold">
-                {index + 1}. {row.name}
+              <p className="font-bold">{orderStatusLabel(row.status)}</p>
+              <p className="text-zinc-400">
+                {row.count}
+                {total > 0
+                  ? ` · ${Math.round((row.count / total) * 100)}%`
+                  : ""}
               </p>
-              <p className="text-zinc-400">{row.quantity} uds</p>
             </div>
           ))}
           {rows.length === 0 && (
-            <p className="text-zinc-400">Aún no hay ítems vendidos</p>
+            <p className="text-zinc-400">Aún no hay órdenes en el rango</p>
           )}
         </div>
       )}

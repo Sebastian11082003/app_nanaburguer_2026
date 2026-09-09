@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { ReportRangeBar } from "@/src/components/reports/report-range-bar";
 import { StatCard } from "@/src/components/reports/stat-card";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { paymentMethodLabel } from "@/src/lib/payment-method-label";
+import { defaultReportRange, ReportRange } from "@/src/lib/report-range";
 import {
   PaymentMethodBreakdown,
   ReportsSummary,
@@ -26,12 +28,18 @@ const LINKS = [
   },
   {
     href: "/restaurant/admin/reports/deliveries",
-    title: "Domicilios",
-    description: "Volumen y mix de pago de delivery",
+    title: "Domicilios y pickup",
+    description: "Volumen y mix de pago por canal",
+  },
+  {
+    href: "/restaurant/admin/reports/status",
+    title: "Órdenes por estado",
+    description: "Cuello de botella operativo",
   },
 ];
 
 export default function ReportsPage() {
+  const [range, setRange] = useState<ReportRange>(defaultReportRange);
   const [summary, setSummary] = useState<ReportsSummary | null>(null);
   const [methods, setMethods] = useState<PaymentMethodBreakdown[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,9 +49,10 @@ export default function ReportsPage() {
     async function load() {
       try {
         setLoading(true);
+        setError("");
         const [nextSummary, nextMethods] = await Promise.all([
-          reportsService.summary(),
-          reportsService.paymentMethods(),
+          reportsService.summary(range),
+          reportsService.paymentMethods(range),
         ]);
         setSummary(nextSummary);
         setMethods(nextMethods);
@@ -55,16 +64,18 @@ export default function ReportsPage() {
     }
 
     load();
-  }, []);
+  }, [range]);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-4xl font-black">Reportes</h1>
         <p className="text-zinc-400">
-          Totales históricos de ventas cobradas (no incluye órdenes abiertas)
+          Ventas cobradas en el rango (UTC). No incluye órdenes abiertas.
         </p>
       </div>
+
+      <ReportRangeBar value={range} onChange={setRange} />
 
       {error && <p className="text-red-500">{error}</p>}
       {loading ? (
@@ -106,7 +117,7 @@ export default function ReportsPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {LINKS.map((link) => (
               <Link
                 key={link.href}

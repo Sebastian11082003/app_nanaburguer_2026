@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { ReportRangeBar } from "@/src/components/reports/report-range-bar";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
+import { defaultReportRange, ReportRange } from "@/src/lib/report-range";
 import { reportsService, SalesByDay } from "@/src/services/reports.service";
 
 export default function SalesReportPage() {
+  const [range, setRange] = useState<ReportRange>(defaultReportRange);
   const [rows, setRows] = useState<SalesByDay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,7 +19,8 @@ export default function SalesReportPage() {
     async function load() {
       try {
         setLoading(true);
-        setRows(await reportsService.salesByDay());
+        setError("");
+        setRows(await reportsService.salesByDay(range));
       } catch (err: unknown) {
         setError(getErrorMessage(err, "No se pudieron cargar las ventas"));
       } finally {
@@ -25,7 +29,7 @@ export default function SalesReportPage() {
     }
 
     load();
-  }, []);
+  }, [range]);
 
   return (
     <div className="space-y-6">
@@ -37,8 +41,10 @@ export default function SalesReportPage() {
           ← Reportes
         </Link>
         <h1 className="mt-2 text-4xl font-black">Ventas por día</h1>
-        <p className="text-zinc-400">Ingresos cobrados agrupados por fecha</p>
+        <p className="text-zinc-400">Ingresos cobrados agrupados por fecha UTC</p>
       </div>
+
+      <ReportRangeBar value={range} onChange={setRange} />
 
       {error && <p className="text-red-500">{error}</p>}
       {loading ? (

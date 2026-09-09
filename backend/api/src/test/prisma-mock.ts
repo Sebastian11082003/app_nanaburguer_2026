@@ -15,6 +15,7 @@ function createDelegateMock() {
     delete: jest.fn(),
     count: jest.fn(),
     groupBy: jest.fn(),
+    aggregate: jest.fn(),
   };
 }
 

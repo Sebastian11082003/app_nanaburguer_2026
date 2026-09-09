@@ -282,6 +282,10 @@
 - Login único de personal (correo + contraseña) y recuperar acceso.
 - Piso de mesas compartido; nav filtrada por rol (mesero/caja/domicilio).
 
+## v0.4.14
+
+- Reportes: filtro de fechas UTC + órdenes por estado + split domicilio/pickup.
+
 ## v0.4.13
 
 - Volume Docker `api_uploads` para `/app/uploads` (logos).
