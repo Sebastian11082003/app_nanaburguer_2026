@@ -42,7 +42,11 @@ export default function RestaurantLocalLoginPage() {
       setRestaurantAuth(response.accessToken, response.restaurant);
       router.push("/restaurant/login");
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Error al iniciar sesión"));
+      setError(
+        getErrorMessage(err, "Error al iniciar sesión")
+          .replace("Restaurant not found", "No hay un restaurante con ese slug y correo")
+          .replace("Invalid credentials", "Correo o contraseña incorrectos"),
+      );
     } finally {
       setLoading(false);
     }

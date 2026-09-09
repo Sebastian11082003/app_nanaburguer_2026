@@ -215,8 +215,8 @@ export default function CreateRestaurantPage() {
             <h2 className="mb-2 text-2xl font-bold">Administrador Principal</h2>
 
             <p className="mb-6 text-sm text-zinc-400">
-              Usuario que administrará el restaurante y podrá crear cajeros,
-              meseros, cocina y domiciliarios.
+              Usuario ADMIN del POS. Puede ser el mismo correo del
+              restaurante; es quien crea mesero, caja, cocina y domicilio.
             </p>
 
             <div className="grid gap-4">

@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Admin del local en el login de personal (v0.4.48)
+
+- `nanaburguer-neiva@gmail.com` (email de `restaurant`) no era un User; el POS solo miraba `User`. Ahora esa clave abre sesión ADMIN y, si falta, crea la persona.
+
 ### Login: plataforma hasta el slug (v0.4.47)
 
 - `/restaurant/login` no reusa el local persistido. El operador escribe el slug; si existe, aparecen nombre y logo. El correo del personal debe ser de ese tenant.

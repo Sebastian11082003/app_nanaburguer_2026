@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.48
+
+- El correo del restaurante (el del alta del tenant) entra en `/restaurant/login` como ADMIN: si no hay User, se verifica `restaurantPasswordHash` y se crea el admin. Ya no exige un segundo correo distinto.
+
 ## v0.4.47
 
 - Login de personal: marca de plataforma (RestoOS) hasta identificar el slug a mano. Nombre y logo del local solo cuando el lookup público coincide.
