@@ -117,7 +117,8 @@ export class AuthService {
    * The restaurant row also has an email (set when the tenant is created).
    * Operators treat that as the restaurant admin. If there is no User yet
    * for that address, we verify `restaurantPasswordHash` and provision an
-   * ADMIN so they can enter the POS and create the other roles.
+   * ADMIN so they can enter the POS. The UI must not ask for a second
+   * "role" login after this session exists.
    */
   async staffLogin(email: string, password: string) {
     const normalized = email.trim().toLowerCase();
