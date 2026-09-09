@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Despacho saca el ticket de cocina (v0.4.44)
+
+- `POST /deliveries/:id/dispatch` mueve el pedido a `OUT_FOR_DELIVERY` salvo `CLOSED`/`CANCELED`. El KDS filtra por `order.status`; un domicilio en moto ya no queda en Cola/Listas. Entregado del rider no cambia el pedido (sigue activo hasta cobro).
+
 ### Usuario cocina del tenant demo (v0.4.43)
 
 - Seed de `nana-neiva`: `kitchen@nana-neiva.test` si el local no tiene KITCHEN. El KDS se abre con login, no pegando la URL.

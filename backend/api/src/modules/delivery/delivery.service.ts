@@ -87,7 +87,7 @@ export class DeliveryService {
       throw new BadRequestException('Order is not ready to dispatch');
     }
 
-    return this.prisma.delivery.update({
+    const dispatched = await this.prisma.delivery.update({
       where: { id },
       data: {
         status: DeliveryStatus.DISPATCHED,
@@ -95,6 +95,22 @@ export class DeliveryService {
         deliveryUserId: userId,
       },
     });
+
+    // Kitchen lists by order.status. Leaving SENT_TO_KITCHEN/READY
+    // after send-out kept the ticket on the KDS while it was on a bike.
+    // Prepaid CLOSED stays closed — cobro already happened.
+    if (
+      delivery.order &&
+      delivery.order.status !== OrderStatus.CLOSED &&
+      delivery.order.status !== OrderStatus.CANCELED
+    ) {
+      await this.prisma.order.update({
+        where: { id: delivery.orderId },
+        data: { status: OrderStatus.OUT_FOR_DELIVERY },
+      });
+    }
+
+    return dispatched;
   }
 
   // ============================

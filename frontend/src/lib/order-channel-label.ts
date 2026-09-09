@@ -30,7 +30,12 @@ export function orderProgressLabel(order: ChannelOrder): string | null {
     return null;
   }
   if (order.delivery?.status === "DELIVERED") return "Entregado";
-  if (order.delivery?.status === "DISPATCHED") return "En camino";
+  if (
+    order.delivery?.status === "DISPATCHED" ||
+    order.status === "OUT_FOR_DELIVERY"
+  ) {
+    return "En camino";
+  }
   if (order.status === "READY") return "Listo";
   if (
     order.status === "SENT_TO_KITCHEN" ||

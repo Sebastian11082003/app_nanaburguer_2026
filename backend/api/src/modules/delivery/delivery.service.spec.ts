@@ -47,9 +47,10 @@ describe('DeliveryService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('dispatches a prepaid CLOSED ticket', async () => {
+    it('dispatches a prepaid CLOSED ticket without touching order status', async () => {
       (prisma.delivery as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
         id: 'del-1',
+        orderId: 'order-1',
         order: { status: OrderStatus.CLOSED },
       });
       (prisma.delivery as { update: jest.Mock }).update.mockResolvedValue({
@@ -60,6 +61,28 @@ describe('DeliveryService', () => {
       await service.dispatch('del-1', 'restaurant-1', 'user-1');
 
       expect((prisma.delivery as { update: jest.Mock }).update).toHaveBeenCalled();
+      expect((prisma.order as { update: jest.Mock }).update).not.toHaveBeenCalled();
+    });
+
+    it('moves an open kitchen ticket to OUT_FOR_DELIVERY', async () => {
+      (prisma.delivery as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'del-1',
+        orderId: 'order-1',
+        order: { status: OrderStatus.READY },
+      });
+      (prisma.delivery as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'del-1',
+        status: 'DISPATCHED',
+      });
+
+      await service.dispatch('del-1', 'restaurant-1', 'user-1');
+
+      const [[orderArgs]] = (prisma.order as { update: jest.Mock }).update.mock
+        .calls;
+      expect(orderArgs).toMatchObject({
+        where: { id: 'order-1' },
+        data: { status: OrderStatus.OUT_FOR_DELIVERY },
+      });
     });
 
     it('throws when the delivery is not in the tenant', async () => {
