@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### No despachar borrador de domicilio (v0.4.37)
+
+- `PATCH /deliveries/:id/dispatch` rechaza CREATED/CANCELED.
+- Despacho de caja desactiva Despachar en borrador y marca Pagado si ya se cobró.
+- Pedidos activos no muestra cobrados pendientes de despacho (siguen en caja).
+
 ### Ventas de caja filtra abiertas (v0.4.36)
 
 - Por defecto lista el mismo set abierto que el piso (`activeOnly`). Chips: Abiertas / Listas / Cerradas / Todas.

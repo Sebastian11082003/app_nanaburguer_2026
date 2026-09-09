@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.37
+
+- Dispatch de domicilio rechaza CREATED/CANCELED. Caja no despacha el borrador; el repartidor no ve cobrados sin despachar.
+
 ## v0.4.36
 
 - Ventas de caja: filtro Abiertas por defecto (no mezcla CANCELED/CLOSED). Listas / Cerradas / Todas.

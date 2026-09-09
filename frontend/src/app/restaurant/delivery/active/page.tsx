@@ -19,9 +19,13 @@ export default function DeliveryActivePage() {
       setError("");
       const data = await deliveryService.getAll();
       setDeliveries(
-        data.filter(
-          (d) => d.status === "PENDING" || d.status === "DISPATCHED",
-        ),
+        data.filter((d) => {
+          const orderStatus = d.order?.status;
+          if (orderStatus === "CANCELED") return false;
+          // Prepaid CLOSED stays on caja dispatch until sent.
+          if (d.status === "DISPATCHED") return true;
+          return d.status === "PENDING" && orderStatus !== "CLOSED";
+        }),
       );
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudieron cargar pedidos"));

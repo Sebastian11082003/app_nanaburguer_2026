@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
-import { DeliveryStatus, OrderType } from '@prisma/client';
+import { DeliveryStatus, OrderStatus, OrderType } from '@prisma/client';
 
 @Injectable()
 export class DeliveryService {
@@ -68,9 +72,20 @@ export class DeliveryService {
   async dispatch(id: string, restaurantId: string, userId: string) {
     const delivery = await this.prisma.delivery.findFirst({
       where: { id, restaurantId },
+      include: { order: true },
     });
 
     if (!delivery) throw new NotFoundException('Delivery not found');
+
+    // A CREATED draft has no kitchen ticket yet. Dispatching it put a
+    // ghost in the rider queue. CANCELED is the same dead end.
+    const orderStatus = delivery.order?.status;
+    if (
+      orderStatus === OrderStatus.CREATED ||
+      orderStatus === OrderStatus.CANCELED
+    ) {
+      throw new BadRequestException('Order is not ready to dispatch');
+    }
 
     return this.prisma.delivery.update({
       where: { id },

@@ -17,7 +17,12 @@ export default function CashierDeliveryPage() {
       setLoading(true);
       setError("");
       const data = await deliveryService.getAll();
-      setDeliveries(data.filter((d) => d.status === "PENDING"));
+      setDeliveries(
+        data.filter(
+          (d) =>
+            d.status === "PENDING" && d.order?.status !== "CANCELED",
+        ),
+      );
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudieron cargar pedidos"));
     } finally {
@@ -78,7 +83,12 @@ export default function CashierDeliveryPage() {
         <p>Cargando...</p>
       ) : (
         <div className="space-y-3">
-          {deliveries.map((delivery) => (
+          {deliveries.map((delivery) => {
+            const orderStatus = delivery.order?.status;
+            const assembling = orderStatus === "CREATED";
+            const paid = orderStatus === "CLOSED";
+            const canDispatch = !!orderStatus && !assembling && orderStatus !== "CANCELED";
+            return (
             <div key={delivery.id} className="panel-surface p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -87,13 +97,12 @@ export default function CashierDeliveryPage() {
                   </h2>
                   <p className="text-sm text-muted">
                     {delivery.address ?? "Pickup"} · {delivery.phone}
-                    {delivery.order
-                      ? ` · ${delivery.order.status}`
-                      : ""}
+                    {orderStatus ? ` · ${orderStatus}` : ""}
+                    {paid ? " · Pagado" : ""}
                   </p>
                 </div>
                 <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-                  {delivery.order?.status === "CREATED" ? (
+                  {assembling ? (
                     <Link
                       href={`/restaurant/delivery/orders?orderId=${delivery.orderId}`}
                       className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold sm:flex-none"
@@ -102,8 +111,8 @@ export default function CashierDeliveryPage() {
                     </Link>
                   ) : null}
                   {delivery.order &&
-                  delivery.order.status !== "CLOSED" &&
-                  delivery.order.status !== "CANCELED" &&
+                  !paid &&
+                  orderStatus !== "CANCELED" &&
                   (delivery.order.totalCents ?? 0) > 0 ? (
                     <Link
                       href={`/restaurant/cashier/orders/${delivery.orderId}`}
@@ -114,7 +123,7 @@ export default function CashierDeliveryPage() {
                   ) : null}
                 <button
                   type="button"
-                  disabled={busyId === delivery.id}
+                  disabled={busyId === delivery.id || !canDispatch}
                   onClick={() => handleDispatch(delivery.id)}
                   className="btn-primary min-h-11 w-full px-5 py-3 text-sm disabled:opacity-50 sm:w-auto"
                 >
@@ -123,7 +132,8 @@ export default function CashierDeliveryPage() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
           {deliveries.length === 0 && (
             <p className="text-muted">No hay pedidos pendientes por despachar</p>
           )}
