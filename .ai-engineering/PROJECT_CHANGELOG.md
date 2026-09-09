@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.52
+
+- Windows: `update-local.bat` en la raíz hace checkout + pull de `dev`. GitHub no empuja solo a tu disco.
+
 ## v0.4.51
 
 - Un solo login del local: `/restaurant/local-login` redirige a `/restaurant/login`. El admin del restaurante no pasa por una segunda pantalla de rol. El slug es opcional (solo logo).

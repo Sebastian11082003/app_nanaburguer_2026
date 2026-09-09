@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Traer dest en Windows (v0.4.52)
+
+- `update-local.bat` en la raíz: checkout + pull de `dev`. GitHub no actualiza tu PC solo.
+
 ### Un solo login del local (v0.4.51)
 
 - `/restaurant/local-login` ya no pide entrar como “el restaurante” y luego otra vez con un rol. Redirige a `/restaurant/login`. El correo del restaurante entra como ADMIN y abre el POS. Si ya hay sesión de personal, esa pantalla no se vuelve a mostrar.
