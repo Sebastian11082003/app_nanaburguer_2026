@@ -44,7 +44,8 @@ export default function RestaurantLocalLoginPage() {
     } catch (err: unknown) {
       setError(
         getErrorMessage(err, "Error al iniciar sesión")
-          .replace("Restaurant not found", "No hay un restaurante con ese slug y correo")
+          .replace("Restaurant not found", "No hay un restaurante con ese correo")
+          .replace("Restaurant disabled", "Este local está inhabilitado. Contacta a la plataforma.")
           .replace("Invalid credentials", "Correo o contraseña incorrectos"),
       );
     } finally {
@@ -56,7 +57,7 @@ export default function RestaurantLocalLoginPage() {
     <AuthShell
       eyebrow="Acceso del local"
       title={identified ? branding.name : PLATFORM_BRAND.name}
-      description="Credenciales del restaurante (slug), no las de un mesero o cajero."
+      description="Correo y clave del restaurante (los del alta del local). El slug solo muestra el logo."
       footerHref="/restaurant/login"
       footerLabel="Soy personal del local"
       brand={

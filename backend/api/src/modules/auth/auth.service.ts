@@ -139,16 +139,23 @@ export class AuthService {
     }
 
     const restaurant = await this.prisma.restaurant.findFirst({
-      where: { id: user.restaurantId, isActive: true },
-      select: { id: true, name: true, slug: true, logoUrl: true },
+      where: { id: user.restaurantId },
+      select: { id: true, name: true, slug: true, logoUrl: true, isActive: true },
     });
 
     if (!restaurant) {
       throw new UnauthorizedException('Restaurant not found');
     }
 
+    if (!restaurant.isActive) {
+      throw new UnauthorizedException('Restaurant disabled');
+    }
+
+    const { isActive: _active, ...publicRestaurant } = restaurant;
+    void _active;
+
     const auth = await this.buildAuthResponse(user);
-    return { ...auth, restaurant };
+    return { ...auth, restaurant: publicRestaurant };
   }
 
   /**
@@ -159,12 +166,15 @@ export class AuthService {
     const restaurant = await this.prisma.restaurant.findFirst({
       where: {
         email: { equals: email, mode: 'insensitive' },
-        isActive: true,
       },
     });
 
     if (!restaurant?.restaurantPasswordHash) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!restaurant.isActive) {
+      throw new UnauthorizedException('Restaurant disabled');
     }
 
     const validPassword = await bcrypt.compare(

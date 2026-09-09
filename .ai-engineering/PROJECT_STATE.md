@@ -42,6 +42,14 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Inhabilitar tenant (v0.4.50)
+
+- Super admin en `/platform/restaurants`: Inhabilitar corta login y API del local. Activar lo devuelve. No borra mesas ni usuarios.
+
+### Acceso del local por correo (v0.4.49)
+
+- `POST /restaurant-auth/login` ya no exige que el slug coincida con el Gmail. El correo del tenant es la identidad.
+
 ### Admin del local en el login de personal (v0.4.48)
 
 - `nanaburguer-neiva@gmail.com` (email de `restaurant`) no era un User; el POS solo miraba `User`. Ahora esa clave abre sesión ADMIN y, si falta, crea la persona.

@@ -16,4 +16,13 @@ export const platformService = {
 
     return response.data;
   },
+  async setRestaurantActive(
+    id: string,
+    isActive: boolean,
+  ): Promise<PlatformRestaurant> {
+    const { data } = await platformApi.patch(`/platform/restaurants/${id}`, {
+      isActive,
+    });
+    return data;
+  },
 };

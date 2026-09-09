@@ -149,6 +149,14 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.50
+
+- Plataforma: inhabilitar/activar un tenant (`PATCH /platform/restaurants/:id`). El personal no entra; los datos siguen. Para mora o falta de pago, no hace falta borrar el restaurante.
+
+## v0.4.49
+
+- Acceso del local identifica por correo del restaurante, no por slug+email a la vez (`Nana-neiva` ya no bloquea `nanaburguer-neiva@gmail.com`).
+
 ## v0.4.48
 
 - El correo del restaurante (el del alta del tenant) entra en `/restaurant/login` como ADMIN: si no hay User, se verifica `restaurantPasswordHash` y se crea el admin. Ya no exige un segundo correo distinto.
