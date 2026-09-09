@@ -28,6 +28,10 @@ Servicios:
 
 Credencial seed (solo local): `admin@nanaburger.com` / `123456`. Entrar por `/platform/login`, crear un restaurante. El personal del local entra en `/restaurant/login` con correo y contraseña (mesero, caja, domicilio y **admin del local** usan la misma pantalla). Olvidé mi contraseña está en `/restaurant/recover`.
 
+## Traer `dev` en Windows
+
+GitHub no actualiza tu PC. Desde la raíz del repo, doble clic en `update-local.bat` (o `update-local.bat` en CMD). Luego reinicia Nest y Next.
+
 Si el tenant demo `nana-neiva` ya existe, el seed crea `admin@nana-neiva.test` y `kitchen@nana-neiva.test` / `123456` cuando `ALLOW_INSECURE_DEFAULTS=true` y aún no hay esos roles. Caja/mesero no pueden anular un ticket con productos; el ADMIN sí. Cocina entra al KDS con su propio login.
 
 La API aplica `prisma migrate deploy` y el seed al arrancar. El seed es idempotente.

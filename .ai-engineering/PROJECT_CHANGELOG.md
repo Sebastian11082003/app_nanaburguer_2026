@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.51
+
+- Windows: `update-local.bat` en la raíz hace checkout + pull de `dev`. GitHub no empuja solo a tu disco.
+
 ## v0.4.50
 
 - Plataforma: inhabilitar/activar un tenant (`PATCH /platform/restaurants/:id`). El personal no entra; los datos siguen. Para mora o falta de pago, no hace falta borrar el restaurante.
