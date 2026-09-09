@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.51
+
+- Un solo login del local: `/restaurant/local-login` redirige a `/restaurant/login`. El admin del restaurante no pasa por una segunda pantalla de rol. El slug es opcional (solo logo).
+
 ## v0.4.50
 
 - Plataforma: inhabilitar/activar un tenant (`PATCH /platform/restaurants/:id`). El personal no entra; los datos siguen. Para mora o falta de pago, no hace falta borrar el restaurante.

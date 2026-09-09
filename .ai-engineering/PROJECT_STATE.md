@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Un solo login del local (v0.4.51)
+
+- `/restaurant/local-login` ya no pide entrar como “el restaurante” y luego otra vez con un rol. Redirige a `/restaurant/login`. El correo del restaurante entra como ADMIN y abre el POS. Si ya hay sesión de personal, esa pantalla no se vuelve a mostrar.
+
 ### Inhabilitar tenant (v0.4.50)
 
 - Super admin en `/platform/restaurants`: Inhabilitar corta login y API del local. Activar lo devuelve. No borra mesas ni usuarios.
