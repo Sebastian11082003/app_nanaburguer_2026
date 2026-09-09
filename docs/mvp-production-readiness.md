@@ -17,7 +17,7 @@ No es una propuesta de features nuevas. Es qué falta **respecto de lo ya promet
 
 El vertical operativo del MVP **existe**: login por rol, mesas, menú, órdenes DINE_IN / DELIVERY / PICKUP, cocina, cobro, factura POS (snapshot), domicilios, usuarios/roles, dashboard/reportes básicos, movimientos de caja, compose local + overlay HTTPS.
 
-**Actualizado en `dev` (v0.4.59):** cierre de turno, poll, cancelar ítem, Liberar mesa post-cocina, KDS limpio, transferir desde caja, hora de recoger editable, recibo al cobrar, Recibos en chrome de caja, cajero no cobra sin turno, backlog en `.ai-engineering/BACKLOG.md`. Lo que sigue abajo describía `dev` @ v0.4.9.
+**Actualizado en `dev` (v0.4.60):** cierre de turno, poll, cancelar ítem (permiso `ORDERS_CANCEL_ITEM`), Liberar mesa post-cocina, KDS limpio, transferir desde caja, hora de recoger editable, recibo al cobrar, Recibos en chrome de caja, cajero no cobra sin turno, backlog en `.ai-engineering/BACKLOG.md`. Lo que sigue abajo describía `dev` @ v0.4.9.
 
 Eso es un **MVP de piloto local**, no un **SaaS listo para producción pública**.
 

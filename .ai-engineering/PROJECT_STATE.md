@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Cancelar ítem por permiso (v0.4.60)
+
+- `ORDERS_CANCEL_ITEM`: ON en caja/admin, OFF en mesero. Se prende o apaga en Roles. Las plantillas de sistema ya no se resetean al abrir esa pantalla.
+
 ### Cobro de caja exige turno (v0.4.59)
 
 - CASHIER no puede cerrar/cobrar sin `CashSession` OPEN (API + modal). ADMIN sigue pudiendo, con aviso de que no entra al cuadre.

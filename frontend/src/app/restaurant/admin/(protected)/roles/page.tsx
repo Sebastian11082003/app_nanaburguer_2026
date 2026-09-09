@@ -144,7 +144,9 @@ export default function AdminRolesPage() {
           <h1 className="text-4xl font-black">Roles y permisos</h1>
           <p className="text-zinc-400">
             Plantillas del sistema + roles custom. La estación define el login
-            (admin, mesero, etc.); la matriz define qué puede hacer.
+            (admin, mesero, etc.); la matriz define qué puede hacer. Los
+            toggles se conservan. Quien ya está logueado debe volver a entrar
+            para tomar el cambio.
           </p>
         </div>
         <button

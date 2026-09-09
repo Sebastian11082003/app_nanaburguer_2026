@@ -18,14 +18,17 @@ import { deliveryService } from "@/src/services/delivery.service";
 import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { useAuthStore } from "@/src/store/auth.store";
+import { canCancelTicketItem } from "@/src/types/auth";
 import { Order } from "@/src/types/order";
 
 export default function DeliveryOrderDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const orderId = params.id;
-  const role = useAuthStore((s) => s.user?.role);
+  const currentUser = useAuthStore((s) => s.user);
+  const role = currentUser?.role;
   const canCharge = role === "ADMIN" || role === "CASHIER";
+  const canCancelItem = canCancelTicketItem(currentUser);
   const backHref =
     role === "CASHIER" || role === "ADMIN"
       ? "/restaurant/cashier/delivery"
@@ -191,7 +194,7 @@ export default function DeliveryOrderDetailPage() {
                 item={item}
                 busy={busy}
                 onCancel={
-                  canCharge &&
+                  canCancelItem &&
                   order.status !== "CREATED" &&
                   order.status !== "CLOSED" &&
                   order.status !== "CANCELED"

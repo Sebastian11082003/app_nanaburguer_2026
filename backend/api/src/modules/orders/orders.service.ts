@@ -561,13 +561,18 @@ export class OrdersService {
   /**
    * Soft-cancels a line after the ticket left the kitchen queue.
    * Hard delete stays on `removeItem` (CREATED only).
+   * Gated by ORDERS_CANCEL_ITEM (caja/admin by default; Roles can toggle).
    */
   async cancelItem(
     orderId: string,
     itemId: string,
     restaurantId: string,
     reason?: string,
+    actor?: { role?: UserRole; permissions?: string[] },
   ) {
+    if (actor) {
+      this.assertCanCancelItem(actor);
+    }
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: { id: orderId, restaurantId },
@@ -618,6 +623,26 @@ export class OrdersService {
         include: OrdersService.ORDER_INCLUDE,
       });
     });
+  }
+
+  /**
+   * JWT with permissions: the toggle is the source of truth.
+   * Legacy token without a permissions claim: caja/admin only.
+   */
+  private assertCanCancelItem(actor: {
+    role?: UserRole;
+    permissions?: string[];
+  }) {
+    if (actor.permissions && actor.permissions.length > 0) {
+      if (!actor.permissions.includes('ORDERS_CANCEL_ITEM')) {
+        throw new ForbiddenException('Missing required permission');
+      }
+      return;
+    }
+
+    if (actor.role !== UserRole.ADMIN && actor.role !== UserRole.CASHIER) {
+      throw new ForbiddenException('Missing required permission');
+    }
   }
 
   // ================================

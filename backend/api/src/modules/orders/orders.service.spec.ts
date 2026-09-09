@@ -416,6 +416,44 @@ describe('OrdersService', () => {
         service.cancelItem('order-1', 'line-1', 'restaurant-1'),
       ).rejects.toThrow('Item already canceled');
     });
+
+    it('rejects a waiter without ORDERS_CANCEL_ITEM', async () => {
+      await expect(
+        service.cancelItem('order-1', 'line-1', 'restaurant-1', 'Error', {
+          role: UserRole.WAITER,
+          permissions: ['ORDERS_CREATE'],
+        }),
+      ).rejects.toThrow('Missing required permission');
+    });
+
+    it('allows a waiter when ORDERS_CANCEL_ITEM is granted', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        restaurantId: 'restaurant-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        type: OrderType.DINE_IN,
+        discountCents: 0,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-1',
+        orderId: 'order-1',
+        canceledAt: null,
+        lineTotalCents: 20000,
+      });
+      (prisma.orderItem as { findMany: jest.Mock }).findMany.mockResolvedValue([
+        { lineTotalCents: 0, canceledAt: new Date() },
+      ]);
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+      });
+
+      await service.cancelItem('order-1', 'line-1', 'restaurant-1', 'Error', {
+        role: UserRole.WAITER,
+        permissions: ['ORDERS_CANCEL_ITEM'],
+      });
+
+      expect((prisma.orderItem as { update: jest.Mock }).update).toHaveBeenCalled();
+    });
   });
 
   describe('updateStatus', () => {
