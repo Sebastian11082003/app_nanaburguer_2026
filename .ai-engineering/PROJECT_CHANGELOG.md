@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.43
+
+- Seed demo: usuario KITCHEN (`kitchen@nana-neiva.test`) para operar la cola.
+
 ## v0.4.42
 
 - Llevar/Ventas: SENT_TO_KITCHEN o IN_PREPARATION → En cocina; READY → Listo.

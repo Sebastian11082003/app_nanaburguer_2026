@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Usuario cocina del tenant demo (v0.4.43)
+
+- Seed de `nana-neiva`: `kitchen@nana-neiva.test` si el local no tiene KITCHEN. El KDS se abre con login, no pegando la URL.
+
 ### Llevar muestra En cocina / Listo (v0.4.42)
 
 - El listado de mostrador (y Ventas) distingue un pickup en fuego de uno listo para entregar.

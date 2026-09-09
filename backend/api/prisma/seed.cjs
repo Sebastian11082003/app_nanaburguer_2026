@@ -72,7 +72,8 @@ async function main() {
  * Demo tenant created from platform. Brand + one sellable item so the
  * POS can open a ticket without an empty catalog (still scoped to that
  * restaurantId — never a global menu). Also plants a restaurant ADMIN
- * so the local can void tickets; waiter/cashier cannot.
+ * so the local can void tickets, and a KITCHEN user so the KDS is a
+ * login, not a hidden URL.
  */
 async function seedDemoTenant(prisma, { staffPassword, allowInsecure }) {
   const restaurant = await prisma.restaurant.findFirst({
@@ -114,6 +115,7 @@ async function seedDemoTenant(prisma, { staffPassword, allowInsecure }) {
   }
 
   await seedDemoAdmin(prisma, restaurant.id, staffPassword, allowInsecure);
+  await seedDemoKitchen(prisma, restaurant.id, staffPassword, allowInsecure);
 }
 
 async function seedDemoAdmin(
@@ -154,6 +156,50 @@ async function seedDemoAdmin(
     },
   });
   console.log("ADMIN DE NANA-NEIVA CREADO");
+}
+
+/**
+ * KDS is a RoleHub, not the POS floor. Without a kitchen user the
+ * station is only reachable by pasting /restaurant/kitchen.
+ */
+async function seedDemoKitchen(
+  prisma,
+  restaurantId,
+  staffPassword,
+  allowInsecure,
+) {
+  const email = "kitchen@nana-neiva.test";
+  const existing = await prisma.user.findFirst({
+    where: { restaurantId, role: "KITCHEN" },
+  });
+  if (existing) {
+    console.log("KITCHEN DE NANA-NEIVA YA EXISTE");
+    return;
+  }
+
+  if (!allowInsecure && INSECURE_SEED_PASSWORDS.has(staffPassword)) {
+    console.log(
+      "Omitiendo kitchen de nana-neiva: password de seed inseguro en este entorno.",
+    );
+    return;
+  }
+
+  const kitchenRole = await prisma.role.findFirst({
+    where: { restaurantId, systemKey: "KITCHEN" },
+  });
+  const passwordHash = await bcrypt.hash(staffPassword, 10);
+
+  await prisma.user.create({
+    data: {
+      email,
+      fullName: "Cocina Nana",
+      passwordHash,
+      role: "KITCHEN",
+      roleId: kitchenRole?.id,
+      restaurantId,
+    },
+  });
+  console.log("KITCHEN DE NANA-NEIVA CREADO");
 }
 
 main()
