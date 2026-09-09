@@ -42,6 +42,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Huecos del turno de revisión (v0.4.55)
+
+- Detalle admin de mesa: Liberar mesa vacía y cancelar ítem, sin saltar a crear orden.
+- Piso: Llevar/Domicilios ocupados solo si hay productos vivos (el borrador vacío sigue en POS para Descartar).
+- Usuarios: editar correo. El Gmail del tenant se mantiene alineado. No hay delete duro; desactivar corta el login.
+
 ### Superficies POS para revisión (v0.4.54)
 
 - Cancelar ítem en Ventas, POS llevar y detalle de domicilio. Hora de recoger en cocina, comanda y listas. Modal de cobro con Servicio 5%. Piso con poll. Recibo: propina solo si hay; el 5% de mesa no es propina.

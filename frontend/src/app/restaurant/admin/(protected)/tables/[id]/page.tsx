@@ -7,9 +7,11 @@ import { useCallback, useEffect, useState } from "react";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { isEmptyCreatedTicket } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderStatusLabel } from "@/src/lib/order-status-label";
+import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { Table, tablesService } from "@/src/services/tables.service";
 
@@ -60,6 +62,63 @@ export default function AdminTableDetailPage() {
     }
   }
 
+  async function handleReleaseTable() {
+    if (!table?.activeOrder) return;
+    if (!window.confirm("¿Liberar la mesa? No hay productos en el ticket.")) {
+      return;
+    }
+
+    try {
+      setBusy(true);
+      setError("");
+      setMessage("");
+      await ordersService.updateStatus(table.activeOrder.id, "CANCELED");
+      setMessage("Mesa liberada");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo liberar la mesa"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCancelItem(itemId: string) {
+    if (!table?.activeOrder) return;
+    const reason = window.prompt("Motivo de cancelación", "Error de digitación");
+    if (reason == null) return;
+
+    try {
+      setBusy(true);
+      setError("");
+      setMessage("");
+      await ordersService.cancelItem(table.activeOrder.id, itemId, reason);
+      setMessage("Ítem cancelado");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cancelar el ítem"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRemoveItem(itemId: string) {
+    if (!table?.activeOrder) return;
+    if (!window.confirm("¿Quitar este producto del ticket?")) return;
+
+    try {
+      setBusy(true);
+      setError("");
+      setMessage("");
+      await ordersService.removeItem(table.activeOrder.id, itemId);
+      setMessage("Ítem quitado");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo quitar el ítem"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleCloseAndPay(payload: {
     method: PaymentMethod;
     receivedCents?: number;
@@ -90,6 +149,10 @@ export default function AdminTableDetailPage() {
   }
 
   const order = table.activeOrder;
+  const canReleaseEmpty = isEmptyCreatedTicket(order);
+  const canEditLines =
+    !!order && order.status !== "CLOSED" && order.status !== "CANCELED";
+  const removeWhileCreated = order?.status === "CREATED";
 
   return (
     <div className="space-y-6">
@@ -133,6 +196,16 @@ export default function AdminTableDetailPage() {
                 {order ? "Continuar orden" : "Tomar orden"}
               </button>
             )}
+            {canReleaseEmpty && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={handleReleaseTable}
+                className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/5 disabled:opacity-50"
+              >
+                Liberar mesa
+              </button>
+            )}
             {order && order.totalCents > 0 && (
               <button
                 type="button"
@@ -165,7 +238,19 @@ export default function AdminTableDetailPage() {
 
           <ul className="mt-4 space-y-2">
             {order.items.map((item) => (
-              <OrderItemRow key={item.id} item={item} />
+              <OrderItemRow
+                key={item.id}
+                item={item}
+                busy={busy}
+                cancelLabel={removeWhileCreated ? "Quitar" : "Cancelar"}
+                onCancel={
+                  canEditLines
+                    ? removeWhileCreated
+                      ? handleRemoveItem
+                      : handleCancelItem
+                    : undefined
+                }
+              />
             ))}
           </ul>
 
