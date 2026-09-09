@@ -20,7 +20,7 @@ import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { useAuthStore } from "@/src/store/auth.store";
-import { hasPermission } from "@/src/types/auth";
+import { canCancelTicketItem, hasPermission } from "@/src/types/auth";
 import { Order } from "@/src/types/order";
 
 type Role = "admin" | "cashier" | "waiter";
@@ -99,9 +99,7 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
     !isClosed &&
     !isCanceled &&
     order.status !== "CREATED" &&
-    (role === "admin" ||
-      role === "cashier" ||
-      hasPermission(currentUser, "ORDERS_CANCEL"));
+    canCancelTicketItem(currentUser);
   const canResumeFromTable =
     !!order &&
     (role === "waiter" || role === "admin" || role === "cashier") &&

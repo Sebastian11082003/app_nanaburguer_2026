@@ -15,6 +15,8 @@ import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { Table, tablesService } from "@/src/services/tables.service";
+import { useAuthStore } from "@/src/store/auth.store";
+import { canCancelTicketItem } from "@/src/types/auth";
 
 /**
  * Admin detail for a single table: activate/deactivate, preview active
@@ -23,6 +25,7 @@ import { Table, tablesService } from "@/src/services/tables.service";
 export default function AdminTableDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const canCancelItem = canCancelTicketItem(useAuthStore((s) => s.user));
   const tableId = params.id;
 
   const [table, setTable] = useState<Table | null>(null);
@@ -254,7 +257,7 @@ export default function AdminTableDetailPage() {
                 busy={busy}
                 cancelLabel={removeWhileCreated ? "Quitar" : "Cancelar"}
                 onCancel={
-                  canEditLines
+                  canEditLines && (removeWhileCreated || canCancelItem)
                     ? removeWhileCreated
                       ? handleRemoveItem
                       : handleCancelItem

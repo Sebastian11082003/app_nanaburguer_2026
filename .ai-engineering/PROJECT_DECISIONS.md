@@ -124,3 +124,17 @@ No bloquear zoom (`maximumScale`) por accesibilidad.
 Motivo:
 
 Mesero y caja trabajan de pie, con una mano. Una UI que solo cabe en laptop no es operable en el local.
+
+---
+
+## DEC-010
+
+Cancelar ítem después de cocina
+
+Permiso `ORDERS_CANCEL_ITEM`. Por defecto ON en ADMIN y CASHIER, OFF en mesero/cocina/domicilio. El admin lo enciende o apaga en Configuración → Roles. Quitar un producto en CREATED (aún no va a cocina) sigue siendo `removeItem` y no usa este permiso.
+
+Las plantillas de sistema ya no se resetean en cada carga: un código nuevo del catálogo se otorga una vez a las estaciones por defecto; después mandan los toggles.
+
+Motivo:
+
+HU-012 pedía autorización. OPS-06: no darlo al mesero de fábrica, pero sí poder habilitarlo sin otro deploy.

@@ -11,6 +11,7 @@ import {
   PERMISSION_CATALOG,
   SYSTEM_ROLE_META,
   SYSTEM_ROLE_PERMISSIONS,
+  unseenDefaultPermissionGrants,
 } from './permissions.catalog';
 
 @Injectable()
@@ -72,24 +73,26 @@ export class RolesService {
             isActive: true,
           },
         });
-      }
 
-      // Keep system templates in sync with the catalog defaults.
-      await tx.rolePermission.deleteMany({ where: { roleId: role.id } });
-      const permissionIds = codes
-        .map((code) => byCode.get(code))
-        .filter((id): id is string => Boolean(id));
+        const permissionIds = codes
+          .map((code) => byCode.get(code))
+          .filter((id): id is string => Boolean(id));
 
-      if (permissionIds.length) {
-        await tx.rolePermission.createMany({
-          data: permissionIds.map((permissionId) => ({
-            roleId: role!.id,
-            permissionId,
-          })),
-          skipDuplicates: true,
-        });
+        if (permissionIds.length) {
+          await tx.rolePermission.createMany({
+            data: permissionIds.map((permissionId) => ({
+              roleId: role!.id,
+              permissionId,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
     }
+
+    // New catalog codes (e.g. ORDERS_CANCEL_ITEM) land on the default
+    // stations once. After that, Configuración → Roles owns the toggles.
+    await this.backfillUnseenDefaultPermissions(tx, restaurantId, byCode);
 
     // Backfill legacy users → system role matching their station enum.
     const users = await tx.user.findMany({
@@ -293,6 +296,33 @@ export class RolesService {
     });
 
     return systemRole?.permissions.map((rp) => rp.permission.code) ?? [];
+  }
+
+  private async backfillUnseenDefaultPermissions(
+    tx: Prisma.TransactionClient | PrismaService,
+    restaurantId: string,
+    byCode: Map<string, string>,
+  ) {
+    const assigned = await tx.rolePermission.findMany({
+      where: { role: { restaurantId } },
+      select: { permission: { select: { code: true } } },
+    });
+    const grants = unseenDefaultPermissionGrants(
+      assigned.map((row) => row.permission.code),
+    );
+
+    for (const { systemKey, code } of grants) {
+      const role = await tx.role.findFirst({
+        where: { restaurantId, systemKey },
+      });
+      const permissionId = byCode.get(code);
+      if (!role || !permissionId) continue;
+
+      await tx.rolePermission.createMany({
+        data: [{ roleId: role.id, permissionId }],
+        skipDuplicates: true,
+      });
+    }
   }
 
   private async resolvePermissionIds(

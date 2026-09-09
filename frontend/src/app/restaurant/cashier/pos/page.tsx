@@ -24,6 +24,8 @@ import { orderProgressLabel } from "@/src/lib/order-channel-label";
 import { menuService } from "@/src/services/menu.service";
 import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
+import { useAuthStore } from "@/src/store/auth.store";
+import { canCancelTicketItem } from "@/src/types/auth";
 import { MenuItem } from "@/src/types/menu";
 import { Order } from "@/src/types/order";
 
@@ -37,6 +39,8 @@ import { Order } from "@/src/types/order";
  */
 export default function CashierPosPage() {
   const router = useRouter();
+  const currentUser = useAuthStore((s) => s.user);
+  const canCancelItem = canCancelTicketItem(currentUser);
   const [customerName, setCustomerName] = useState("Mostrador");
   const [customerPhone, setCustomerPhone] = useState("");
   const [pickupAt, setPickupAt] = useState("");
@@ -403,7 +407,10 @@ export default function CashierPosPage() {
                 item={line}
                 busy={busy}
                 onCancel={
-                  order && order.status !== "CLOSED" && order.status !== "CANCELED"
+                  canCancelItem &&
+                  order &&
+                  order.status !== "CLOSED" &&
+                  order.status !== "CANCELED"
                     ? handleCancelItem
                     : undefined
                 }

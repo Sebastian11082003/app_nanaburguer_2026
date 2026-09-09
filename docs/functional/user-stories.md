@@ -310,7 +310,7 @@ Implemented
 
 ## HU-012 — Cancel Order Item
 
-**Actor:** Admin
+**Actor:** Admin, Cashier
 
 ### Description
 
@@ -320,7 +320,8 @@ So that operational mistakes can be corrected.
 
 ### Acceptance Criteria
 
-- The system must require administrator authorization.
+- Canceling a line after kitchen requires `ORDERS_CANCEL_ITEM`.
+- Default stations: administrator and cashier. Waiter is off unless the admin enables the permission.
 - Canceled items must move to a canceled state.
 - The system must preserve audit records.
 - The system must register cancellation reasons.

@@ -27,7 +27,7 @@ import { Table, tablesService } from "@/src/services/tables.service";
 import { useAuthStore } from "@/src/store/auth.store";
 import { Category, MenuItem } from "@/src/types/menu";
 import { Order } from "@/src/types/order";
-import { hasPermission } from "@/src/types/auth";
+import { canCancelTicketItem, hasPermission } from "@/src/types/auth";
 
 export type CreateOrderScreenProps = {
   /** Back link target (e.g. `/restaurant/waiter/tables`). */
@@ -425,11 +425,7 @@ export function CreateOrderScreen({
     !!order &&
     order.status !== "CLOSED" &&
     order.status !== "CANCELED" &&
-    (role === "admin" ||
-      role === "cashier" ||
-      currentUser?.role === "ADMIN" ||
-      currentUser?.role === "CASHIER" ||
-      hasPermission(currentUser, "ORDERS_CANCEL"));
+    canCancelTicketItem(currentUser);
   const canApplyDiscount =
     !!order &&
     order.status !== "CLOSED" &&
