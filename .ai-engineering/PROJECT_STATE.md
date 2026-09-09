@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Ventas marca domicilio en camino / entregado (v0.4.39)
+
+- Si el ticket sigue abierto, la fila dice En camino o Entregado según `Delivery.status`. Caja ve qué cobro COD ya salió.
+
 ### Descartar borrador vacío Llevar/domicilio (v0.4.38)
 
 - Esos tickets ya no se auto-cancelan al cambiar de pestaña. Sin productos, **Descartar pedido** libera el canal (mismo permiso que Liberar mesa).

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
-import { orderChannelLabel } from "@/src/lib/order-channel-label";
+import { orderQueueLabel } from "@/src/lib/order-channel-label";
 import { FindOrdersParams, ordersService } from "@/src/services/orders.service";
 import { Order } from "@/src/types/order";
 
@@ -98,7 +98,7 @@ export default function CashierOrdersPage() {
                 <div>
                   <h2 className="text-xl font-bold">#{order.orderNumber}</h2>
                   <p className="text-sm text-zinc-400">
-                    {order.status} · {orderChannelLabel(order)}
+                    {order.status} · {orderQueueLabel(order)}
                   </p>
                 </div>
                 <p className="font-bold">{formatCents(order.totalCents)}</p>

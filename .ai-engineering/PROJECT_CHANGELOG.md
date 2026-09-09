@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.39
+
+- Ventas (caja/admin): domicilio abierto muestra En camino / Entregado.
+
 ## v0.4.38
 
 - Borrador CREATED vacío de Llevar/domicilio: botón Descartar (no vuelve el auto-cancel al navegar).

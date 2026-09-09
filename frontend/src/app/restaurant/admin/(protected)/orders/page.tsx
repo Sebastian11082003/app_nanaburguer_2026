@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
-import { orderChannelLabel } from "@/src/lib/order-channel-label";
+import { orderQueueLabel } from "@/src/lib/order-channel-label";
 import { formatCents } from "@/src/lib/money";
 import { ordersService } from "@/src/services/orders.service";
 import { Order, OrderStatus } from "@/src/types/order";
@@ -79,7 +79,7 @@ export default function AdminOrdersPage() {
             >
               <div>
                 <p className="font-bold">
-                  #{order.orderNumber} · {orderChannelLabel(order)}
+                  #{order.orderNumber} · {orderQueueLabel(order)}
                 </p>
                 <p className="text-sm text-zinc-500">
                   {order.items?.length ?? 0} items ·{" "}
