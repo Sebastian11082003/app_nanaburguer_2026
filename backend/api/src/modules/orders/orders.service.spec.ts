@@ -1,6 +1,13 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrderSource, OrderStatus, OrderType, Prisma } from '@prisma/client';
+import {
+  CashSessionStatus,
+  OrderSource,
+  OrderStatus,
+  OrderType,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -702,6 +709,90 @@ describe('OrdersService', () => {
       await expect(
         service.closeOrder('order-1', 'restaurant-1', 'user-1'),
       ).rejects.toThrow('Cannot close a ticket with no live items');
+    });
+
+    it('rejects a cashier close when no cash shift is open', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.READY,
+        totalCents: 20000,
+        sale: null,
+        items: [{ canceledAt: null }],
+      });
+      (prisma.cashSession as { findFirst: jest.Mock }).findFirst.mockResolvedValue(
+        null,
+      );
+
+      await expect(
+        service.closeOrder(
+          'order-1',
+          'restaurant-1',
+          'user-1',
+          UserRole.CASHIER,
+        ),
+      ).rejects.toThrow('Abre un turno de caja antes de cobrar');
+      expect((prisma.order as { update: jest.Mock }).update).not.toHaveBeenCalled();
+    });
+
+    it('lets a cashier close when a cash shift is open', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.READY,
+        totalCents: 20000,
+        sale: null,
+        items: [{ canceledAt: null }],
+      });
+      (prisma.cashSession as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'shift-1',
+        status: CashSessionStatus.OPEN,
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CLOSED,
+      });
+      (prisma.sale as { create: jest.Mock }).create.mockResolvedValue({
+        id: 'sale-new',
+        totalCents: 20000,
+      });
+
+      await service.closeOrder(
+        'order-1',
+        'restaurant-1',
+        'user-1',
+        UserRole.CASHIER,
+      );
+
+      expect((prisma.order as { update: jest.Mock }).update).toHaveBeenCalled();
+    });
+
+    it('lets an admin close without an open cash shift', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.READY,
+        totalCents: 20000,
+        sale: null,
+        items: [{ canceledAt: null }],
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CLOSED,
+      });
+      (prisma.sale as { create: jest.Mock }).create.mockResolvedValue({
+        id: 'sale-new',
+        totalCents: 20000,
+      });
+
+      await service.closeOrder(
+        'order-1',
+        'restaurant-1',
+        'user-1',
+        UserRole.ADMIN,
+      );
+
+      expect(
+        (prisma.cashSession as { findFirst: jest.Mock }).findFirst,
+      ).not.toHaveBeenCalled();
+      expect((prisma.order as { update: jest.Mock }).update).toHaveBeenCalled();
     });
   });
 

@@ -163,9 +163,14 @@ export class OrdersController {
   closeOrder(
     @Param('id') id: string,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { userId: string } },
+    @Req() req: { user: { userId: string; role: UserRole } },
   ) {
-    return this.ordersService.closeOrder(id, restaurantId, req.user.userId);
+    return this.ordersService.closeOrder(
+      id,
+      restaurantId,
+      req.user.userId,
+      req.user.role,
+    );
   }
 
   // 🟢 LISTAR
