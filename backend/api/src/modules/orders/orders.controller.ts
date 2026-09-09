@@ -22,6 +22,7 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { SetDiscountDto } from './dto/set-discount.dto';
 import { TransferTableDto } from './dto/transfer-table.dto';
 import { CancelItemDto } from './dto/cancel-item.dto';
+import { UpdatePickupAtDto } from './dto/update-pickup-at.dto';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -144,6 +145,16 @@ export class OrdersController {
       dto.discountCents,
       restaurantId,
     );
+  }
+
+  @Patch(':id/pickup-at')
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
+  setPickupAt(
+    @Param('id') id: string,
+    @Body() dto: UpdatePickupAtDto,
+    @Tenant() restaurantId: string,
+  ) {
+    return this.ordersService.setPickupAt(id, dto.pickupAt, restaurantId);
   }
 
   // 🟢 CERRAR ORDEN (caja)

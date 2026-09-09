@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { posReceiptHref } from "@/src/lib/invoice-href";
 import {
   clearEmptyTicketReleaser,
   hasLiveLines,
@@ -215,8 +216,14 @@ function DeliveryCreateOrderPage() {
     try {
       setBusy(true);
       setError("");
-      await closeAndPayOrder(order.id, payload);
+      const paid = await closeAndPayOrder(order.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(
+          posReceiptHref(paid.invoiceId, afterCreateHref),
+        );
+        return;
+      }
       setMessage(`Pedido #${order.orderNumber} cobrado`);
       setOrder(null);
       setCustomerName("");
@@ -400,6 +407,23 @@ function DeliveryCreateOrderPage() {
                   className="field-input mt-1"
                   value={pickupAt}
                   onChange={(e) => setPickupAt(e.target.value)}
+                  onBlur={() => {
+                    if (!order || order.type !== "PICKUP") return;
+                    if (order.status === "CLOSED" || order.status === "CANCELED") {
+                      return;
+                    }
+                    void ordersService
+                      .setPickupAt(
+                        order.id,
+                        pickupAt ? new Date(pickupAt).toISOString() : null,
+                      )
+                      .then(setOrder)
+                      .catch((err: unknown) =>
+                        setError(
+                          getErrorMessage(err, "No se pudo guardar la hora"),
+                        ),
+                      );
+                  }}
                 />
               </label>
             )}

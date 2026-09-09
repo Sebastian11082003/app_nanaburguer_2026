@@ -10,6 +10,7 @@ import { KitchenTicket } from "@/src/components/orders/kitchen-ticket";
 import { TransferTableModal } from "@/src/components/tables/transfer-table-modal";
 import { categoryColor } from "@/src/lib/category-color";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { posReceiptHref } from "@/src/lib/invoice-href";
 import {
   clearEmptyTicketReleaser,
   hasLiveLines,
@@ -309,8 +310,12 @@ export function CreateOrderScreen({
     try {
       setBusy(true);
       setError("");
-      await closeAndPayOrder(order.id, payload);
+      const paid = await closeAndPayOrder(order.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(posReceiptHref(paid.invoiceId, tablesHref));
+        return;
+      }
       setMessage("Orden cerrada y cobrada");
       router.push(tablesHref);
     } catch (err: unknown) {

@@ -8,6 +8,7 @@ import {
   paymentMethodsService,
   RestaurantPaymentMethod,
 } from "@/src/services/payment-methods.service";
+import { cashService } from "@/src/services/cash.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 
 type Props = {
@@ -43,6 +44,7 @@ export function ClosePayModal({
   const [loadError, setLoadError] = useState("");
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [receivedInput, setReceivedInput] = useState("");
+  const [shiftOpen, setShiftOpen] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -69,6 +71,15 @@ export function ClosePayModal({
       })
       .finally(() => {
         if (!cancelled) setLoadingMethods(false);
+      });
+
+    cashService
+      .currentSession()
+      .then((current) => {
+        if (!cancelled) setShiftOpen(Boolean(current.session));
+      })
+      .catch(() => {
+        if (!cancelled) setShiftOpen(null);
       });
 
     return () => {
@@ -128,7 +139,15 @@ export function ClosePayModal({
           </p>
         </div>
 
-        {loadError && <p className="mt-3 text-sm text-red-400">{loadError}</p>}
+        {shiftOpen === false && (
+          <p className="mt-3 text-sm text-amber-400">
+            No hay un turno de caja abierto. El cobro queda, pero no entra en
+            el cuadre hasta que abras caja.{" "}
+            <a href="/restaurant/cashier/cash" className="underline">
+              Abrir caja
+            </a>
+          </p>
+        )}
         {loadingMethods && (
           <p className="mt-3 text-sm text-zinc-500">Cargando métodos...</p>
         )}

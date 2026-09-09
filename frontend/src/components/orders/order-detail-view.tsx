@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { posReceiptHref } from "@/src/lib/invoice-href";
 import {
   hasLiveLines,
   isEmptyOpenDineIn,
@@ -121,8 +122,12 @@ export function OrderDetailView({ orderId, role, backHref }: Props) {
     try {
       setBusy(true);
       setError("");
-      await closeAndPayOrder(order.id, payload);
+      const paid = await closeAndPayOrder(order.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(posReceiptHref(paid.invoiceId, backHref));
+        return;
+      }
       setMessage("Orden cerrada y cobrada");
       await load();
     } catch (err: unknown) {

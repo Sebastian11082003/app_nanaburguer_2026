@@ -584,6 +584,48 @@ describe('OrdersService', () => {
     });
   });
 
+  describe('setPickupAt', () => {
+    it('updates pickup time on an open PICKUP ticket', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        type: OrderType.PICKUP,
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        pickupAt: new Date('2026-09-09T19:30:00.000Z'),
+      });
+
+      await service.setPickupAt(
+        'order-1',
+        '2026-09-09T19:30:00.000Z',
+        'restaurant-1',
+      );
+
+      const [[updateArgs]] = (prisma.order as { update: jest.Mock }).update.mock
+        .calls;
+      expect(updateArgs.data.pickupAt).toEqual(
+        new Date('2026-09-09T19:30:00.000Z'),
+      );
+    });
+
+    it('rejects pickupAt on dine-in', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CREATED,
+        type: OrderType.DINE_IN,
+      });
+
+      await expect(
+        service.setPickupAt(
+          'order-1',
+          '2026-09-09T19:30:00.000Z',
+          'restaurant-1',
+        ),
+      ).rejects.toThrow('pickupAt is only valid on PICKUP orders');
+    });
+  });
+
   describe('closeOrder', () => {
     it('throws NotFound when the order does not belong to the tenant', async () => {
       (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);

@@ -459,6 +459,43 @@ export class OrdersService {
     });
   }
 
+  /**
+   * Pickup time can change after the ticket is sent to kitchen (customer
+   * called to delay). Locked only once CLOSED/CANCELED.
+   */
+  async setPickupAt(
+    orderId: string,
+    pickupAt: string | null | undefined,
+    restaurantId: string,
+  ) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, restaurantId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (
+      order.status === OrderStatus.CLOSED ||
+      order.status === OrderStatus.CANCELED
+    ) {
+      throw new BadRequestException('Order is closed or canceled');
+    }
+
+    if (order.type !== OrderType.PICKUP) {
+      throw new BadRequestException('pickupAt is only valid on PICKUP orders');
+    }
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        pickupAt: pickupAt ? new Date(pickupAt) : null,
+      },
+      include: OrdersService.ORDER_INCLUDE,
+    });
+  }
+
   // ================================
   // REMOVE ITEM
   // ================================
