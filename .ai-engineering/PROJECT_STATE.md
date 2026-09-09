@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Login: plataforma hasta el slug (v0.4.47)
+
+- `/restaurant/login` no reusa el local persistido. El operador escribe el slug; si existe, aparecen nombre y logo. El correo del personal debe ser de ese tenant.
+
 ### Rider solo crea domicilio (v0.4.46)
 
 - En Nuevo pedido el personal `DELIVERY` ya no ve el chip Pickup. El alta fuerza `DELIVERY` (dirección obligatoria). Caja/admin siguen eligiendo Llevar o domicilio.

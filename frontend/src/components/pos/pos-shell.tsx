@@ -40,7 +40,7 @@ export function PosShell({ children }: { children: ReactNode }) {
     await releaseEmptyTicketIfNeeded();
     logoutStaff();
     logoutRestaurant();
-    router.push("/restaurant/local-login");
+    router.push("/restaurant/login");
   }
 
   return (

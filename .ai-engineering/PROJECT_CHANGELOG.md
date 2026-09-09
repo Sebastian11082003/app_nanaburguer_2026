@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.47
+
+- Login de personal: marca de plataforma (RestoOS) hasta identificar el slug a mano. Nombre y logo del local solo cuando el lookup público coincide.
+
 ## v0.4.46
 
 - Alta de pedido: el rol `DELIVERY` no puede elegir Pickup. Solo crea domicilio (dirección obligatoria).

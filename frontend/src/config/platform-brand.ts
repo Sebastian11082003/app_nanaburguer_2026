@@ -4,8 +4,8 @@
  *
  * This is a multi-tenant product meant to be sold to many different
  * restaurants/gastrobares/etc, so the platform's own screens (landing
- * `/`, the platform admin back-office `/platform/*`, and the pre-login
- * `/restaurant/login` gate where the tenant hasn't been resolved yet)
+ * `/`, the platform admin back-office `/platform/*`, and `/restaurant/login`
+ * until the operator types a slug that matches a restaurant)
  * must NEVER show a specific customer's branding (e.g. a pilot client
  * like "Nana Burger"). Everything the platform's own UI needs lives here
  * as a single, easy-to-rename source of truth.
