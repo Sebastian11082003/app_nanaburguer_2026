@@ -6,7 +6,7 @@ if errorlevel 1 goto :fail
 git pull origin dev
 if errorlevel 1 goto :fail
 echo.
-echo Listo. Para Nest y Next (Ctrl+C) y arrancalos de nuevo.
+echo Deten Nest y Next (Ctrl+C) y arrancalos de nuevo.
 echo En el navegador: Ctrl+Shift+R
 pause
 exit /b 0
