@@ -282,6 +282,10 @@
 - Login único de personal (correo + contraseña) y recuperar acceso.
 - Piso de mesas compartido; nav filtrada por rol (mesero/caja/domicilio).
 
+## v0.4.12
+
+- KDS: líneas del pedido en cola/preparando/listas y poll cada 8s (pausa con la pestaña oculta).
+
 ## v0.4.11
 
 - Cierre de caja de turno: `CashSession` (abrir / preview / cerrar con snapshot).

@@ -211,6 +211,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 - Efectivo esperado = fondo + ventas CASH + ingresos manuales − egresos. SALE_PAYMENT no se cuenta dos veces.
 - UI admin/cajero: `/restaurant/admin/cash` y `/restaurant/cashier/cash`.
 
+### KDS cocina (v0.4.12)
+
+- El tablero lista las líneas (`2x Hamburguesa` + notas/cortesía), no solo “N items”.
+- Poll cada 8s (sin “Cargando...” en el refresco; se pausa si la pestaña está oculta).
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.
@@ -568,14 +573,13 @@ repitan literalmente lo que la línea de código ya dice. Ver
 
 ## Próxima Fase
 
-Cierre de turno (HU-025) ya está en código (v0.4.11). Auditoría: [docs/mvp-production-readiness.md](../docs/mvp-production-readiness.md).
+Cierre de turno (v0.4.11) y poll de cocina (v0.4.12) ya están. Auditoría: [docs/mvp-production-readiness.md](../docs/mvp-production-readiness.md).
 
 Para un piloto real (Nana operando un día en VPS), en este orden:
 
 1. Volume de `uploads/` + backup/restore de Postgres.
-2. Poll corto en cocina + líneas del pedido en el tablero.
-3. Operador: VPS + DNS + secretos + HTTPS overlay.
-4. Impresora térmica — sigue diferida hasta que el usuario la pida.
+2. Operador: VPS + DNS + secretos + HTTPS overlay.
+3. Impresora térmica — sigue diferida hasta que el usuario la pida.
 
 Inventario, Factus, WhatsApp y menú público **siguen fuera del MVP**.
 
