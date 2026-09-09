@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Pulido de ticket para revisión (v0.4.53)
+
+- Cocina y comanda muestran `CANCELADO` en la línea anulada (no la cuentan como ítem vivo). Recibo y reporte de productos ignoran esas líneas. Servicio 5% vive en `service-fee.ts`.
+
 ### Traer dest en Windows (v0.4.52)
 
 - `update-local.bat` en la raíz: checkout + pull de `dev`. GitHub no actualiza tu PC solo.

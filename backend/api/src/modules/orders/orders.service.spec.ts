@@ -355,6 +355,62 @@ describe('OrdersService', () => {
     });
   });
 
+  describe('cancelItem', () => {
+    it('soft-cancels the line and drops it from dine-in totals', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        restaurantId: 'restaurant-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        type: OrderType.DINE_IN,
+        discountCents: 0,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-1',
+        orderId: 'order-1',
+        canceledAt: null,
+        lineTotalCents: 20000,
+      });
+      (prisma.orderItem as { findMany: jest.Mock }).findMany.mockResolvedValue([
+        { lineTotalCents: 0, canceledAt: new Date() },
+      ]);
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+      });
+
+      await service.cancelItem('order-1', 'line-1', 'restaurant-1', 'Error');
+
+      const [[itemUpdate]] = (prisma.orderItem as { update: jest.Mock }).update
+        .mock.calls;
+      expect(itemUpdate.data.lineTotalCents).toBe(0);
+      expect(itemUpdate.data.cancelReason).toBe('Error');
+      expect(itemUpdate.data.canceledAt).toBeInstanceOf(Date);
+
+      const [[orderUpdate]] = (prisma.order as { update: jest.Mock }).update
+        .mock.calls;
+      expect(orderUpdate.data).toEqual({
+        subtotalCents: 0,
+        taxCents: 0,
+        discountCents: 0,
+        totalCents: 0,
+      });
+    });
+
+    it('rejects canceling an already canceled line', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-1',
+        canceledAt: new Date(),
+      });
+
+      await expect(
+        service.cancelItem('order-1', 'line-1', 'restaurant-1'),
+      ).rejects.toThrow('Item already canceled');
+    });
+  });
+
   describe('updateStatus', () => {
     it('throws NotFound for an order outside the tenant scope', async () => {
       (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);

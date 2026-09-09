@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.53
+
+- Ticket: recargo de servicio 5% en constante; cocina y comanda marcan ítems CANCELADO; el recibo y el top de productos no cuentan líneas anuladas. Órdenes admin filtra preparando / en camino / anuladas.
+
 ## v0.4.52
 
 - Windows: `update-local.bat` en la raíz hace checkout + pull de `dev`. GitHub no empuja solo a tu disco.

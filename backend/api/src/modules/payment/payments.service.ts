@@ -180,13 +180,17 @@ export class PaymentsService {
   ) {
     const { restaurant, order } = sale;
 
-    const items = order.items.map((i) => ({
-      name: i.menuItem.name,
-      quantity: i.quantity,
-      unitPrice: i.unitPriceCents,
-      total: i.lineTotalCents,
-      notes: i.notes,
-    }));
+    // Canceled lines stay on the ticket for kitchen audit; the receipt
+    // only lists what the guest actually pays.
+    const items = order.items
+      .filter((i) => !i.canceledAt)
+      .map((i) => ({
+        name: i.menuItem.name,
+        quantity: i.quantity,
+        unitPrice: i.unitPriceCents,
+        total: i.lineTotalCents,
+        notes: i.notes,
+      }));
 
     return tx.invoice.create({
       data: {

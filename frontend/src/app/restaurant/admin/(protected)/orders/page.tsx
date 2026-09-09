@@ -14,8 +14,11 @@ const STATUS_FILTERS: { label: string; value: OrderStatus | undefined }[] = [
   { label: "Todas", value: undefined },
   { label: "En curso", value: "CREATED" },
   { label: "En cocina", value: "SENT_TO_KITCHEN" },
+  { label: "Preparando", value: "IN_PREPARATION" },
   { label: "Listas", value: "READY" },
+  { label: "En camino", value: "OUT_FOR_DELIVERY" },
   { label: "Cerradas", value: "CLOSED" },
+  { label: "Anuladas", value: "CANCELED" },
 ];
 
 /** Admin's overview of every order for the tenant, with a quick status filter. */

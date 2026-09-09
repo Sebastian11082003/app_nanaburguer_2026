@@ -40,6 +40,10 @@ describe('ReportsService', () => {
     return prisma.delivery as Delegate;
   }
 
+  function orderItem(): Delegate {
+    return prisma.orderItem as Delegate;
+  }
+
   it('filters salesByDay to the requested UTC window', async () => {
     sale().findMany.mockResolvedValue([
       { createdAt: new Date('2026-09-02T10:00:00.000Z'), totalCents: 1000 },
@@ -109,6 +113,22 @@ describe('ReportsService', () => {
         where: {
           restaurantId: 'r1',
           paidAt: { gte: new Date('2026-09-01T00:00:00.000Z') },
+        },
+      }),
+    );
+  });
+
+  it('excludes canceled lines from top products', async () => {
+    orderItem().groupBy.mockResolvedValue([]);
+    (prisma.menuItem as { findMany: jest.Mock }).findMany.mockResolvedValue([]);
+
+    await service.topProducts('r1');
+
+    expect(orderItem().groupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          canceledAt: null,
+          order: { restaurantId: 'r1' },
         },
       }),
     );

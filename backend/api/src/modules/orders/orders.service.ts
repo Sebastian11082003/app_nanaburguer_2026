@@ -10,6 +10,7 @@ import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { OrderStatus, OrderType, PaymentMethod, Prisma, UserRole } from '@prisma/client';
 
 import { ACTIVE_ORDER_STATUSES } from '../../common/constants/order-status.constants';
+import { SERVICE_FEE_RATE } from '../../common/constants/service-fee';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AddItemDto } from './dto/add-item.dto';
 import { TransferTableDto } from './dto/transfer-table.dto';
@@ -76,7 +77,9 @@ export class OrdersService {
     const discount = Math.min(Math.max(discountCents, 0), subtotal);
     const net = subtotal - discount;
     const serviceFee =
-      type === OrderType.DINE_IN ? Math.round(net * 0.05) : 0;
+      type === OrderType.DINE_IN
+        ? Math.round(net * SERVICE_FEE_RATE)
+        : 0;
 
     return {
       subtotalCents: subtotal,
