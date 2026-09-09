@@ -205,6 +205,12 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 - Inventario: no existe y no está en el MVP.
 - Para piloto en VPS: cierre de turno, volume de logos, poll de cocina, DNS/secretos.
 
+### Cierre de caja de turno (v0.4.11)
+
+- Un turno OPEN por tenant: abrir con fondo, preview en vivo (ventas por medio), cerrar con snapshot histórico.
+- Efectivo esperado = fondo + ventas CASH + ingresos manuales − egresos. SALE_PAYMENT no se cuenta dos veces.
+- UI admin/cajero: `/restaurant/admin/cash` y `/restaurant/cashier/cash`.
+
 ### Huecos operativos (v0.4.9)
 
 - Usuario: detalle + PATCH (rol, activo, password). No se puede desactivar a uno mismo.
@@ -512,7 +518,7 @@ Suite Jest unitaria (mocks de Prisma, sin depender de BD real):
 - `roles.guard.spec.ts`: rutas sin restricción, sin usuario, rol no
   permitido, rol permitido.
 
-**Resultado:** 5 suites Jest (env de arranque + auth/órdenes/guards). `nest build` sigue OK.
+**Resultado:** 6 suites Jest (env + auth/órdenes/guards + caja). `nest build` sigue OK.
 
 ---
 
@@ -562,15 +568,14 @@ repitan literalmente lo que la línea de código ya dice. Ver
 
 ## Próxima Fase
 
-Auditoría de contrato vs código: [docs/mvp-production-readiness.md](../docs/mvp-production-readiness.md).
+Cierre de turno (HU-025) ya está en código (v0.4.11). Auditoría: [docs/mvp-production-readiness.md](../docs/mvp-production-readiness.md).
 
 Para un piloto real (Nana operando un día en VPS), en este orden:
 
-1. Cierre de caja de turno (HU-025: hoy solo hay movimientos manuales).
-2. Volume de `uploads/` + backup/restore de Postgres.
-3. Poll corto en cocina + líneas del pedido en el tablero.
-4. Operador: VPS + DNS + secretos + HTTPS overlay.
-5. Impresora térmica — sigue diferida hasta que el usuario la pida.
+1. Volume de `uploads/` + backup/restore de Postgres.
+2. Poll corto en cocina + líneas del pedido en el tablero.
+3. Operador: VPS + DNS + secretos + HTTPS overlay.
+4. Impresora térmica — sigue diferida hasta que el usuario la pida.
 
 Inventario, Factus, WhatsApp y menú público **siguen fuera del MVP**.
 

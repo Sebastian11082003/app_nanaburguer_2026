@@ -1,6 +1,6 @@
 "use client";
 
-import { CashMovementsPanel } from "@/src/components/cash/cash-movements-panel";
+import { CashShiftPanel } from "@/src/components/cash/cash-shift-panel";
 
 export default function AdminCashPage() {
   return (
@@ -8,11 +8,10 @@ export default function AdminCashPage() {
       <div>
         <h1 className="text-4xl font-black">Caja</h1>
         <p className="text-zinc-400">
-          Ingresos y egresos manuales del restaurante (no es el cobro de
-          órdenes)
+          Abrí el turno, registrá movimientos y cerrá con el cuadre del día
         </p>
       </div>
-      <CashMovementsPanel />
+      <CashShiftPanel />
     </div>
   );
 }

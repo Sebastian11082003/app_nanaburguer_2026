@@ -12,9 +12,10 @@ import {
 
 /**
  * Shared cash book for admin and cashier. Movements are tenant-scoped on
- * the API; this UI never sends restaurantId.
+ * the API; this UI never sends restaurantId. When `from` is set (open
+ * shift), the list and running balance cover that window only.
  */
-export function CashMovementsPanel() {
+export function CashMovementsPanel({ from }: { from?: string }) {
   const [rows, setRows] = useState<CashMovement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -29,13 +30,13 @@ export function CashMovementsPanel() {
     try {
       if (!opts?.silent) setLoading(true);
       setError("");
-      setRows(await cashService.getAll());
+      setRows(await cashService.getAll(from));
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudieron cargar los movimientos"));
     } finally {
       if (!opts?.silent) setLoading(false);
     }
-  }, []);
+  }, [from]);
 
   useEffect(() => {
     load();
@@ -83,11 +84,13 @@ export function CashMovementsPanel() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-5 py-4">
-        <p className="text-sm text-zinc-400">Saldo de movimientos</p>
+        <p className="text-sm text-zinc-400">
+          {from ? "Saldo del turno" : "Saldo de movimientos"}
+        </p>
         <p className="mt-1 text-2xl font-black">{formatCents(balanceCents)}</p>
         <p className="mt-1 text-sm text-zinc-500">
-          Ingresos menos egresos registrados a mano. No incluye ventas
-          cobradas (eso está en reportes).
+          Ingresos menos egresos del libro. Un cobro en efectivo también
+          deja un ingreso automático (SALE_PAYMENT).
         </p>
       </div>
 

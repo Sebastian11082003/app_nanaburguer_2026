@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { CashMovementsPanel } from "@/src/components/cash/cash-movements-panel";
+import { CashShiftPanel } from "@/src/components/cash/cash-shift-panel";
 
 export default function CashierCashPage() {
   return (
@@ -11,8 +11,8 @@ export default function CashierCashPage() {
         <div className="min-w-0">
           <h1 className="text-2xl font-black sm:text-4xl">Caja</h1>
           <p className="text-sm text-zinc-400 sm:text-base">
-            Ingresos y egresos manuales. El cobro de órdenes está en la mesa
-            o en Ventas.
+            Abre el turno, registra movimientos y cierra el cuadre. El cobro
+            de órdenes está en la mesa o en Ventas.
           </p>
         </div>
         <Link
@@ -22,7 +22,7 @@ export default function CashierCashPage() {
           ← Mesas
         </Link>
       </div>
-      <CashMovementsPanel />
+      <CashShiftPanel />
     </main>
   );
 }

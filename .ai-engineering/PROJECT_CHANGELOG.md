@@ -282,6 +282,12 @@
 - Login único de personal (correo + contraseña) y recuperar acceso.
 - Piso de mesas compartido; nav filtrada por rol (mesero/caja/domicilio).
 
+## v0.4.11
+
+- Cierre de caja de turno: `CashSession` (abrir / preview / cerrar con snapshot).
+- HU-025: totales del período, por medio de pago, e histórico de cierres.
+- Ventas CASH siguen en el libro; el preview las toma de `Payment` para no duplicar `SALE_PAYMENT`.
+
 ## v0.4.10
 
 - Auditoría MVP vs producción: `docs/mvp-production-readiness.md`.
