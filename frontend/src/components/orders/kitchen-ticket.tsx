@@ -43,8 +43,15 @@ export function KitchenTicket({ order, onClose }: Props) {
         <ul className="mt-4 space-y-2 border-t border-dashed border-zinc-400 pt-4 text-base">
           {order.items.map((item) => (
             <li key={item.id}>
-              <p className="font-bold">{orderLineLabel(item)}</p>
-              {item.notes && (
+              <p
+                className={
+                  item.canceledAt ? "font-bold text-zinc-400 line-through" : "font-bold"
+                }
+              >
+                {item.canceledAt ? "CANCELADO · " : ""}
+                {orderLineLabel(item)}
+              </p>
+              {item.notes && !item.canceledAt && (
                 <p className="text-sm italic text-zinc-600">Nota: {item.notes}</p>
               )}
             </li>
