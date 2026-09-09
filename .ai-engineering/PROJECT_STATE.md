@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Recibos en caja (v0.4.58)
+
+- El chrome POS tiene Recibos para ADMIN y CASHIER. La lista reutiliza el mismo componente que Facturas de admin; el detalle se queda en `/restaurant/cashier/invoices/:id`.
+
 ### Recibo, hora de recoger y aviso de caja (v0.4.57)
 
 - PATCH pickup-at en Llevar abierto. Cobro abre el comprobante. Modal de cobro avisa si no hay sesión de caja. Backlog en `.ai-engineering/BACKLOG.md`.

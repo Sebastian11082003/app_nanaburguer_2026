@@ -13,7 +13,7 @@ function CashierInvoiceInner() {
     <main className="mx-auto max-w-5xl overflow-x-hidden">
       <InvoiceReceiptView
         invoiceId={params.id}
-        backHref={from || "/restaurant/cashier/orders"}
+        backHref={from || "/restaurant/cashier/invoices"}
       />
     </main>
   );

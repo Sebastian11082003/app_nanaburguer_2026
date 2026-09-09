@@ -20,7 +20,7 @@ Rama de integración: `dev`.
 | OPS-04 | hecho v0.4.57 | Aviso si se cobra sin turno de caja abierto (no bloquea) |
 | OPS-05 | pendiente | ¿Exigir turno de caja abierto para cobrar? (hoy solo aviso) |
 | OPS-06 | decidir | ¿El mesero cancela ítem después de cocina, o solo caja/admin? |
-| OPS-07 | pendiente | Listado de recibos también en chrome de caja (hoy se abre al cobrar) |
+| OPS-07 | hecho v0.4.58 | Recibos en el chrome de caja (lista + imprimir, sin pasar por admin) |
 
 ## Después del piloto (no inventar ahora)
 
