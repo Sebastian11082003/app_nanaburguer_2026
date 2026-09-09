@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Ventas de caja filtra abiertas (v0.4.36)
+
+- Por defecto lista el mismo set abierto que el piso (`activeOnly`). Chips: Abiertas / Listas / Cerradas / Todas.
+
 ### Cobro de domicilio desde Domicilios (v0.4.35)
 
 - Caja/admin cierran y cobran el domicilio en el alta y en el detalle. El repartidor no.

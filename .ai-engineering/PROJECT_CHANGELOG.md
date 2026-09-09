@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.36
+
+- Ventas de caja: filtro Abiertas por defecto (no mezcla CANCELED/CLOSED). Listas / Cerradas / Todas.
+
 ## v0.4.35
 
 - Caja/admin cobran domicilio desde el alta y el detalle. Despacho tiene Nuevo pedido y Cobrar.
