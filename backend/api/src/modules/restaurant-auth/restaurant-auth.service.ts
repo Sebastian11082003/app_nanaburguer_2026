@@ -16,8 +16,8 @@ export class RestaurantAuthService {
   async login(slug: string, email: string, password: string) {
     const restaurant = await this.prisma.restaurant.findFirst({
       where: {
-        slug,
-        email,
+        slug: { equals: slug.trim().toLowerCase(), mode: 'insensitive' },
+        email: { equals: email.trim().toLowerCase(), mode: 'insensitive' },
         isActive: true,
       },
     });

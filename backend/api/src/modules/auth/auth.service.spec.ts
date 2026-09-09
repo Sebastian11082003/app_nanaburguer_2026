@@ -215,8 +215,54 @@ describe('AuthService', () => {
       expect(result.restaurant.logoUrl).toBe('/logo/nana-logo.jpeg');
     });
 
+    it('lets the restaurant contact email in as ADMIN when no staff user exists', async () => {
+      (prisma.user as { findFirst: jest.Mock }).findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
+      (prisma.restaurant as { findFirst: jest.Mock }).findFirst
+        .mockResolvedValueOnce({
+          id: 'restaurant-1',
+          name: 'Nanaburguer',
+          email: 'nanaburguer-neiva@gmail.com',
+          restaurantPasswordHash: 'rest-hash',
+          isActive: true,
+        })
+        .mockResolvedValueOnce({
+          id: 'restaurant-1',
+          name: 'Nanaburguer',
+          slug: 'nanaburguer',
+          logoUrl: null,
+        });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (prisma.role as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'role-admin',
+      });
+      (prisma.user as { create: jest.Mock }).create.mockResolvedValue({
+        id: 'admin-1',
+        email: 'nanaburguer-neiva@gmail.com',
+        passwordHash: 'rest-hash',
+        role: UserRole.ADMIN,
+        restaurantId: 'restaurant-1',
+        fullName: 'Nanaburguer',
+        roleId: 'role-admin',
+        isActive: true,
+      });
+
+      const result = await service.staffLogin(
+        'nanaburguer-neiva@gmail.com',
+        'secret123',
+      );
+
+      expect(result.user.role).toBe(UserRole.ADMIN);
+      expect(result.restaurant.slug).toBe('nanaburguer');
+      expect((prisma.user as { create: jest.Mock }).create).toHaveBeenCalled();
+    });
+
     it('rejects invalid credentials', async () => {
       (prisma.user as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);
+      (prisma.restaurant as { findFirst: jest.Mock }).findFirst.mockResolvedValue(
+        null,
+      );
       await expect(
         service.staffLogin('nobody@nana.test', 'secret123'),
       ).rejects.toThrow('Invalid credentials');

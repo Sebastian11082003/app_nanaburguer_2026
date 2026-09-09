@@ -91,12 +91,6 @@ export class PlatformService {
 
     const adminEmail = dto.adminEmail.trim().toLowerCase();
 
-    if (restaurantEmail === adminEmail) {
-      throw new BadRequestException(
-        'Restaurant email and admin email must be different',
-      );
-    }
-
     const existingRestaurant = await this.prisma.restaurant.findFirst({
       where: {
         OR: [

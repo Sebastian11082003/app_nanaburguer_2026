@@ -113,22 +113,29 @@ export class AuthService {
   /**
    * Same login for every station (Loggro-style). Email is globally unique,
    * so the tenant is resolved from the user — no slug, no role picker.
+   *
+   * The restaurant row also has an email (set when the tenant is created).
+   * Operators treat that as the restaurant admin. If there is no User yet
+   * for that address, we verify `restaurantPasswordHash` and provision an
+   * ADMIN so they can enter the POS and create the other roles.
    */
   async staffLogin(email: string, password: string) {
-    const user = await this.prisma.user.findFirst({
+    const normalized = email.trim().toLowerCase();
+
+    let user = await this.prisma.user.findFirst({
       where: {
-        email: { equals: email.trim(), mode: 'insensitive' },
+        email: { equals: normalized, mode: 'insensitive' },
         isActive: true,
       },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const validPassword = await bcrypt.compare(password, user.passwordHash);
-    if (!validPassword) {
-      throw new UnauthorizedException('Invalid credentials');
+    if (user) {
+      const validPassword = await bcrypt.compare(password, user.passwordHash);
+      if (!validPassword) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+    } else {
+      user = await this.loginRestaurantAdmin(normalized, password);
     }
 
     const restaurant = await this.prisma.restaurant.findFirst({
@@ -142,6 +149,60 @@ export class AuthService {
 
     const auth = await this.buildAuthResponse(user);
     return { ...auth, restaurant };
+  }
+
+  /**
+   * Tenant contact email + restaurant password → ADMIN staff session.
+   * Reuses the stored hash; does not create a second password.
+   */
+  private async loginRestaurantAdmin(email: string, password: string) {
+    const restaurant = await this.prisma.restaurant.findFirst({
+      where: {
+        email: { equals: email, mode: 'insensitive' },
+        isActive: true,
+      },
+    });
+
+    if (!restaurant?.restaurantPasswordHash) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const validPassword = await bcrypt.compare(
+      password,
+      restaurant.restaurantPasswordHash,
+    );
+    if (!validPassword) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        email: { equals: restaurant.email ?? email, mode: 'insensitive' },
+      },
+    });
+    if (existing) {
+      if (existing.restaurantId !== restaurant.id || !existing.isActive) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+      return existing;
+    }
+
+    await this.rolesService.ensureDefaults(restaurant.id);
+    const adminRole = await this.prisma.role.findFirst({
+      where: { restaurantId: restaurant.id, systemKey: UserRole.ADMIN },
+    });
+
+    return this.prisma.user.create({
+      data: {
+        fullName: restaurant.name,
+        email: (restaurant.email ?? email).toLowerCase(),
+        passwordHash: restaurant.restaurantPasswordHash,
+        role: UserRole.ADMIN,
+        roleId: adminRole?.id,
+        restaurantId: restaurant.id,
+        isActive: true,
+      },
+    });
   }
 
   /**

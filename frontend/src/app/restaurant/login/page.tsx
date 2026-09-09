@@ -28,10 +28,6 @@ export default function StaffLoginPage() {
   const identified = status === "found" && branding;
 
   async function loginWith(form: HTMLFormElement) {
-    if (!identified) {
-      setError("Identifica el local con su slug antes de ingresar");
-      return;
-    }
     const data = new FormData(form);
     const nextEmail = String(data.get("email") ?? "").trim();
     const nextPassword = String(data.get("password") ?? "");
@@ -42,19 +38,19 @@ export default function StaffLoginPage() {
         email: nextEmail,
         password: nextPassword,
       });
-      if (
-        response.restaurant.slug.trim().toLowerCase() !==
-        (branding.slug ?? slug).trim().toLowerCase()
-      ) {
-        setError("Ese correo no pertenece a este local");
-        return;
-      }
       setAuth(response.accessToken, response.user);
       setTenantPreview(response.restaurant);
       void remember;
       router.push(homeForRole(response.user.role));
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Correo o contraseña incorrectos"));
+      const raw = getErrorMessage(err, "Correo o contraseña incorrectos");
+      setError(
+        raw === "Invalid credentials"
+          ? "Correo o contraseña incorrectos"
+          : raw === "Restaurant not found"
+            ? "No se encontró el restaurante de ese correo"
+            : raw,
+      );
     } finally {
       setLoading(false);
     }
@@ -67,7 +63,7 @@ export default function StaffLoginPage() {
       description={
         identified
           ? "El mismo acceso para mesero, caja y domicilio. El rol decide el menú."
-          : "Escribe el slug del restaurante. Nombre y logo aparecen cuando el local existe."
+          : "Escribe el slug para ver el local. El correo del restaurante o el de una persona (admin, mesero, caja) entran aquí."
       }
       footerHref="/restaurant/local-login"
       footerLabel="Acceso del local (correo del restaurante)"
@@ -137,7 +133,7 @@ export default function StaffLoginPage() {
         {error && <p className="text-sm text-danger">{error}</p>}
         <button
           type="button"
-          disabled={loading || !identified}
+          disabled={loading}
           className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:transform-none disabled:hover:shadow-none"
           onClick={(e) => {
             const form = e.currentTarget.form;
