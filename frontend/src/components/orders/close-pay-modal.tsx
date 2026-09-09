@@ -10,6 +10,7 @@ import {
 } from "@/src/services/payment-methods.service";
 import { cashService } from "@/src/services/cash.service";
 import { PaymentMethod } from "@/src/services/payment.service";
+import { useAuthStore } from "@/src/store/auth.store";
 
 type Props = {
   open: boolean;
@@ -45,6 +46,7 @@ export function ClosePayModal({
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [receivedInput, setReceivedInput] = useState("");
   const [shiftOpen, setShiftOpen] = useState<boolean | null>(null);
+  const role = useAuthStore((s) => s.user?.role);
 
   useEffect(() => {
     if (!open) return;
@@ -100,8 +102,15 @@ export function ClosePayModal({
   const cashOk =
     method !== "CASH" ||
     (Number.isFinite(receivedCents) && receivedCents >= totalCents);
+  // CASHIER cannot charge outside a shift (API also rejects). ADMIN still can.
+  const cashierNeedsShift = role === "CASHIER" && shiftOpen !== true;
   const canConfirm =
-    !!method && cashOk && totalCents > 0 && !loadingMethods && methods.length > 0;
+    !!method &&
+    cashOk &&
+    totalCents > 0 &&
+    !loadingMethods &&
+    methods.length > 0 &&
+    !cashierNeedsShift;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center">
@@ -139,7 +148,15 @@ export function ClosePayModal({
           </p>
         </div>
 
-        {shiftOpen === false && (
+        {shiftOpen === false && role === "CASHIER" && (
+          <p className="mt-3 text-sm text-amber-400">
+            No hay un turno de caja abierto. Ábrelo para cobrar.{" "}
+            <a href="/restaurant/cashier/cash" className="underline">
+              Abrir caja
+            </a>
+          </p>
+        )}
+        {shiftOpen === false && role !== "CASHIER" && (
           <p className="mt-3 text-sm text-amber-400">
             No hay un turno de caja abierto. El cobro queda, pero no entra en
             el cuadre hasta que abras caja.{" "}

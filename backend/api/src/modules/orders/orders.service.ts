@@ -7,7 +7,14 @@ import {
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 
-import { OrderStatus, OrderType, PaymentMethod, Prisma, UserRole } from '@prisma/client';
+import {
+  CashSessionStatus,
+  OrderStatus,
+  OrderType,
+  PaymentMethod,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 
 import { ACTIVE_ORDER_STATUSES } from '../../common/constants/order-status.constants';
 import { SERVICE_FEE_RATE } from '../../common/constants/service-fee';
@@ -754,8 +761,16 @@ export class OrdersService {
    * record used for payments/invoicing. Idempotent with respect to Sale
    * creation: if a Sale already exists for this order it's left alone,
    * so retrying a close request never produces duplicate sales.
+   *
+   * CASHIER must have an open cash shift (OPS-05). ADMIN may still close
+   * without one — the sale just stays out of the drawer until a shift opens.
    */
-  async closeOrder(orderId: string, restaurantId: string, userId: string) {
+  async closeOrder(
+    orderId: string,
+    restaurantId: string,
+    userId: string,
+    role?: UserRole,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: {
@@ -786,6 +801,18 @@ export class OrdersService {
         throw new BadRequestException(
           'Cannot close a ticket with no live items',
         );
+      }
+
+      if (role === UserRole.CASHIER) {
+        const openShift = await tx.cashSession.findFirst({
+          where: { restaurantId, status: CashSessionStatus.OPEN },
+          select: { id: true },
+        });
+        if (!openShift) {
+          throw new BadRequestException(
+            'Abre un turno de caja antes de cobrar',
+          );
+        }
       }
 
       const items =

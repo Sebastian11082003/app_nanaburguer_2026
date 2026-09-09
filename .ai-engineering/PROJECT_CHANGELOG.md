@@ -149,6 +149,10 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.59
+
+- El cajero no cobra si no hay turno de caja abierto. El admin sí puede (aviso, el cobro no entra al cuadre hasta abrir caja).
+
 ## v0.4.58
 
 - Caja tiene Recibos en el chrome POS: lista de comprobantes del local y detalle imprimible, sin entrar al layout de admin.

@@ -42,6 +42,10 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
+### Cobro de caja exige turno (v0.4.59)
+
+- CASHIER no puede cerrar/cobrar sin `CashSession` OPEN (API + modal). ADMIN sigue pudiendo, con aviso de que no entra al cuadre.
+
 ### Recibos en caja (v0.4.58)
 
 - El chrome POS tiene Recibos para ADMIN y CASHIER. La lista reutiliza el mismo componente que Facturas de admin; el detalle se queda en `/restaurant/cashier/invoices/:id`.
