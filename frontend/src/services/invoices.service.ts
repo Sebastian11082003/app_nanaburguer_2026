@@ -88,9 +88,16 @@ export const invoicesService = {
     return data;
   },
 
-  /** Simulates DIAN acceptance (no real e-invoicing integration yet). */
+  /** Issues a simulated electronic invoice (HU-026). Not DIAN/Factus. */
   async accept(id: string): Promise<Invoice> {
     const { data } = await api.post(`/invoices/${id}/accept`);
+    return data;
+  },
+
+  async reject(id: string, reason?: string): Promise<Invoice> {
+    const { data } = await api.post(`/invoices/${id}/reject`, {
+      reason,
+    });
     return data;
   },
 };

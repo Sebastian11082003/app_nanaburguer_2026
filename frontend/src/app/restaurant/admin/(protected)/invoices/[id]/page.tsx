@@ -54,16 +54,30 @@ export default function InvoiceDetailPage() {
     load();
   }, [load]);
 
-  /** Simulated DIAN acceptance — assigns a CUFE and flips status to ACCEPTED. */
+  /** Simulated electronic issue — stores CUFE + provider payload. Not DIAN. */
   async function handleAccept() {
     try {
       setBusy(true);
       setError("");
       await invoicesService.accept(invoiceId);
-      setMessage("Factura marcada como aceptada");
+      setMessage("Factura electrónica simulada emitida (no es DIAN)");
       await load();
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudo aceptar la factura"));
+      setError(getErrorMessage(err, "No se pudo emitir la factura electrónica"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleReject() {
+    try {
+      setBusy(true);
+      setError("");
+      await invoicesService.reject(invoiceId, "Rechazada en caja");
+      setMessage("Factura rechazada (simulador local)");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo rechazar la factura"));
     } finally {
       setBusy(false);
     }
@@ -212,15 +226,29 @@ export default function InvoiceDetailPage() {
       )}
 
       {invoice.status === "PENDING" && (
-        <button
-          type="button"
-          disabled={busy}
-          onClick={handleAccept}
-          className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-black disabled:opacity-50 print:hidden"
-        >
-          {busy ? "Procesando..." : "Marcar como aceptada (simulación DIAN)"}
-        </button>
+        <div className="flex flex-wrap gap-3 print:hidden">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleAccept}
+            className="rounded-xl bg-white px-5 py-3 text-sm font-bold text-black disabled:opacity-50"
+          >
+            {busy ? "Procesando..." : "Emitir factura electrónica (simulador)"}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleReject}
+            className="rounded-xl border border-zinc-700 px-5 py-3 text-sm font-semibold disabled:opacity-50"
+          >
+            Rechazar
+          </button>
+        </div>
       )}
+      <p className="text-xs text-zinc-500 print:hidden">
+        El simulador guarda la respuesta del proveedor. No es Factus ni DIAN
+        (HU-026 local).
+      </p>
     </div>
   );
 }
