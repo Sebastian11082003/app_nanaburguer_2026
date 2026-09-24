@@ -17,6 +17,7 @@ import {
 } from '@prisma/client';
 
 import { SALE_PAYMENT_CONCEPT } from '../cashMovement/cash.constants';
+import { CashService } from '../cashMovement/cash.service';
 import { PaymentMethodsService } from '../payment-methods/payment-methods.service';
 
 type SaleWithRelations = Prisma.SaleGetPayload<{
@@ -50,6 +51,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentMethodsService: PaymentMethodsService,
+    private readonly cashService: CashService,
   ) {}
 
   async create(
@@ -115,6 +117,7 @@ export class PaymentsService {
         }
 
         changeCents = dto.receivedCents - expected;
+        await this.cashService.assertOpenSession(restaurantId, tx);
       }
 
       // 💳 PAYMENT

@@ -1,17 +1,29 @@
+import { cashService } from "@/src/services/cash.service";
 import { ordersService } from "@/src/services/orders.service";
 import {
   CreatePaymentPayload,
   paymentService,
 } from "@/src/services/payment.service";
 
+const CASH_SESSION_REQUIRED_ES =
+  "Abrí la caja (turno) antes de cobrar o registrar efectivo";
+
 /**
  * Closes the order (creates Sale) and records a single full payment.
- * Shared by admin/cashier close flows so method/amount stay consistent.
+ * CASH is checked before close so a rejected cobro does not leave the
+ * ticket CLOSED without a payment.
  */
 export async function closeAndPayOrder(
   orderId: string,
   payment: Pick<CreatePaymentPayload, "method" | "receivedCents" | "tipCents">,
 ) {
+  if (payment.method === "CASH") {
+    const current = await cashService.currentSession();
+    if (!current.session) {
+      throw new Error(CASH_SESSION_REQUIRED_ES);
+    }
+  }
+
   await ordersService.close(orderId);
   const closed = await ordersService.getById(orderId);
 

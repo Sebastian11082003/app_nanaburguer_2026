@@ -160,6 +160,9 @@ export function ClosePayModal({
                 ? `Cambio: ${formatCents(Math.max(changeCents, 0))}`
                 : "Ingresa un monto válido"}
             </span>
+            <span className="block text-xs text-zinc-500">
+              El efectivo exige un turno de caja abierto (Admin/Caja → Caja).
+            </span>
           </label>
         )}
 

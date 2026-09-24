@@ -6,7 +6,10 @@ import {
 import { CashSessionStatus, CashType, PaymentMethod } from '@prisma/client';
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
-import { SALE_PAYMENT_CONCEPT } from './cash.constants';
+import {
+  CASH_SESSION_REQUIRED,
+  SALE_PAYMENT_CONCEPT,
+} from './cash.constants';
 import { CloseCashSessionDto } from './dto/close-cash-session.dto';
 import { CreateCashMovementDto } from './dto/create-cash-movement.dto';
 import { OpenCashSessionDto } from './dto/open-cash-session.dto';
@@ -41,11 +44,31 @@ export type CashSessionPreview = {
 export class CashService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async assertOpenSession(
+    restaurantId: string,
+    db: {
+      cashSession: { findFirst: PrismaService['cashSession']['findFirst'] };
+    } = this.prisma,
+  ) {
+    const open = await db.cashSession.findFirst({
+      where: { restaurantId, status: CashSessionStatus.OPEN },
+      select: { id: true },
+    });
+
+    if (!open) {
+      throw new BadRequestException(CASH_SESSION_REQUIRED);
+    }
+
+    return open;
+  }
+
   async create(
     dto: CreateCashMovementDto,
     restaurantId: string,
     userId: string,
   ) {
+    await this.assertOpenSession(restaurantId);
+
     return this.prisma.cashMovement.create({
       data: {
         type: dto.type,

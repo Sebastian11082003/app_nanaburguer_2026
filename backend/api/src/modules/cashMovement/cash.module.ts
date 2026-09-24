@@ -16,5 +16,6 @@ import { TenantGuard } from '../../common/guards/tenant.guard';
     PermissionsGuard,
     TenantGuard,
   ],
+  exports: [CashService],
 })
 export class CashModule {}

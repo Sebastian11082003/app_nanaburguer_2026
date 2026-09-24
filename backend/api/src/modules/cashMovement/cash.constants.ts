@@ -4,3 +4,7 @@
  * otherwise expected cash would double-count.
  */
 export const SALE_PAYMENT_CONCEPT = 'SALE_PAYMENT';
+
+/** CASH payments and manual drawer moves need an OPEN CashSession. */
+export const CASH_SESSION_REQUIRED =
+  'Open a cash session before recording cash';

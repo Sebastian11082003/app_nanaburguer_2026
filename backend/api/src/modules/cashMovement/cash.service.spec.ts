@@ -77,6 +77,65 @@ describe('CashService', () => {
     });
   });
 
+  describe('assertOpenSession', () => {
+    it('throws when there is no OPEN session', async () => {
+      sessionDelegate().findFirst.mockResolvedValue(null);
+
+      await expect(service.assertOpenSession('r1')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.assertOpenSession('r1')).rejects.toThrow(
+        'Open a cash session before recording cash',
+      );
+    });
+
+    it('returns the open session id', async () => {
+      sessionDelegate().findFirst.mockResolvedValue({ id: 's1' });
+
+      await expect(service.assertOpenSession('r1')).resolves.toEqual({
+        id: 's1',
+      });
+    });
+  });
+
+  describe('create', () => {
+    it('rejects a manual movement when no session is open', async () => {
+      sessionDelegate().findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.create(
+          {
+            type: CashType.INCOME,
+            concept: 'propina',
+            amountCents: 1000,
+          },
+          'r1',
+          'u1',
+        ),
+      ).rejects.toThrow(BadRequestException);
+      expect(movementDelegate().create).not.toHaveBeenCalled();
+    });
+
+    it('records a movement when a session is open', async () => {
+      sessionDelegate().findFirst.mockResolvedValue({ id: 's1' });
+      const created = { id: 'm1' };
+      movementDelegate().create.mockResolvedValue(created);
+
+      await expect(
+        service.create(
+          {
+            type: CashType.INCOME,
+            concept: 'propina',
+            amountCents: 1000,
+          },
+          'r1',
+          'u1',
+        ),
+      ).resolves.toEqual(created);
+      expect(movementDelegate().create).toHaveBeenCalled();
+    });
+  });
+
   describe('computePreview', () => {
     it('uses payments for sales and ignores SALE_PAYMENT movements', async () => {
       paymentDelegate().groupBy.mockResolvedValue([

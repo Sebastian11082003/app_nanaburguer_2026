@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
+import { CashModule } from '../cashMovement/cash.module';
 import { PaymentMethodsModule } from '../payment-methods/payment-methods.module';
 
 import { PaymentsController } from './payments.controller';
@@ -11,7 +12,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 
 @Module({
-  imports: [PrismaModule, AuthModule, PaymentMethodsModule],
+  imports: [PrismaModule, AuthModule, PaymentMethodsModule, CashModule],
   controllers: [PaymentsController],
   providers: [PaymentsService, RolesGuard, TenantGuard],
 })
