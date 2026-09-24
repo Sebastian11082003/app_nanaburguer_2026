@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderChannelLabel } from "@/src/lib/order-channel-label";
 import { orderLineLabel } from "@/src/lib/order-line-label";
+import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { ordersService } from "@/src/services/orders.service";
 import { Order, OrderStatus } from "@/src/types/order";
 
@@ -43,7 +44,12 @@ export function KitchenBoard({
           setError("");
         }
         const data = await ordersService.getAll({ status });
-        setOrders(data);
+        // Canceled-all tickets stay OPEN until Liberar; they must not clog KDS.
+        setOrders(
+          data.filter((row) =>
+            (row.items ?? []).some((item) => !item.canceledAt),
+          ),
+        );
         if (opts?.silent) setError("");
       } catch (err: unknown) {
         if (!opts?.silent) {
@@ -115,7 +121,10 @@ export function KitchenBoard({
         <p>Cargando...</p>
       ) : (
         <div className="space-y-3">
-          {orders.map((order) => (
+          {orders.map((order) => {
+            const lines = order.items ?? [];
+            const activeCount = lines.filter((item) => !item.canceledAt).length;
+            return (
             <div
               key={order.id}
               className="rounded-2xl border border-zinc-800 bg-zinc-950 p-5"
@@ -125,8 +134,11 @@ export function KitchenBoard({
                   <h2 className="text-2xl font-bold">#{order.orderNumber}</h2>
                   <p className="text-zinc-400">
                     {orderChannelLabel(order)} ·{" "}
-                    {order.items?.length ?? 0} ítems ·{" "}
+                    {activeCount} ítems ·{" "}
                     {formatCents(order.totalCents)}
+                    {formatPickupAt(order.pickupAt)
+                      ? ` · Recoge ${formatPickupAt(order.pickupAt)}`
+                      : ""}
                   </p>
                 </div>
 
@@ -143,8 +155,16 @@ export function KitchenBoard({
               </div>
 
               <ul className="mt-3 space-y-1 text-sm">
-                {(order.items ?? []).map((item) => (
-                  <li key={item.id} className="text-zinc-200">
+                {lines.map((item) => (
+                  <li
+                    key={item.id}
+                    className={
+                      item.canceledAt
+                        ? "text-zinc-500 line-through"
+                        : "text-zinc-200"
+                    }
+                  >
+                    {item.canceledAt ? "CANCELADO · " : ""}
                     {orderLineLabel(item)}
                     {item.isComplimentary ? (
                       <span className="text-zinc-500"> · cortesía</span>
@@ -156,7 +176,8 @@ export function KitchenBoard({
                 ))}
               </ul>
             </div>
-          ))}
+            );
+          })}
 
           {orders.length === 0 && (
             <p className="text-zinc-400">Sin órdenes en este estado</p>

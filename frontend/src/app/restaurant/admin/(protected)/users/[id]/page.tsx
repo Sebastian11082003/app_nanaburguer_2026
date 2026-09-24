@@ -20,6 +20,7 @@ export default function UserDetailPage() {
   const actorId = useAuthStore((s) => s.user?.id);
   const [user, setUser] = useState<RestaurantUser | null>(null);
   const [roles, setRoles] = useState<RestaurantRole[]>([]);
+  const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [roleId, setRoleId] = useState("");
   const [password, setPassword] = useState("");
@@ -37,6 +38,7 @@ export default function UserDetailPage() {
         rolesService.getAll(),
       ]);
       setUser(next);
+      setEmail(next.email);
       setFullName(next.fullName);
       setRoleId(next.roleId ?? "");
       setRoles(roleRows.filter((r) => r.isActive));
@@ -59,11 +61,13 @@ export default function UserDetailPage() {
       setError("");
       setMessage("");
       const updated = await usersService.update(user.id, {
+        email: email.trim(),
         fullName: fullName.trim(),
         roleId: roleId || undefined,
         ...(password.trim() ? { password: password.trim() } : {}),
       });
       setUser(updated);
+      setEmail(updated.email);
       setPassword("");
       setMessage("Usuario actualizado");
     } catch (err: unknown) {
@@ -113,7 +117,7 @@ export default function UserDetailPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{user.fullName}</h1>
-          <p className="text-zinc-400">{user.email}</p>
+          <p className="text-zinc-400">{email || user.email}</p>
         </div>
         <Link
           href="/restaurant/admin/users"
@@ -130,12 +134,25 @@ export default function UserDetailPage() {
         onSubmit={handleSave}
         className="space-y-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-6"
       >
-        <input
-          required
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3"
-        />
+        <label className="block space-y-1 text-sm">
+          <span className="text-zinc-400">Nombre</span>
+          <input
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3"
+          />
+        </label>
+        <label className="block space-y-1 text-sm">
+          <span className="text-zinc-400">Correo</span>
+          <input
+            required
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3"
+          />
+        </label>
         <label className="block space-y-1 text-sm">
           <span className="text-zinc-400">Rol</span>
           <select
@@ -170,8 +187,9 @@ export default function UserDetailPage() {
 
       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
         <p className="text-sm text-zinc-400">
-          Estado: {user.isActive ? "Activo" : "Inactivo"}. Un usuario inactivo
-          no puede entrar por login de estación.
+          Estado: {user.isActive ? "Activo" : "Inactivo"}. Desactivar quita el
+          acceso; no borramos el usuario para no perder el historial de
+          pedidos.
         </p>
         <button
           type="button"

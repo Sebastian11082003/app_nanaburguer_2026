@@ -105,8 +105,10 @@ export class UsersService {
   }
 
   /**
-   * Admin edits identity/role/active flag. Actor cannot deactivate
-   * themselves — that would lock the only admin out of the panel.
+   * Admin edits identity (including email), role, or active flag.
+   * Actor cannot deactivate themselves — that would lock the only admin
+   * out of the panel. Users are never hard-deleted: orders keep the
+   * createdBy/updatedBy history.
    */
   async update(
     id: string,
@@ -140,17 +142,60 @@ export class UsersService {
       roleId = assigned.id;
     }
 
-    return this.prisma.user.update({
-      where: { id },
-      data: {
-        ...(dto.fullName !== undefined ? { fullName: dto.fullName } : {}),
-        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
-        ...(dto.roleId ? { roleId, role: station } : {}),
-        ...(dto.password
-          ? { passwordHash: await bcrypt.hash(dto.password, 10) }
-          : {}),
-      },
-      select: USER_PUBLIC_SELECT,
+    let nextEmail: string | undefined;
+    let syncRestaurantEmail = false;
+    if (dto.email !== undefined) {
+      nextEmail = dto.email.trim().toLowerCase();
+      if (nextEmail !== existing.email.toLowerCase()) {
+        const taken = await this.prisma.user.findFirst({
+          where: {
+            email: { equals: nextEmail, mode: 'insensitive' },
+            NOT: { id },
+          },
+          select: { id: true },
+        });
+        if (taken) {
+          throw new BadRequestException('Email already exists');
+        }
+
+        // Restaurant Gmail login provisions ADMIN from restaurant.email.
+        // If this user *is* that contact, keep both in sync or the next
+        // login would create a second admin with the old address.
+        const restaurant = await this.prisma.restaurant.findFirst({
+          where: { id: restaurantId },
+          select: { email: true },
+        });
+        syncRestaurantEmail =
+          !!restaurant?.email &&
+          restaurant.email.toLowerCase() === existing.email.toLowerCase();
+      }
+    }
+
+    const passwordHash = dto.password
+      ? await bcrypt.hash(dto.password, 10)
+      : undefined;
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.user.update({
+        where: { id },
+        data: {
+          ...(nextEmail !== undefined ? { email: nextEmail } : {}),
+          ...(dto.fullName !== undefined ? { fullName: dto.fullName } : {}),
+          ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+          ...(dto.roleId ? { roleId, role: station } : {}),
+          ...(passwordHash ? { passwordHash } : {}),
+        },
+        select: USER_PUBLIC_SELECT,
+      });
+
+      if (syncRestaurantEmail && nextEmail) {
+        await tx.restaurant.update({
+          where: { id: restaurantId },
+          data: { email: nextEmail },
+        });
+      }
+
+      return updated;
     });
   }
 

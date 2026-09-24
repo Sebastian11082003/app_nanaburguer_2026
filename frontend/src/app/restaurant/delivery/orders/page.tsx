@@ -6,9 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { posReceiptHref } from "@/src/lib/invoice-href";
 import {
   clearEmptyTicketReleaser,
-  isEmptyCreatedDraft,
+  hasLiveLines,
+  isEmptyOpenTicket,
   releaseEmptyTicketIfNeeded,
 } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
@@ -214,8 +216,14 @@ function DeliveryCreateOrderPage() {
     try {
       setBusy(true);
       setError("");
-      await closeAndPayOrder(order.id, payload);
+      const paid = await closeAndPayOrder(order.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(
+          posReceiptHref(paid.invoiceId, afterCreateHref),
+        );
+        return;
+      }
       setMessage(`Pedido #${order.orderNumber} cobrado`);
       setOrder(null);
       setCustomerName("");
@@ -232,7 +240,7 @@ function DeliveryCreateOrderPage() {
   }
 
   async function handleDiscard() {
-    if (!order || !isEmptyCreatedDraft(order)) return;
+    if (!order || !isEmptyOpenTicket(order)) return;
     if (!window.confirm("¿Descartar este pedido? No hay productos.")) return;
     clearEmptyTicketReleaser();
     try {
@@ -270,11 +278,12 @@ function DeliveryCreateOrderPage() {
     }
   }
 
-  const canDiscard = isEmptyCreatedDraft(order);
+  const canDiscard = isEmptyOpenTicket(order);
   const chargeDisabled =
     busy ||
     !order ||
-    !order.items?.length ||
+    !hasLiveLines(order) ||
+    order.totalCents <= 0 ||
     order.status === "CLOSED" ||
     order.status === "CANCELED";
   const afterCreateHref =
@@ -398,6 +407,23 @@ function DeliveryCreateOrderPage() {
                   className="field-input mt-1"
                   value={pickupAt}
                   onChange={(e) => setPickupAt(e.target.value)}
+                  onBlur={() => {
+                    if (!order || order.type !== "PICKUP") return;
+                    if (order.status === "CLOSED" || order.status === "CANCELED") {
+                      return;
+                    }
+                    void ordersService
+                      .setPickupAt(
+                        order.id,
+                        pickupAt ? new Date(pickupAt).toISOString() : null,
+                      )
+                      .then(setOrder)
+                      .catch((err: unknown) =>
+                        setError(
+                          getErrorMessage(err, "No se pudo guardar la hora"),
+                        ),
+                      );
+                  }}
                 />
               </label>
             )}
@@ -526,6 +552,9 @@ function DeliveryCreateOrderPage() {
         <ClosePayModal
           open={payOpen}
           totalCents={order?.totalCents ?? 0}
+          subtotalCents={order?.subtotalCents}
+          discountCents={order?.discountCents}
+          taxCents={order?.taxCents}
           busy={busy}
           onClose={() => setPayOpen(false)}
           onConfirm={handlePay}

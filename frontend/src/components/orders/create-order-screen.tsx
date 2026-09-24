@@ -10,8 +10,11 @@ import { KitchenTicket } from "@/src/components/orders/kitchen-ticket";
 import { TransferTableModal } from "@/src/components/tables/transfer-table-modal";
 import { categoryColor } from "@/src/lib/category-color";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { posReceiptHref } from "@/src/lib/invoice-href";
 import {
   clearEmptyTicketReleaser,
+  hasLiveLines,
+  isEmptyOpenDineIn,
   releaseEmptyTicketIfNeeded,
 } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
@@ -24,7 +27,7 @@ import { Table, tablesService } from "@/src/services/tables.service";
 import { useAuthStore } from "@/src/store/auth.store";
 import { Category, MenuItem } from "@/src/types/menu";
 import { Order } from "@/src/types/order";
-import { hasPermission } from "@/src/types/auth";
+import { canCancelTicketItem, hasPermission } from "@/src/types/auth";
 
 export type CreateOrderScreenProps = {
   /** Back link target (e.g. `/restaurant/waiter/tables`). */
@@ -307,8 +310,12 @@ export function CreateOrderScreen({
     try {
       setBusy(true);
       setError("");
-      await closeAndPayOrder(order.id, payload);
+      const paid = await closeAndPayOrder(order.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(posReceiptHref(paid.invoiceId, tablesHref));
+        return;
+      }
       setMessage("Orden cerrada y cobrada");
       router.push(tablesHref);
     } catch (err: unknown) {
@@ -390,7 +397,7 @@ export function CreateOrderScreen({
     !!order &&
     order.status !== "CLOSED" &&
     order.status !== "CANCELED" &&
-    (order?.items?.length ?? 0) > 0 &&
+    hasLiveLines(order) &&
     order.totalCents > 0 &&
     (role === "admin" ||
       role === "cashier" ||
@@ -407,9 +414,7 @@ export function CreateOrderScreen({
   // Opening a table creates a CREATED ticket immediately. Without this,
   // going back leaves the floor red at $0 and waiters cannot cancel.
   const canReleaseEmptyTable =
-    !!order &&
-    order.status === "CREATED" &&
-    (order.items ?? []).every((line) => line.canceledAt) &&
+    isEmptyOpenDineIn(order) &&
     (role === "admin" ||
       role === "cashier" ||
       role === "waiter" ||
@@ -420,11 +425,7 @@ export function CreateOrderScreen({
     !!order &&
     order.status !== "CLOSED" &&
     order.status !== "CANCELED" &&
-    (role === "admin" ||
-      role === "cashier" ||
-      currentUser?.role === "ADMIN" ||
-      currentUser?.role === "CASHIER" ||
-      hasPermission(currentUser, "ORDERS_CANCEL"));
+    canCancelTicketItem(currentUser);
   const canApplyDiscount =
     !!order &&
     order.status !== "CLOSED" &&
@@ -439,7 +440,7 @@ export function CreateOrderScreen({
   const kitchenDisabled =
     busy ||
     !order ||
-    !order.items?.length ||
+    !hasLiveLines(order) ||
     order.status === "CLOSED" ||
     order.status === "CANCELED";
 
@@ -808,6 +809,9 @@ export function CreateOrderScreen({
         <ClosePayModal
           open={payOpen}
           totalCents={order?.totalCents ?? 0}
+          subtotalCents={order?.subtotalCents}
+          discountCents={order?.discountCents}
+          taxCents={order?.taxCents}
           busy={busy}
           onClose={() => setPayOpen(false)}
           onConfirm={handleCloseAndPay}

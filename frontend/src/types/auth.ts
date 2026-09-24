@@ -32,3 +32,17 @@ export function hasPermission(
   }
   return user.permissions.includes(code);
 }
+
+/**
+ * Cancel a line after cocina. Default stations: caja + admin.
+ * Configuración → Roles can grant or revoke `ORDERS_CANCEL_ITEM`.
+ */
+export function canCancelTicketItem(
+  user: AuthUser | null | undefined,
+): boolean {
+  if (!user) return false;
+  if (!user.permissions || user.permissions.length === 0) {
+    return user.role === "ADMIN" || user.role === "CASHIER";
+  }
+  return user.permissions.includes("ORDERS_CANCEL_ITEM");
+}

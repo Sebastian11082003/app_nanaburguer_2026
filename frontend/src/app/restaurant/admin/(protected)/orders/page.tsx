@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { orderQueueLabel } from "@/src/lib/order-channel-label";
+import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { formatCents } from "@/src/lib/money";
 import { ordersService } from "@/src/services/orders.service";
 import { Order, OrderStatus } from "@/src/types/order";
@@ -14,8 +16,11 @@ const STATUS_FILTERS: { label: string; value: OrderStatus | undefined }[] = [
   { label: "Todas", value: undefined },
   { label: "En curso", value: "CREATED" },
   { label: "En cocina", value: "SENT_TO_KITCHEN" },
+  { label: "Preparando", value: "IN_PREPARATION" },
   { label: "Listas", value: "READY" },
+  { label: "En camino", value: "OUT_FOR_DELIVERY" },
   { label: "Cerradas", value: "CLOSED" },
+  { label: "Anuladas", value: "CANCELED" },
 ];
 
 /** Admin's overview of every order for the tenant, with a quick status filter. */
@@ -82,8 +87,12 @@ export default function AdminOrdersPage() {
                   #{order.orderNumber} · {orderQueueLabel(order)}
                 </p>
                 <p className="text-sm text-zinc-500">
+                  {orderStatusLabel(order.status)} ·{" "}
                   {order.items?.length ?? 0} items ·{" "}
                   {new Date(order.createdAt).toLocaleString()}
+                  {formatPickupAt(order.pickupAt)
+                    ? ` · Recoge ${formatPickupAt(order.pickupAt)}`
+                    : ""}
                 </p>
                 <p className="text-sm text-zinc-500">
                   Creada por {order.createdBy?.fullName ?? "—"}

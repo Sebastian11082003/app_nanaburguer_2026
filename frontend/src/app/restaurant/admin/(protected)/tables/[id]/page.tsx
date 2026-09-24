@@ -5,12 +5,18 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { adminReceiptHref } from "@/src/lib/invoice-href";
+import { isEmptyOpenDineIn } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
-import { orderLineLabel } from "@/src/lib/order-line-label";
+import { orderStatusLabel } from "@/src/lib/order-status-label";
+import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { Table, tablesService } from "@/src/services/tables.service";
+import { useAuthStore } from "@/src/store/auth.store";
+import { canCancelTicketItem } from "@/src/types/auth";
 
 /**
  * Admin detail for a single table: activate/deactivate, preview active
@@ -19,6 +25,7 @@ import { Table, tablesService } from "@/src/services/tables.service";
 export default function AdminTableDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const canCancelItem = canCancelTicketItem(useAuthStore((s) => s.user));
   const tableId = params.id;
 
   const [table, setTable] = useState<Table | null>(null);
@@ -59,6 +66,63 @@ export default function AdminTableDetailPage() {
     }
   }
 
+  async function handleReleaseTable() {
+    if (!table?.activeOrder) return;
+    if (!window.confirm("¿Liberar la mesa? No hay productos en el ticket.")) {
+      return;
+    }
+
+    try {
+      setBusy(true);
+      setError("");
+      setMessage("");
+      await ordersService.updateStatus(table.activeOrder.id, "CANCELED");
+      setMessage("Mesa liberada");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo liberar la mesa"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCancelItem(itemId: string) {
+    if (!table?.activeOrder) return;
+    const reason = window.prompt("Motivo de cancelación", "Error de digitación");
+    if (reason == null) return;
+
+    try {
+      setBusy(true);
+      setError("");
+      setMessage("");
+      await ordersService.cancelItem(table.activeOrder.id, itemId, reason);
+      setMessage("Ítem cancelado");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cancelar el ítem"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRemoveItem(itemId: string) {
+    if (!table?.activeOrder) return;
+    if (!window.confirm("¿Quitar este producto del ticket?")) return;
+
+    try {
+      setBusy(true);
+      setError("");
+      setMessage("");
+      await ordersService.removeItem(table.activeOrder.id, itemId);
+      setMessage("Ítem quitado");
+      await load();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo quitar el ítem"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleCloseAndPay(payload: {
     method: PaymentMethod;
     receivedCents?: number;
@@ -69,8 +133,17 @@ export default function AdminTableDetailPage() {
       setBusy(true);
       setError("");
       setMessage("");
-      await closeAndPayOrder(table.activeOrder.id, payload);
+      const paid = await closeAndPayOrder(table.activeOrder.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(
+          adminReceiptHref(
+            paid.invoiceId,
+            `/restaurant/admin/tables/${table.id}`,
+          ),
+        );
+        return;
+      }
       setMessage("Orden cerrada y cobrada");
       await load();
     } catch (err: unknown) {
@@ -89,6 +162,10 @@ export default function AdminTableDetailPage() {
   }
 
   const order = table.activeOrder;
+  const canReleaseEmpty = isEmptyOpenDineIn(order);
+  const canEditLines =
+    !!order && order.status !== "CLOSED" && order.status !== "CANCELED";
+  const removeWhileCreated = order?.status === "CREATED";
 
   return (
     <div className="space-y-6">
@@ -132,6 +209,16 @@ export default function AdminTableDetailPage() {
                 {order ? "Continuar orden" : "Tomar orden"}
               </button>
             )}
+            {canReleaseEmpty && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={handleReleaseTable}
+                className="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/5 disabled:opacity-50"
+              >
+                Liberar mesa
+              </button>
+            )}
             {order && order.totalCents > 0 && (
               <button
                 type="button"
@@ -158,22 +245,39 @@ export default function AdminTableDetailPage() {
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6">
           <h2 className="text-xl font-bold">Orden activa</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Estado: {order.status} · Creada:{" "}
+            Estado: {orderStatusLabel(order.status)} · Creada:{" "}
             {new Date(order.createdAt).toLocaleString()}
           </p>
 
-          <ul className="mt-4 space-y-2 text-sm">
+          <ul className="mt-4 space-y-2">
             {order.items.map((item) => (
-              <li key={item.id} className="flex justify-between gap-3">
-                <span>{orderLineLabel(item)}</span>
-                <span>{formatCents(item.lineTotalCents)}</span>
-              </li>
+              <OrderItemRow
+                key={item.id}
+                item={item}
+                busy={busy}
+                cancelLabel={removeWhileCreated ? "Quitar" : "Cancelar"}
+                onCancel={
+                  canEditLines && (removeWhileCreated || canCancelItem)
+                    ? removeWhileCreated
+                      ? handleRemoveItem
+                      : handleCancelItem
+                    : undefined
+                }
+              />
             ))}
           </ul>
 
-          <div className="mt-4 flex justify-between border-t border-zinc-800 pt-4 font-bold">
-            <span>Total</span>
-            <span>{formatCents(order.totalCents)}</span>
+          <div className="mt-4 space-y-1 border-t border-zinc-800 pt-4 text-sm">
+            {(order.taxCents ?? 0) > 0 && (
+              <div className="flex justify-between text-zinc-400">
+                <span>Servicio 5%</span>
+                <span>{formatCents(order.taxCents)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold">
+              <span>Total</span>
+              <span>{formatCents(order.totalCents)}</span>
+            </div>
           </div>
         </div>
       )}
@@ -181,6 +285,9 @@ export default function AdminTableDetailPage() {
       <ClosePayModal
         open={payOpen}
         totalCents={order?.totalCents ?? 0}
+        subtotalCents={order?.subtotalCents}
+        discountCents={order?.discountCents}
+        taxCents={order?.taxCents}
         busy={busy}
         onClose={() => setPayOpen(false)}
         onConfirm={handleCloseAndPay}

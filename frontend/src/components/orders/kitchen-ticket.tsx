@@ -2,6 +2,7 @@
 
 import { orderChannelLabel } from "@/src/lib/order-channel-label";
 import { orderLineLabel } from "@/src/lib/order-line-label";
+import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { Order } from "@/src/types/order";
 
 interface Props {
@@ -38,13 +39,23 @@ export function KitchenTicket({ order, onClose }: Props) {
             {orderChannelLabel(order)}
           </p>
           <p className="text-zinc-600">Orden #{order.orderNumber}</p>
+          {formatPickupAt(order.pickupAt) ? (
+            <p className="font-semibold">Recoge {formatPickupAt(order.pickupAt)}</p>
+          ) : null}
         </div>
 
         <ul className="mt-4 space-y-2 border-t border-dashed border-zinc-400 pt-4 text-base">
           {order.items.map((item) => (
             <li key={item.id}>
-              <p className="font-bold">{orderLineLabel(item)}</p>
-              {item.notes && (
+              <p
+                className={
+                  item.canceledAt ? "font-bold text-zinc-400 line-through" : "font-bold"
+                }
+              >
+                {item.canceledAt ? "CANCELADO · " : ""}
+                {orderLineLabel(item)}
+              </p>
+              {item.notes && !item.canceledAt && (
                 <p className="text-sm italic text-zinc-600">Nota: {item.notes}</p>
               )}
             </li>

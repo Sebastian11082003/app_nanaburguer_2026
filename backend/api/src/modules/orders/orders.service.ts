@@ -7,9 +7,18 @@ import {
 
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 
-import { OrderStatus, OrderType, PaymentMethod, Prisma, UserRole } from '@prisma/client';
+import {
+  CashSessionStatus,
+  OrderStatus,
+  OrderType,
+  PaymentMethod,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 
 import { ACTIVE_ORDER_STATUSES } from '../../common/constants/order-status.constants';
+import { SERVICE_FEE_RATE } from '../../common/constants/service-fee';
+import { hasLiveOrderLines } from '../../common/order-lines';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AddItemDto } from './dto/add-item.dto';
 import { TransferTableDto } from './dto/transfer-table.dto';
@@ -76,7 +85,9 @@ export class OrdersService {
     const discount = Math.min(Math.max(discountCents, 0), subtotal);
     const net = subtotal - discount;
     const serviceFee =
-      type === OrderType.DINE_IN ? Math.round(net * 0.05) : 0;
+      type === OrderType.DINE_IN
+        ? Math.round(net * SERVICE_FEE_RATE)
+        : 0;
 
     return {
       subtotalCents: subtotal,
@@ -455,6 +466,43 @@ export class OrdersService {
     });
   }
 
+  /**
+   * Pickup time can change after the ticket is sent to kitchen (customer
+   * called to delay). Locked only once CLOSED/CANCELED.
+   */
+  async setPickupAt(
+    orderId: string,
+    pickupAt: string | null | undefined,
+    restaurantId: string,
+  ) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, restaurantId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (
+      order.status === OrderStatus.CLOSED ||
+      order.status === OrderStatus.CANCELED
+    ) {
+      throw new BadRequestException('Order is closed or canceled');
+    }
+
+    if (order.type !== OrderType.PICKUP) {
+      throw new BadRequestException('pickupAt is only valid on PICKUP orders');
+    }
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        pickupAt: pickupAt ? new Date(pickupAt) : null,
+      },
+      include: OrdersService.ORDER_INCLUDE,
+    });
+  }
+
   // ================================
   // REMOVE ITEM
   // ================================
@@ -463,8 +511,7 @@ export class OrdersService {
    * CREATED, i.e. never sent to kitchen). This is a hard delete — safe
    * only at this stage because nothing downstream (kitchen ticket, sales
    * report) has seen the item yet. Once the order leaves CREATED, use
-   * the future per-item "cancel" flow instead (keeps an audit trail),
-   * not this one.
+   * `cancelItem` (audit trail), not this one.
    */
   async removeItem(
     orderId: string,
@@ -514,13 +561,18 @@ export class OrdersService {
   /**
    * Soft-cancels a line after the ticket left the kitchen queue.
    * Hard delete stays on `removeItem` (CREATED only).
+   * Gated by ORDERS_CANCEL_ITEM (caja/admin by default; Roles can toggle).
    */
   async cancelItem(
     orderId: string,
     itemId: string,
     restaurantId: string,
     reason?: string,
+    actor?: { role?: UserRole; permissions?: string[] },
   ) {
+    if (actor) {
+      this.assertCanCancelItem(actor);
+    }
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: { id: orderId, restaurantId },
@@ -573,6 +625,26 @@ export class OrdersService {
     });
   }
 
+  /**
+   * JWT with permissions: the toggle is the source of truth.
+   * Legacy token without a permissions claim: caja/admin only.
+   */
+  private assertCanCancelItem(actor: {
+    role?: UserRole;
+    permissions?: string[];
+  }) {
+    if (actor.permissions && actor.permissions.length > 0) {
+      if (!actor.permissions.includes('ORDERS_CANCEL_ITEM')) {
+        throw new ForbiddenException('Missing required permission');
+      }
+      return;
+    }
+
+    if (actor.role !== UserRole.ADMIN && actor.role !== UserRole.CASHIER) {
+      throw new ForbiddenException('Missing required permission');
+    }
+  }
+
   // ================================
   // UPDATE STATUS
   // ================================
@@ -580,8 +652,9 @@ export class OrdersService {
    * Moves an order to a new lifecycle status (e.g. SENT_TO_KITCHEN →
    * IN_PREPARATION → READY). `@Roles` on the controller is who may call
    * the endpoint. Cancel is extra-gated here: only ADMIN may void a
-   * ticket that already has products. Waiter/cashier can only release
-   * an empty CREATED ticket so a table is not stuck red at $0.
+   * ticket that still has live products. Waiter/cashier can release any
+   * empty ticket (CREATED or after cancel-all) so the table is not stuck
+   * red at $0. Kitchen cannot advance a ticket with no live lines.
    */
   async updateStatus(
     orderId: string,
@@ -606,13 +679,20 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
+    const live = hasLiveOrderLines(order.items);
+
     if (status === OrderStatus.CANCELED && role && role !== UserRole.ADMIN) {
-      const hasProducts = order.items.some((line) => !line.canceledAt);
-      if (order.status !== OrderStatus.CREATED || hasProducts) {
+      if (live) {
         throw new ForbiddenException(
           'Solo un ticket vacío se puede liberar sin ser admin',
         );
       }
+    } else if (
+      status !== OrderStatus.CANCELED &&
+      status !== OrderStatus.CLOSED &&
+      !live
+    ) {
+      throw new BadRequestException('No live items on this ticket');
     }
 
     return this.prisma.order.update({
@@ -706,8 +786,16 @@ export class OrdersService {
    * record used for payments/invoicing. Idempotent with respect to Sale
    * creation: if a Sale already exists for this order it's left alone,
    * so retrying a close request never produces duplicate sales.
+   *
+   * CASHIER must have an open cash shift (OPS-05). ADMIN may still close
+   * without one — the sale just stays out of the drawer until a shift opens.
    */
-  async closeOrder(orderId: string, restaurantId: string, userId: string) {
+  async closeOrder(
+    orderId: string,
+    restaurantId: string,
+    userId: string,
+    role?: UserRole,
+  ) {
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: {
@@ -718,6 +806,7 @@ export class OrdersService {
         include: {
           sale: true,
           delivery: true,
+          items: { select: { canceledAt: true } },
         },
       });
 
@@ -727,6 +816,28 @@ export class OrdersService {
 
       if (order.status === OrderStatus.CLOSED) {
         throw new BadRequestException('Already closed');
+      }
+
+      if (order.status === OrderStatus.CANCELED) {
+        throw new BadRequestException('Order is canceled');
+      }
+
+      if (!hasLiveOrderLines(order.items) || order.totalCents <= 0) {
+        throw new BadRequestException(
+          'Cannot close a ticket with no live items',
+        );
+      }
+
+      if (role === UserRole.CASHIER) {
+        const openShift = await tx.cashSession.findFirst({
+          where: { restaurantId, status: CashSessionStatus.OPEN },
+          select: { id: true },
+        });
+        if (!openShift) {
+          throw new BadRequestException(
+            'Abre un turno de caja antes de cobrar',
+          );
+        }
       }
 
       const items =

@@ -16,7 +16,10 @@ const CASH_SESSION_REQUIRED_ES =
 export async function closeAndPayOrder(
   orderId: string,
   payment: Pick<CreatePaymentPayload, "method" | "receivedCents" | "tipCents">,
-) {
+): Promise<{
+  order: Awaited<ReturnType<typeof ordersService.getById>>;
+  invoiceId: string | null;
+}> {
   if (payment.method === "CASH") {
     const current = await cashService.currentSession();
     if (!current.session) {
@@ -31,8 +34,10 @@ export async function closeAndPayOrder(
     throw new Error("La venta no se creó al cerrar la orden");
   }
 
+  let invoiceId: string | null = null;
+
   if (!closed.sale.payment) {
-    await paymentService.create(closed.sale.id, {
+    const paid = await paymentService.create(closed.sale.id, {
       method: payment.method,
       amountCents: closed.totalCents,
       tipCents: payment.tipCents ?? 0,
@@ -41,7 +46,8 @@ export async function closeAndPayOrder(
           ? (payment.receivedCents ?? closed.totalCents)
           : undefined,
     });
+    invoiceId = paid?.invoice?.id ?? null;
   }
 
-  return closed;
+  return { order: closed, invoiceId };
 }

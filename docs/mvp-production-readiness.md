@@ -12,6 +12,8 @@ Contrato: [functional-scope.md](functional/functional-scope.md), [user-stories.m
 
 El **turno de restaurante del MVP está construido**. Un local puede: entrar, armar mesa / llevar / domicilio, cocina, cobrar, imprimir recibo snapshot, abrir/cerrar caja, ver reportes del admin.
 
+**Actualizado en `dev` (v0.4.60 + Sprint 5):** cierre de turno, poll, cancelar ítem (`ORDERS_CANCEL_ITEM`), Liberar mesa post-cocina, KDS limpio, transferir desde caja, hora de recoger editable, recibo al cobrar, Recibos en chrome de caja, cajero no cobra sin turno, HU-026 simulador local, HU-029 cambiar local. Backlog en `.ai-engineering/BACKLOG.md`.
+
 Eso es un **MVP de piloto en la máquina** (o LAN). **No** es un SaaS público en VPS.
 
 QA: 🟡 — Jest **90/90**. Smoke API **2026-09-23**: mesa→cocina→CASH+factura+reportes; CASH sin turno 400. Login sin overlay. Next `localhost:3001`. Sin E2E UI.

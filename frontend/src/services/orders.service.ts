@@ -93,6 +93,13 @@ export const ordersService = {
     return data;
   },
 
+  async setPickupAt(orderId: string, pickupAt: string | null): Promise<Order> {
+    const { data } = await api.patch(`/orders/${orderId}/pickup-at`, {
+      pickupAt,
+    });
+    return data;
+  },
+
   /** Closes the order (frees its table) and creates the linked Sale for payment. */
   async close(orderId: string): Promise<Order> {
     const { data } = await api.patch(`/orders/${orderId}/close`);

@@ -48,38 +48,53 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 
 ## Último avance
 
-### HU-026 simulador fiscal (v0.4.55)
+### HU-026 simulador fiscal (merge Sprint 5)
 
 - `POST /invoices/:id/accept` y `reject` pasan por `BillingProvider`.
 - Payload en `responseJson.electronicBilling`; `GET /print` sigue siendo el ticket POS.
 - Factus/DIAN real no entra. HU-027/028 siguen Planned.
-- Smoke salón 2026-09-23: mesa→cocina (comanda “Burger smoke”)→READY→CASH 15750 (5% servicio)→invoice; reportes `revenue=45750`.
 
-### Caja OPEN + hidratación login (v0.4.54)
+### Cancelar ítem por permiso (v0.4.60)
 
-- API: pago CASH y movimiento manual fallan sin sesión OPEN (`CASH_SESSION_REQUIRED`).
-- Frontend: `closeAndPayOrder` consulta el turno antes de `orders.close`, para no dejar tickets CLOSED sin cobro.
-- Login: `html` con clase `dark` y ThemeProvider `forcedTheme="dark"`.
-- QA 2026-09-23: Jest 85/85. Smoke API: movimiento y cobro CASH sin OPEN → 400; con OPEN → 201. Login `/platform/login` y `/restaurant/login` sin overlay de hidratación (el botón N de Next es Dev Tools, no un error). El cobro en UI no se recorrió: el relleno automático de contraseña está bloqueado en el navegador del agente.
+- `ORDERS_CANCEL_ITEM`: ON en caja/admin, OFF en mesero. Se prende o apaga en Roles. Las plantillas de sistema ya no se resetean al abrir esa pantalla.
 
-### QA del MVP local (v0.4.53)
+### Cobro de caja exige turno (v0.4.59)
 
-- Smoke contra Postgres local + API `localhost:3000` + Next `localhost:3001`.
-- Caja 500: la tabla `cash_session` tenía columnas snake_case viejas. Migración `20260922010000_align_cash_session_columns`. Abrir/cerrar turno OK.
-- Vertical salón OK: mesa → cocina → cobro CASH + factura. Pickup se crea. Reportes summary OK.
-- El slug real del piloto es `Nana-neiva` (no `nana-neiva`). `admin@nana-neiva.test` no existe; el branding público sí responde.
+- CASHIER no puede cerrar/cobrar sin `CashSession` OPEN (API + modal). ADMIN sigue pudiendo, con aviso de que no entra al cuadre.
 
-### QA del MVP local (v0.4.52)
+### Recibos en caja (v0.4.58)
 
-- Corte de QA en `docs/mvp-production-readiness.md`: el turno de salón está construido; no hay E2E automatizado.
-- Plataforma: se quitaron enlaces a Reportes/Facturación/Configuración (404). Quedan Dashboard y Restaurantes.
-- Para sacar el MVP: levantar Docker y pasar el smoke de esa guía. Inventario/DIAN/VPS no bloquean.
+- El chrome POS tiene Recibos para ADMIN y CASHIER. La lista reutiliza el mismo componente que Facturas de admin; el detalle se queda en `/restaurant/cashier/invoices/:id`.
 
-### Clase de producto: POS SaaS, no ERP (v0.4.51)
+### Recibo, hora de recoger y aviso de caja (v0.4.57)
 
-- DEC-008 corregido: **RestoOS** es un POS SaaS multi-tenant (tipo Loggro Restobar), no un ERP.
-- Nana Burger es el tenant piloto, no el tipo de sistema.
-- ADR-024. Inventario, DIAN y contabilidad no redefinen la categoría.
+- PATCH pickup-at en Llevar abierto. Cobro abre el comprobante. Modal de cobro avisa si no hay sesión de caja. Backlog en `.ai-engineering/BACKLOG.md`.
+
+### Liberar ticket vacío post-cocina (v0.4.56)
+
+- Cancelar todas las líneas ya no deja la mesa ocupada: Liberar mesa vale en cualquier estado abierto sin productos vivos. KDS no muestra esos tickets. Caja puede transferir mesa. Cobro rechaza $0.
+
+### Huecos del turno de revisión (v0.4.55)
+
+- Detalle admin de mesa: Liberar mesa vacía y cancelar ítem, sin saltar a crear orden.
+- Piso: Llevar/Domicilios ocupados solo si hay productos vivos (el borrador vacío sigue en POS para Descartar).
+- Usuarios: editar correo. El Gmail del tenant se mantiene alineado. No hay delete duro; desactivar corta el login.
+
+### Superficies POS para revisión (v0.4.54)
+
+- Cancelar ítem en Ventas, POS llevar y detalle de domicilio. Hora de recoger en cocina, comanda y listas. Modal de cobro con Servicio 5%. Piso con poll. Recibo: propina solo si hay; el 5% de mesa no es propina.
+
+### Pulido de ticket para revisión (v0.4.53)
+
+- Cocina y comanda muestran `CANCELADO` en la línea anulada (no la cuentan como ítem vivo). Recibo y reporte de productos ignoran esas líneas. Servicio 5% vive en `service-fee.ts`.
+
+### Traer dest en Windows (v0.4.52)
+
+- `update-local.bat` en la raíz: checkout + pull de `dev`. GitHub no actualiza tu PC solo.
+
+### Un solo login del local (v0.4.51)
+
+- `/restaurant/local-login` ya no pide entrar como “el restaurante” y luego otra vez con un rol. Redirige a `/restaurant/login`. El correo del restaurante entra como ADMIN y abre el POS. Si ya hay sesión de personal, esa pantalla no se vuelve a mostrar.
 
 ### Inhabilitar tenant (v0.4.50)
 

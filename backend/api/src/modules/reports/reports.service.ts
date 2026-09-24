@@ -165,6 +165,7 @@ export class ReportsService {
     const result = await this.prisma.orderItem.groupBy({
       by: ['menuItemId'],
       where: {
+        canceledAt: null,
         order: {
           restaurantId,
           ...(createdAt ? { sale: { createdAt } } : {}),

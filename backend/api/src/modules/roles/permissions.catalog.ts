@@ -75,6 +75,13 @@ export const PERMISSION_CATALOG: PermissionDef[] = [
     groupName: 'Órdenes',
   },
   {
+    code: 'ORDERS_CANCEL_ITEM',
+    name: 'Cancelar ítem después de cocina',
+    description:
+      'Anular un producto ya enviado. Por defecto caja y admin; se puede dar al mesero.',
+    groupName: 'Órdenes',
+  },
+  {
     code: 'ORDERS_CLOSE_PAY',
     name: 'Cerrar y cobrar',
     groupName: 'Órdenes',
@@ -132,6 +139,7 @@ export const SYSTEM_ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'ORDERS_VIEW',
     'ORDERS_EDIT',
     'ORDERS_SEND_KITCHEN',
+    'ORDERS_CANCEL_ITEM',
     'ORDERS_CLOSE_PAY',
     'ORDERS_DISCOUNT',
     'PAYMENTS_CREATE',
@@ -182,3 +190,25 @@ export const SYSTEM_ROLE_META: Record<
     description: 'Pedidos a domicilio y entregas',
   },
 };
+
+/**
+ * New catalog codes that no role in the tenant has yet. Grant them to
+ * the system templates that include them by default — without wiping
+ * permissions an admin already toggled on or off.
+ */
+export function unseenDefaultPermissionGrants(
+  alreadyGranted: Iterable<string>,
+): Array<{ systemKey: UserRole; code: string }> {
+  const seen = new Set(alreadyGranted);
+  const grants: Array<{ systemKey: UserRole; code: string }> = [];
+
+  for (const systemKey of Object.values(UserRole)) {
+    for (const code of SYSTEM_ROLE_PERMISSIONS[systemKey]) {
+      if (!seen.has(code)) {
+        grants.push({ systemKey, code });
+      }
+    }
+  }
+
+  return grants;
+}

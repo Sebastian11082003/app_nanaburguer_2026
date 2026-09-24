@@ -9,6 +9,7 @@ import { BrandMark } from "@/src/components/brand/brand-mark";
 import { PLATFORM_BRAND } from "@/src/config/platform-brand";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 import { useRestaurantBrandingLookup } from "@/src/hooks/use-restaurant-branding-lookup";
+import { useResumeStaffSession } from "@/src/hooks/use-resume-staff-session";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { changeLocal as clearLocal } from "@/src/lib/staff-session";
 import { homeForRole, userAuthService } from "@/src/services/user-auth.service";
@@ -17,6 +18,7 @@ import { useRestaurantStore } from "@/src/store/restaurant.store";
 
 export default function StaffLoginPage() {
   const router = useRouter();
+  const { hydrated, isAuthenticated } = useResumeStaffSession();
   const setAuth = useAuthStore((s) => s.setAuth);
   const setTenantPreview = useRestaurantStore((s) => s.setTenantPreview);
   const { restaurant: persisted, ready } = useHydratedRestaurant();
@@ -80,7 +82,7 @@ export default function StaffLoginPage() {
     setError("");
   }
 
-  if (!ready) {
+  if (!ready || !hydrated || isAuthenticated) {
     return <main className="p-8 text-muted">Cargando...</main>;
   }
 
@@ -90,8 +92,8 @@ export default function StaffLoginPage() {
       title={identified ? branding.name : PLATFORM_BRAND.name}
       description={
         identified
-          ? "El mismo acceso para mesero, caja y domicilio. El rol decide el menú."
-          : "Escribe el slug para ver el local. El correo del restaurante o el de una persona (admin, mesero, caja) entran aquí."
+          ? "Un solo acceso. El correo del restaurante entra como admin; mesero, caja y domicilio con el suyo. El rol abre el menú, no otra pantalla."
+          : "Correo y contraseña. El del restaurante entra como admin. El slug es opcional y solo muestra el logo."
       }
       footerHref="/restaurant/local-login"
       footerLabel="Acceso del local (correo del restaurante)"
@@ -122,14 +124,13 @@ export default function StaffLoginPage() {
       >
         <input
           name="slug"
-          placeholder="Slug del restaurante"
+          placeholder="Slug del restaurante (opcional)"
           value={slug}
           onChange={(e) => {
             setSlug(e.target.value);
             setError("");
           }}
           className="field-input"
-          required
           autoComplete="organization"
           autoCapitalize="none"
           readOnly={localLocked}

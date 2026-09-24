@@ -1,6 +1,13 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { OrderSource, OrderStatus, OrderType, Prisma } from '@prisma/client';
+import {
+  CashSessionStatus,
+  OrderSource,
+  OrderStatus,
+  OrderType,
+  Prisma,
+  UserRole,
+} from '@prisma/client';
 
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
@@ -355,6 +362,100 @@ describe('OrdersService', () => {
     });
   });
 
+  describe('cancelItem', () => {
+    it('soft-cancels the line and drops it from dine-in totals', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        restaurantId: 'restaurant-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        type: OrderType.DINE_IN,
+        discountCents: 0,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-1',
+        orderId: 'order-1',
+        canceledAt: null,
+        lineTotalCents: 20000,
+      });
+      (prisma.orderItem as { findMany: jest.Mock }).findMany.mockResolvedValue([
+        { lineTotalCents: 0, canceledAt: new Date() },
+      ]);
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+      });
+
+      await service.cancelItem('order-1', 'line-1', 'restaurant-1', 'Error');
+
+      const [[itemUpdate]] = (prisma.orderItem as { update: jest.Mock }).update
+        .mock.calls;
+      expect(itemUpdate.data.lineTotalCents).toBe(0);
+      expect(itemUpdate.data.cancelReason).toBe('Error');
+      expect(itemUpdate.data.canceledAt).toBeInstanceOf(Date);
+
+      const [[orderUpdate]] = (prisma.order as { update: jest.Mock }).update
+        .mock.calls;
+      expect(orderUpdate.data).toEqual({
+        subtotalCents: 0,
+        taxCents: 0,
+        discountCents: 0,
+        totalCents: 0,
+      });
+    });
+
+    it('rejects canceling an already canceled line', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-1',
+        canceledAt: new Date(),
+      });
+
+      await expect(
+        service.cancelItem('order-1', 'line-1', 'restaurant-1'),
+      ).rejects.toThrow('Item already canceled');
+    });
+
+    it('rejects a waiter without ORDERS_CANCEL_ITEM', async () => {
+      await expect(
+        service.cancelItem('order-1', 'line-1', 'restaurant-1', 'Error', {
+          role: UserRole.WAITER,
+          permissions: ['ORDERS_CREATE'],
+        }),
+      ).rejects.toThrow('Missing required permission');
+    });
+
+    it('allows a waiter when ORDERS_CANCEL_ITEM is granted', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        restaurantId: 'restaurant-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        type: OrderType.DINE_IN,
+        discountCents: 0,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-1',
+        orderId: 'order-1',
+        canceledAt: null,
+        lineTotalCents: 20000,
+      });
+      (prisma.orderItem as { findMany: jest.Mock }).findMany.mockResolvedValue([
+        { lineTotalCents: 0, canceledAt: new Date() },
+      ]);
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+      });
+
+      await service.cancelItem('order-1', 'line-1', 'restaurant-1', 'Error', {
+        role: UserRole.WAITER,
+        permissions: ['ORDERS_CANCEL_ITEM'],
+      });
+
+      expect((prisma.orderItem as { update: jest.Mock }).update).toHaveBeenCalled();
+    });
+  });
+
   describe('updateStatus', () => {
     it('throws NotFound for an order outside the tenant scope', async () => {
       (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);
@@ -367,6 +468,7 @@ describe('OrdersService', () => {
     it('updates the status and records who made the change', async () => {
       (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
         id: 'order-1',
+        items: [{ canceledAt: null }],
       });
       (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
         id: 'order-1',
@@ -406,6 +508,46 @@ describe('OrdersService', () => {
       );
 
       expect(prisma.order.update).toHaveBeenCalled();
+    });
+
+    it('lets a waiter release a post-kitchen ticket with no live lines', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        items: [{ canceledAt: new Date() }],
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CANCELED,
+      });
+
+      await service.updateStatus(
+        'order-1',
+        OrderStatus.CANCELED,
+        'restaurant-1',
+        'user-1',
+        'WAITER',
+      );
+
+      expect(prisma.order.update).toHaveBeenCalled();
+    });
+
+    it('rejects advancing a ticket with no live lines', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        items: [{ canceledAt: new Date() }],
+      });
+
+      await expect(
+        service.updateStatus(
+          'order-1',
+          OrderStatus.IN_PREPARATION,
+          'restaurant-1',
+          'user-1',
+          'KITCHEN',
+        ),
+      ).rejects.toThrow('No live items on this ticket');
     });
 
     it('rejects a waiter canceling a ticket that already has products', async () => {
@@ -487,6 +629,48 @@ describe('OrdersService', () => {
     });
   });
 
+  describe('setPickupAt', () => {
+    it('updates pickup time on an open PICKUP ticket', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        type: OrderType.PICKUP,
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        pickupAt: new Date('2026-09-09T19:30:00.000Z'),
+      });
+
+      await service.setPickupAt(
+        'order-1',
+        '2026-09-09T19:30:00.000Z',
+        'restaurant-1',
+      );
+
+      const [[updateArgs]] = (prisma.order as { update: jest.Mock }).update.mock
+        .calls;
+      expect(updateArgs.data.pickupAt).toEqual(
+        new Date('2026-09-09T19:30:00.000Z'),
+      );
+    });
+
+    it('rejects pickupAt on dine-in', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CREATED,
+        type: OrderType.DINE_IN,
+      });
+
+      await expect(
+        service.setPickupAt(
+          'order-1',
+          '2026-09-09T19:30:00.000Z',
+          'restaurant-1',
+        ),
+      ).rejects.toThrow('pickupAt is only valid on PICKUP orders');
+    });
+  });
+
   describe('closeOrder', () => {
     it('throws NotFound when the order does not belong to the tenant', async () => {
       (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);
@@ -514,6 +698,7 @@ describe('OrdersService', () => {
         status: OrderStatus.READY,
         totalCents: 20000,
         sale: null,
+        items: [{ canceledAt: null }],
       });
       (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
         id: 'order-1',
@@ -538,6 +723,7 @@ describe('OrdersService', () => {
         status: OrderStatus.READY,
         totalCents: 20000,
         sale: { id: 'sale-1' },
+        items: [{ canceledAt: null }],
       });
       (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
         id: 'order-1',
@@ -547,6 +733,104 @@ describe('OrdersService', () => {
       await service.closeOrder('order-1', 'restaurant-1', 'user-1');
 
       expect((prisma.sale as { create: jest.Mock }).create).not.toHaveBeenCalled();
+    });
+
+    it('rejects closing a ticket with no live lines', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        totalCents: 0,
+        sale: null,
+        items: [{ canceledAt: new Date() }],
+      });
+
+      await expect(
+        service.closeOrder('order-1', 'restaurant-1', 'user-1'),
+      ).rejects.toThrow('Cannot close a ticket with no live items');
+    });
+
+    it('rejects a cashier close when no cash shift is open', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.READY,
+        totalCents: 20000,
+        sale: null,
+        items: [{ canceledAt: null }],
+      });
+      (prisma.cashSession as { findFirst: jest.Mock }).findFirst.mockResolvedValue(
+        null,
+      );
+
+      await expect(
+        service.closeOrder(
+          'order-1',
+          'restaurant-1',
+          'user-1',
+          UserRole.CASHIER,
+        ),
+      ).rejects.toThrow('Abre un turno de caja antes de cobrar');
+      expect((prisma.order as { update: jest.Mock }).update).not.toHaveBeenCalled();
+    });
+
+    it('lets a cashier close when a cash shift is open', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.READY,
+        totalCents: 20000,
+        sale: null,
+        items: [{ canceledAt: null }],
+      });
+      (prisma.cashSession as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'shift-1',
+        status: CashSessionStatus.OPEN,
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CLOSED,
+      });
+      (prisma.sale as { create: jest.Mock }).create.mockResolvedValue({
+        id: 'sale-new',
+        totalCents: 20000,
+      });
+
+      await service.closeOrder(
+        'order-1',
+        'restaurant-1',
+        'user-1',
+        UserRole.CASHIER,
+      );
+
+      expect((prisma.order as { update: jest.Mock }).update).toHaveBeenCalled();
+    });
+
+    it('lets an admin close without an open cash shift', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.READY,
+        totalCents: 20000,
+        sale: null,
+        items: [{ canceledAt: null }],
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.CLOSED,
+      });
+      (prisma.sale as { create: jest.Mock }).create.mockResolvedValue({
+        id: 'sale-new',
+        totalCents: 20000,
+      });
+
+      await service.closeOrder(
+        'order-1',
+        'restaurant-1',
+        'user-1',
+        UserRole.ADMIN,
+      );
+
+      expect(
+        (prisma.cashSession as { findFirst: jest.Mock }).findFirst,
+      ).not.toHaveBeenCalled();
+      expect((prisma.order as { update: jest.Mock }).update).toHaveBeenCalled();
     });
   });
 

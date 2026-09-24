@@ -175,6 +175,46 @@
 - Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
 - Runbook: `docs/10-devops/local-setup.md`.
 
+## v0.4.60
+
+- Cancelar ítem después de cocina es el permiso `ORDERS_CANCEL_ITEM` (caja y admin encendido; mesero apagado). Se habilita o inhabilita en Roles. Las plantillas del sistema ya no pierden esos toggles al recargar.
+
+## v0.4.59
+
+- El cajero no cobra si no hay turno de caja abierto. El admin sí puede (aviso, el cobro no entra al cuadre hasta abrir caja).
+
+## v0.4.58
+
+- Caja tiene Recibos en el chrome POS: lista de comprobantes del local y detalle imprimible, sin entrar al layout de admin.
+
+## v0.4.57
+
+- Hora de recoger se puede corregir con el Llevar ya en cocina. Tras cobrar se abre el recibo para imprimir. El cobro avisa si no hay turno de caja abierto (no bloquea). Backlog vivo en `.ai-engineering/BACKLOG.md` (GitHub Projects aún no existe en la cuenta).
+
+## v0.4.56
+
+- Tras cancelar todas las líneas, caja/mesero pueden Liberar mesa (ya no queda roja a $0). Cocina oculta esos tickets vacíos. Transferir mesa también desde caja. No se cobra un ticket sin productos vivos.
+
+## v0.4.55
+
+- Turno de revisión: Liberar mesa vacía desde el detalle admin; cancelar ítem ahí mismo. El piso no pinta Llevar/Domicilios por un borrador CREATED vacío. Admin puede cambiar el correo del personal (si es el Gmail del local, también actualiza el contacto del restaurante). Desactivar sigue siendo el “borrado” (se conserva el historial).
+
+## v0.4.54
+
+- Revisión POS: cancelar ítem desde Ventas, Llevar y domicilio; hora de recoger visible en cocina/comanda/listas; cobro muestra Servicio 5%; piso se actualiza solo; recibo no pone propina $0 junto al recargo.
+
+## v0.4.53
+
+- Ticket: recargo de servicio 5% en constante; cocina y comanda marcan ítems CANCELADO; el recibo y el top de productos no cuentan líneas anuladas. Órdenes admin filtra preparando / en camino / anuladas.
+
+## v0.4.52
+
+- Windows: `update-local.bat` en la raíz hace checkout + pull de `dev`. GitHub no empuja solo a tu disco.
+
+## v0.4.51
+
+- Un solo login del local: `/restaurant/local-login` redirige a `/restaurant/login`. El admin del restaurante no pasa por una segunda pantalla de rol. El slug es opcional (solo logo).
+
 ## v0.4.50
 
 - Plataforma: inhabilitar/activar un tenant (`PATCH /platform/restaurants/:id`). El personal no entra; los datos siguen. Para mora o falta de pago, no hace falta borrar el restaurante.

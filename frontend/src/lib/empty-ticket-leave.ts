@@ -11,17 +11,31 @@ import { Order } from "@/src/types/order";
  */
 let releaser: (() => Promise<void>) | null = null;
 
-/** CREATED with no live lines — Liberar mesa / Descartar. */
-export function isEmptyCreatedDraft(order: Order | null | undefined): boolean {
+export function hasLiveLines(order: Order | null | undefined): boolean {
+  return (order?.items ?? []).some((line) => !line.canceledAt);
+}
+
+/** Open ticket with no live lines — Liberar mesa / Descartar after cancel-all. */
+export function isEmptyOpenTicket(order: Order | null | undefined): boolean {
   return (
     !!order &&
-    order.status === "CREATED" &&
-    (order.items ?? []).every((line) => line.canceledAt)
+    order.status !== "CLOSED" &&
+    order.status !== "CANCELED" &&
+    !hasLiveLines(order)
   );
+}
+
+/** CREATED with no live lines — auto-release on leave; Descartar drafts. */
+export function isEmptyCreatedDraft(order: Order | null | undefined): boolean {
+  return !!order && isEmptyOpenTicket(order) && order.status === "CREATED";
 }
 
 export function isEmptyCreatedTicket(order: Order | null | undefined): boolean {
   return isEmptyCreatedDraft(order) && order?.type === "DINE_IN";
+}
+
+export function isEmptyOpenDineIn(order: Order | null | undefined): boolean {
+  return !!order && isEmptyOpenTicket(order) && order.type === "DINE_IN";
 }
 
 export function clearEmptyTicketReleaser() {

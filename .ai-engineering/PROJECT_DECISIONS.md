@@ -87,7 +87,7 @@ Identidad de tenant obligatoria (POS SaaS multi-tenant)
 
 Después del login del restaurante, toda superficie `/restaurant/*` **ya autenticada** muestra **logotipo + nombre + slug**. Si hay `logoUrl`, el mark es esa imagen, no la letra del nombre.
 
-La puerta de `/restaurant/login` (y el slug de `/restaurant/local-login`) es de **plataforma (RestoOS)** hasta que el operador escribe un slug que el API reconoce. El persist de un local anterior no pinta NanaBurguer (ni ningún tenant) en esa pantalla. Nombre y logo del local aparecen solo tras ese lookup público.
+La puerta de `/restaurant/login` es de **plataforma (RestoOS)** hasta que el operador escribe un slug que el API reconoce (el slug es opcional: solo pinta logo y nombre). `/restaurant/local-login` redirige a esa misma pantalla: no hay un segundo login de “rol”. El persist de un local anterior no pinta NanaBurguer (ni ningún tenant) en esa pantalla. Nombre y logo del local aparecen solo tras ese lookup público.
 
 El chrome compartido (`PosShell`, admin, hubs) lee `restaurant-auth` **después** de identificar el tenant. Una pantalla nueva no “elige” si pinta el local: lo hereda.
 
@@ -130,3 +130,17 @@ No bloquear zoom (`maximumScale`) por accesibilidad.
 Motivo:
 
 Mesero y caja trabajan de pie, con una mano. Una UI que solo cabe en laptop no es operable en el local.
+
+---
+
+## DEC-010
+
+Cancelar ítem después de cocina
+
+Permiso `ORDERS_CANCEL_ITEM`. Por defecto ON en ADMIN y CASHIER, OFF en mesero/cocina/domicilio. El admin lo enciende o apaga en Configuración → Roles. Quitar un producto en CREATED (aún no va a cocina) sigue siendo `removeItem` y no usa este permiso.
+
+Las plantillas de sistema ya no se resetean en cada carga: un código nuevo del catálogo se otorga una vez a las estaciones por defecto; después mandan los toggles.
+
+Motivo:
+
+HU-012 pedía autorización. OPS-06: no darlo al mesero de fábrica, pero sí poder habilitarlo sin otro deploy.

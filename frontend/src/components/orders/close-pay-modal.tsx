@@ -8,11 +8,16 @@ import {
   paymentMethodsService,
   RestaurantPaymentMethod,
 } from "@/src/services/payment-methods.service";
+import { cashService } from "@/src/services/cash.service";
 import { PaymentMethod } from "@/src/services/payment.service";
+import { useAuthStore } from "@/src/store/auth.store";
 
 type Props = {
   open: boolean;
   totalCents: number;
+  subtotalCents?: number;
+  discountCents?: number;
+  taxCents?: number;
   busy?: boolean;
   onClose: () => void;
   onConfirm: (payload: {
@@ -28,6 +33,9 @@ type Props = {
 export function ClosePayModal({
   open,
   totalCents,
+  subtotalCents,
+  discountCents,
+  taxCents,
   busy = false,
   onClose,
   onConfirm,
@@ -37,6 +45,8 @@ export function ClosePayModal({
   const [loadError, setLoadError] = useState("");
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [receivedInput, setReceivedInput] = useState("");
+  const [shiftOpen, setShiftOpen] = useState<boolean | null>(null);
+  const role = useAuthStore((s) => s.user?.role);
 
   useEffect(() => {
     if (!open) return;
@@ -65,6 +75,15 @@ export function ClosePayModal({
         if (!cancelled) setLoadingMethods(false);
       });
 
+    cashService
+      .currentSession()
+      .then((current) => {
+        if (!cancelled) setShiftOpen(Boolean(current.session));
+      })
+      .catch(() => {
+        if (!cancelled) setShiftOpen(null);
+      });
+
     return () => {
       cancelled = true;
     };
@@ -83,8 +102,15 @@ export function ClosePayModal({
   const cashOk =
     method !== "CASH" ||
     (Number.isFinite(receivedCents) && receivedCents >= totalCents);
+  // CASHIER cannot charge outside a shift (API also rejects). ADMIN still can.
+  const cashierNeedsShift = role === "CASHIER" && shiftOpen !== true;
   const canConfirm =
-    !!method && cashOk && totalCents > 0 && !loadingMethods && methods.length > 0;
+    !!method &&
+    cashOk &&
+    totalCents > 0 &&
+    !loadingMethods &&
+    methods.length > 0 &&
+    !cashierNeedsShift;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center">
@@ -97,14 +123,48 @@ export function ClosePayModal({
         <h2 id="close-pay-title" className="text-xl font-bold">
           Cerrar y cobrar
         </h2>
-        <p className="mt-1 text-sm text-zinc-400">
-          Total a cobrar:{" "}
-          <span className="font-semibold text-white">
-            {formatCents(totalCents)}
-          </span>
-        </p>
+        <div className="mt-3 space-y-1 text-sm text-zinc-400">
+          {typeof subtotalCents === "number" && (
+            <p className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{formatCents(subtotalCents)}</span>
+            </p>
+          )}
+          {(discountCents ?? 0) > 0 && (
+            <p className="flex justify-between text-amber-400">
+              <span>Descuento</span>
+              <span>-{formatCents(discountCents ?? 0)}</span>
+            </p>
+          )}
+          {(taxCents ?? 0) > 0 && (
+            <p className="flex justify-between">
+              <span>Servicio 5%</span>
+              <span>{formatCents(taxCents ?? 0)}</span>
+            </p>
+          )}
+          <p className="flex justify-between text-base font-semibold text-white">
+            <span>Total a cobrar</span>
+            <span>{formatCents(totalCents)}</span>
+          </p>
+        </div>
 
-        {loadError && <p className="mt-3 text-sm text-red-400">{loadError}</p>}
+        {shiftOpen === false && role === "CASHIER" && (
+          <p className="mt-3 text-sm text-amber-400">
+            No hay un turno de caja abierto. Ábrelo para cobrar.{" "}
+            <a href="/restaurant/cashier/cash" className="underline">
+              Abrir caja
+            </a>
+          </p>
+        )}
+        {shiftOpen === false && role !== "CASHIER" && (
+          <p className="mt-3 text-sm text-amber-400">
+            No hay un turno de caja abierto. El cobro queda, pero no entra en
+            el cuadre hasta que abras caja.{" "}
+            <a href="/restaurant/cashier/cash" className="underline">
+              Abrir caja
+            </a>
+          </p>
+        )}
         {loadingMethods && (
           <p className="mt-3 text-sm text-zinc-500">Cargando métodos...</p>
         )}

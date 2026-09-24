@@ -1,9 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { OrderStatus } from '@prisma/client';
 
 import { ACTIVE_ORDER_STATUSES } from '../../common/constants/order-status.constants';
+import { hasLiveOrderLines } from '../../common/order-lines';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
+
+/**
+ * Llevar/Domicilios stay listable after leaving the screen. Empty tickets
+ * (no live lines, including post-kitchen voids) must not paint the channel
+ * card red — staff discard/liberar them from POS, not from Mesas.
+ */
+export function occupiesFloorChannel(order: {
+  status?: OrderStatus | string;
+  items: Array<{ canceledAt?: Date | string | null }>;
+}): boolean {
+  return hasLiveOrderLines(order.items);
+}
 
 /**
  * TablesService owns the physical tables of a restaurant (dine-in only).
@@ -68,11 +82,17 @@ export class TablesService {
         status: { in: ACTIVE_ORDER_STATUSES },
         type: { in: ['PICKUP', 'DELIVERY'] },
       },
-      select: { type: true, totalCents: true },
+      select: {
+        type: true,
+        totalCents: true,
+        status: true,
+        items: { select: { canceledAt: true } },
+      },
     });
 
-    const pickup = openChannels.filter((row) => row.type === 'PICKUP');
-    const delivery = openChannels.filter((row) => row.type === 'DELIVERY');
+    const occupying = openChannels.filter((row) => occupiesFloorChannel(row));
+    const pickup = occupying.filter((row) => row.type === 'PICKUP');
+    const delivery = occupying.filter((row) => row.type === 'DELIVERY');
 
     return {
       tables,

@@ -22,16 +22,19 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { SetDiscountDto } from './dto/set-discount.dto';
 import { TransferTableDto } from './dto/transfer-table.dto';
 import { CancelItemDto } from './dto/cancel-item.dto';
+import { UpdatePickupAtDto } from './dto/update-pickup-at.dto';
 
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 
+import { Permissions } from '../../common/decorators/permissions.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Tenant } from '../../common/decorators/tenant.decorator';
 
 @Controller('orders')
-@UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard, TenantGuard)
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -81,18 +84,21 @@ export class OrdersController {
   }
 
   @Post(':id/items/:itemId/cancel')
-  @Roles(UserRole.ADMIN, UserRole.CASHIER)
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
+  @Permissions('ORDERS_CANCEL_ITEM')
   cancelItem(
     @Param('id') id: string,
     @Param('itemId') itemId: string,
     @Body() dto: CancelItemDto,
     @Tenant() restaurantId: string,
+    @Req() req: { user: { role: UserRole; permissions?: string[] } },
   ) {
     return this.ordersService.cancelItem(
       id,
       itemId,
       restaurantId,
       dto.reason,
+      { role: req.user.role, permissions: req.user.permissions },
     );
   }
 
@@ -122,7 +128,7 @@ export class OrdersController {
 
   // 🟢 TRANSFERIR MESA
   @Patch(':id/transfer')
-  @Roles(UserRole.ADMIN, UserRole.WAITER)
+  @Roles(UserRole.ADMIN, UserRole.WAITER, UserRole.CASHIER)
   transferTable(
     @Param('id') id: string,
     @Body() dto: TransferTableDto,
@@ -146,15 +152,30 @@ export class OrdersController {
     );
   }
 
+  @Patch(':id/pickup-at')
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER, UserRole.DELIVERY)
+  setPickupAt(
+    @Param('id') id: string,
+    @Body() dto: UpdatePickupAtDto,
+    @Tenant() restaurantId: string,
+  ) {
+    return this.ordersService.setPickupAt(id, dto.pickupAt, restaurantId);
+  }
+
   // 🟢 CERRAR ORDEN (caja)
   @Patch(':id/close')
   @Roles(UserRole.ADMIN, UserRole.CASHIER)
   closeOrder(
     @Param('id') id: string,
     @Tenant() restaurantId: string,
-    @Req() req: { user: { userId: string } },
+    @Req() req: { user: { userId: string; role: UserRole } },
   ) {
-    return this.ordersService.closeOrder(id, restaurantId, req.user.userId);
+    return this.ordersService.closeOrder(
+      id,
+      restaurantId,
+      req.user.userId,
+      req.user.role,
+    );
   }
 
   // 🟢 LISTAR

@@ -16,7 +16,7 @@ interface RestaurantAuthShellProps {
   eyebrow?: string;
   footerHref?: string;
   footerLabel?: string;
-  /** Footer becomes "Cambiar local (slug)" when the tenant is already known. */
+  /** Footer becomes "Cambiar local (slug)" and returns to staff login. */
   changeLocal?: boolean;
 }
 
@@ -49,7 +49,7 @@ export function RestaurantAuthShell({
       eyebrow={eyebrow ?? (restaurant ? "Personal del local" : "Personal")}
       title={title}
       description={description}
-      footerHref={footerHref}
+      footerHref={changeLocal ? "/restaurant/login" : footerHref}
       footerLabel={footerLabel}
       footerAction={
         changeLocal

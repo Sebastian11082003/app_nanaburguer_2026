@@ -12,7 +12,8 @@
         "docs/sdd-mapping.md",
         "docs/mvp-production-readiness.md",
         ".ai-engineering/PROJECT_STATE.md",
-        ".ai-engineering/PROJECT_CHANGELOG.md"
+        ".ai-engineering/PROJECT_CHANGELOG.md",
+        ".ai-engineering/BACKLOG.md"
       ]
     },
     "frontend": {
@@ -22,7 +23,8 @@
         "docs/sdd-mapping.md",
         "docs/mvp-production-readiness.md",
         ".ai-engineering/PROJECT_STATE.md",
-        ".ai-engineering/PROJECT_CHANGELOG.md"
+        ".ai-engineering/PROJECT_CHANGELOG.md",
+        ".ai-engineering/BACKLOG.md"
       ]
     },
     "database": {
@@ -51,7 +53,8 @@
         "docs/sdd-mapping.md",
         "docs/mvp-production-readiness.md",
         ".ai-engineering/PROJECT_STATE.md",
-        ".ai-engineering/PROJECT_CHANGELOG.md"
+        ".ai-engineering/PROJECT_CHANGELOG.md",
+        ".ai-engineering/BACKLOG.md"
       ]
     }
   },

@@ -10,7 +10,11 @@ export interface CreatePaymentPayload {
 }
 
 export const paymentService = {
-  async create(saleId: string, payload: CreatePaymentPayload) {
+  async create(saleId: string, payload: CreatePaymentPayload): Promise<{
+    payment: { id: string };
+    changeCents: number;
+    invoice?: { id: string } | null;
+  }> {
     const { data } = await api.post(`/sales/${saleId}/payments`, payload);
     return data;
   },

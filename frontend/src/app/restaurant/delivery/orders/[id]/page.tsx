@@ -1,25 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
+import { posReceiptHref } from "@/src/lib/invoice-href";
+import { hasLiveLines } from "@/src/lib/empty-ticket-leave";
+import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
-import { orderLineLabel } from "@/src/lib/order-line-label";
+import { orderChannelLabel } from "@/src/lib/order-channel-label";
+import { orderStatusLabel } from "@/src/lib/order-status-label";
 import { deliveryService } from "@/src/services/delivery.service";
 import { ordersService } from "@/src/services/orders.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { useAuthStore } from "@/src/store/auth.store";
+import { canCancelTicketItem } from "@/src/types/auth";
 import { Order } from "@/src/types/order";
 
 export default function DeliveryOrderDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const orderId = params.id;
-  const role = useAuthStore((s) => s.user?.role);
+  const currentUser = useAuthStore((s) => s.user);
+  const role = currentUser?.role;
   const canCharge = role === "ADMIN" || role === "CASHIER";
+  const canCancelItem = canCancelTicketItem(currentUser);
   const backHref =
     role === "CASHIER" || role === "ADMIN"
       ? "/restaurant/cashier/delivery"
@@ -72,12 +81,33 @@ export default function DeliveryOrderDetailPage() {
     try {
       setBusy(true);
       setError("");
-      await closeAndPayOrder(order.id, payload);
+      const paid = await closeAndPayOrder(order.id, payload);
       setPayOpen(false);
+      if (paid.invoiceId) {
+        router.push(posReceiptHref(paid.invoiceId, backHref));
+        return;
+      }
       setMessage("Pedido cobrado");
       await load();
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo cobrar"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCancelItem(itemId: string) {
+    if (!order) return;
+    const reason = window.prompt("Motivo de cancelación", "Error de digitación");
+    if (reason == null) return;
+    try {
+      setBusy(true);
+      setError("");
+      const updated = await ordersService.cancelItem(order.id, itemId, reason);
+      setOrder(updated);
+      setMessage("Ítem cancelado");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo cancelar el ítem"));
     } finally {
       setBusy(false);
     }
@@ -119,7 +149,8 @@ export default function DeliveryOrderDetailPage() {
 
         <div className="panel-surface space-y-3 p-6">
           <p className="text-sm text-muted">
-            Estado orden: <span className="text-paper">{order.status}</span>
+            Estado orden:{" "}
+            <span className="text-paper">{orderStatusLabel(order.status)}</span>
           </p>
           <p className="text-sm text-muted">
             Estado delivery:{" "}
@@ -128,8 +159,15 @@ export default function DeliveryOrderDetailPage() {
             </span>
           </p>
           <p className="text-sm text-muted">
-            Tipo: <span className="text-paper">{order.type}</span>
+            Tipo:{" "}
+            <span className="text-paper">{orderChannelLabel(order)}</span>
           </p>
+          {formatPickupAt(order.pickupAt) ? (
+            <p className="text-sm text-muted">
+              Recoge:{" "}
+              <span className="text-paper">{formatPickupAt(order.pickupAt)}</span>
+            </p>
+          ) : null}
           <p className="text-sm text-muted">
             Teléfono:{" "}
             <span className="text-paper">{order.delivery?.phone ?? "—"}</span>
@@ -149,17 +187,34 @@ export default function DeliveryOrderDetailPage() {
 
         <div className="panel-surface p-6">
           <h2 className="font-display text-2xl">Productos</h2>
-          <ul className="mt-4 space-y-2 text-sm">
+          <ul className="mt-4 space-y-2">
             {order.items.map((item) => (
-              <li key={item.id} className="flex justify-between">
-                <span>{orderLineLabel(item)}</span>
-                <span>{formatCents(item.lineTotalCents)}</span>
-              </li>
+              <OrderItemRow
+                key={item.id}
+                item={item}
+                busy={busy}
+                onCancel={
+                  canCancelItem &&
+                  order.status !== "CREATED" &&
+                  order.status !== "CLOSED" &&
+                  order.status !== "CANCELED"
+                    ? handleCancelItem
+                    : undefined
+                }
+              />
             ))}
           </ul>
-          <div className="mt-4 flex justify-between border-t border-white/10 pt-4 font-bold">
-            <span>Total</span>
-            <span>{formatCents(order.totalCents)}</span>
+          <div className="mt-4 space-y-1 border-t border-white/10 pt-4 text-sm">
+            {(order.taxCents ?? 0) > 0 && (
+              <div className="flex justify-between text-muted">
+                <span>Servicio 5%</span>
+                <span>{formatCents(order.taxCents)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold">
+              <span>Total</span>
+              <span>{formatCents(order.totalCents)}</span>
+            </div>
           </div>
         </div>
 
@@ -175,7 +230,8 @@ export default function DeliveryOrderDetailPage() {
           {canCharge &&
             order.status !== "CLOSED" &&
             order.status !== "CANCELED" &&
-            (order.items?.length ?? 0) > 0 && (
+            hasLiveLines(order) &&
+            order.totalCents > 0 && (
               <button
                 type="button"
                 disabled={busy}
@@ -206,6 +262,9 @@ export default function DeliveryOrderDetailPage() {
         <ClosePayModal
           open={payOpen}
           totalCents={order.totalCents}
+          subtotalCents={order.subtotalCents}
+          discountCents={order.discountCents}
+          taxCents={order.taxCents}
           busy={busy}
           onClose={() => setPayOpen(false)}
           onConfirm={handlePay}
