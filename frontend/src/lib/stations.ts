@@ -52,7 +52,7 @@ export const STATIONS: StationMeta[] = [
     emailPrefix: "delivery",
     label: "Delivery",
     loginHref: "/restaurant/delivery/login",
-    homeHref: "/restaurant/delivery",
+    homeHref: "/restaurant/delivery/active",
   },
 ];
 

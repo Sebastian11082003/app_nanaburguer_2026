@@ -47,7 +47,7 @@ const VISIBLE: Record<UserRole, PosNavKey[]> = {
   ],
   CASHIER: ["dashboard", "sell", "sales", "delivery", "cash"],
   WAITER: ["dashboard"],
-  DELIVERY: ["dashboard", "delivery"],
+  DELIVERY: ["delivery"],
   KITCHEN: ["dashboard"],
 };
 

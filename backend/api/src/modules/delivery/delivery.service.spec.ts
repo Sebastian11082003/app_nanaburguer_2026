@@ -95,4 +95,38 @@ describe('DeliveryService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('deliver', () => {
+    it('rejects a ticket that has not been dispatched', async () => {
+      (prisma.delivery as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'del-1',
+        status: 'PENDING',
+      });
+
+      await expect(service.deliver('del-1', 'restaurant-1')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect((prisma.delivery as { update: jest.Mock }).update).not.toHaveBeenCalled();
+    });
+
+    it('marks a dispatched ticket delivered', async () => {
+      (prisma.delivery as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'del-1',
+        status: 'DISPATCHED',
+      });
+      (prisma.delivery as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'del-1',
+        status: 'DELIVERED',
+      });
+
+      await service.deliver('del-1', 'restaurant-1');
+
+      expect((prisma.delivery as { update: jest.Mock }).update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'del-1' },
+          data: expect.objectContaining({ status: 'DELIVERED' }),
+        }),
+      );
+    });
+  });
 });

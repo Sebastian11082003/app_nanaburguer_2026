@@ -123,6 +123,14 @@ export class DeliveryService {
 
     if (!delivery) throw new NotFoundException('Delivery not found');
 
+    if (delivery.status === DeliveryStatus.DELIVERED) {
+      throw new BadRequestException('Delivery already delivered');
+    }
+
+    if (delivery.status !== DeliveryStatus.DISPATCHED) {
+      throw new BadRequestException('Delivery is not out for delivery');
+    }
+
     return this.prisma.delivery.update({
       where: { id },
       data: {

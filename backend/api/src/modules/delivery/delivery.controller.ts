@@ -58,7 +58,7 @@ export class DeliveryController {
   // 🚚 DISPATCH
   // ============================
   @Patch(':id/dispatch')
-  @Roles(UserRole.ADMIN, UserRole.CASHIER)
+  @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.DELIVERY)
   dispatch(
     @Param('id') id: string,
     @Tenant() restaurantId: string,
