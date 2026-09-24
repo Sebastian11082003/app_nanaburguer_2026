@@ -119,7 +119,7 @@ export class AuthService {
    * for that address, we verify `restaurantPasswordHash` and provision an
    * ADMIN so they can enter the POS and create the other roles.
    */
-  async staffLogin(email: string, password: string) {
+  async staffLogin(email: string, password: string, slug?: string) {
     const normalized = email.trim().toLowerCase();
 
     let user = await this.prisma.user.findFirst({
@@ -149,6 +149,11 @@ export class AuthService {
 
     if (!restaurant.isActive) {
       throw new UnauthorizedException('Restaurant disabled');
+    }
+
+    const wantedSlug = slug?.trim().toLowerCase();
+    if (wantedSlug && restaurant.slug.toLowerCase() !== wantedSlug) {
+      throw new UnauthorizedException('Staff does not belong to this restaurant');
     }
 
     const { isActive: _active, ...publicRestaurant } = restaurant;

@@ -6,6 +6,7 @@ import { ReactNode, useState } from "react";
 
 import { BrandMark } from "@/src/components/brand/brand-mark";
 import { releaseEmptyTicketIfNeeded } from "@/src/lib/empty-ticket-leave";
+import { changeLocal, logoutStaffKeepLocal } from "@/src/lib/staff-session";
 import { isPosNavActive, posNavForRole } from "@/src/lib/pos-nav";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
@@ -18,9 +19,7 @@ export function PosShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const logoutStaff = useAuthStore((s) => s.logout);
   const restaurant = useRestaurantStore((s) => s.restaurant);
-  const logoutRestaurant = useRestaurantStore((s) => s.logout);
   const [menuOpen, setMenuOpen] = useState(false);
   const nav = posNavForRole(user?.role);
 
@@ -32,14 +31,13 @@ export function PosShell({ children }: { children: ReactNode }) {
 
   async function handleLogout() {
     await releaseEmptyTicketIfNeeded();
-    logoutStaff();
+    logoutStaffKeepLocal();
     router.push("/restaurant/login");
   }
 
   async function handleChangeLocal() {
     await releaseEmptyTicketIfNeeded();
-    logoutStaff();
-    logoutRestaurant();
+    changeLocal();
     router.push("/restaurant/login");
   }
 

@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { AuthShell } from "@/src/components/brand/auth-shell";
 import { BrandMark } from "@/src/components/brand/brand-mark";
 import { PLATFORM_BRAND } from "@/src/config/platform-brand";
+import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 import { useRestaurantBrandingLookup } from "@/src/hooks/use-restaurant-branding-lookup";
 import { getErrorMessage } from "@/src/lib/get-error-message";
+import { changeLocal as clearLocal } from "@/src/lib/staff-session";
 import { homeForRole, userAuthService } from "@/src/services/user-auth.service";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
@@ -17,6 +19,7 @@ export default function StaffLoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
   const setTenantPreview = useRestaurantStore((s) => s.setTenantPreview);
+  const { restaurant: persisted, ready } = useHydratedRestaurant();
   const [slug, setSlug] = useState("");
   const { branding, status } = useRestaurantBrandingLookup(slug);
   const [email, setEmail] = useState("");
@@ -25,18 +28,27 @@ export default function StaffLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (ready && persisted?.slug && !slug) {
+      setSlug(persisted.slug);
+    }
+  }, [ready, persisted?.slug, slug]);
+
   const identified = status === "found" && branding;
+  const localLocked = Boolean(persisted?.slug) && slug === persisted?.slug;
 
   async function loginWith(form: HTMLFormElement) {
     const data = new FormData(form);
     const nextEmail = String(data.get("email") ?? "").trim();
     const nextPassword = String(data.get("password") ?? "");
+    const nextSlug = String(data.get("slug") ?? slug).trim();
     try {
       setLoading(true);
       setError("");
       const response = await userAuthService.staffLogin({
         email: nextEmail,
         password: nextPassword,
+        slug: nextSlug,
       });
       setAuth(response.accessToken, response.user);
       setTenantPreview(response.restaurant);
@@ -51,11 +63,25 @@ export default function StaffLoginPage() {
             ? "No se encontró el restaurante de ese correo"
             : raw === "Restaurant disabled"
               ? "Este local está inhabilitado. Contacta a la plataforma."
+            : raw === "Staff does not belong to this restaurant"
+              ? "Ese correo no pertenece a este local. Cambia de local o revisa el slug."
             : raw,
       );
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleChangeLocal() {
+    clearLocal();
+    setSlug("");
+    setEmail("");
+    setPassword("");
+    setError("");
+  }
+
+  if (!ready) {
+    return <main className="p-8 text-muted">Cargando...</main>;
   }
 
   return (
@@ -69,6 +95,14 @@ export default function StaffLoginPage() {
       }
       footerHref="/restaurant/local-login"
       footerLabel="Acceso del local (correo del restaurante)"
+      footerAction={
+        identified
+          ? {
+              label: `Cambiar local (${branding.slug})`,
+              onClick: handleChangeLocal,
+            }
+          : undefined
+      }
       brand={
         identified ? (
           <BrandMark
@@ -98,6 +132,7 @@ export default function StaffLoginPage() {
           required
           autoComplete="organization"
           autoCapitalize="none"
+          readOnly={localLocked}
         />
         {status === "missing" && (
           <p className="text-sm text-danger">

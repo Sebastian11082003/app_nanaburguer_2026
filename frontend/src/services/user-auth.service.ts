@@ -4,6 +4,7 @@ import { AuthUser, UserRole } from "@/src/types/auth";
 interface StaffLoginDto {
   email: string;
   password: string;
+  slug?: string;
 }
 
 export interface StaffRestaurant {
@@ -21,6 +22,7 @@ export interface StaffLoginResponse {
 
 export function homeForRole(role: UserRole): string {
   if (role === "KITCHEN") return "/restaurant/kitchen";
+  if (role === "DELIVERY") return "/restaurant/delivery/active";
   return "/restaurant/app";
 }
 

@@ -46,7 +46,8 @@ export default function RootLayout({
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${display.variable} ${body.variable} ${script.variable}`}
+      className={`dark ${display.variable} ${body.variable} ${script.variable}`}
+      style={{ colorScheme: "dark" }}
     >
       <body className="font-body antialiased">
         <ThemeProvider>

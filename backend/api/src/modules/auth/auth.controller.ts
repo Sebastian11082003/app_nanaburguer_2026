@@ -26,7 +26,7 @@ export class AuthController {
   @Public()
   @Post('staff-login')
   staffLogin(@Body() dto: StaffLoginDto) {
-    return this.authService.staffLogin(dto.email, dto.password);
+    return this.authService.staffLogin(dto.email, dto.password, dto.slug);
   }
 
   @Public()

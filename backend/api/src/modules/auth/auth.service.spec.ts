@@ -293,6 +293,30 @@ describe('AuthService', () => {
         service.staffLogin('nobody@nana.test', 'secret123'),
       ).rejects.toThrow('Invalid credentials');
     });
+
+    it('rejects staff whose restaurant does not match the identified slug', async () => {
+      (prisma.user as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'user-1',
+        email: 'cashier@nana.test',
+        passwordHash: 'hashed',
+        role: UserRole.CASHIER,
+        restaurantId: 'restaurant-1',
+        fullName: 'Cajero',
+        isActive: true,
+      });
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (prisma.restaurant as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'restaurant-1',
+        name: 'Nana',
+        slug: 'nana',
+        logoUrl: null,
+        isActive: true,
+      });
+
+      await expect(
+        service.staffLogin('cashier@nana.test', 'secret123', 'otro-local'),
+      ).rejects.toThrow('Staff does not belong to this restaurant');
+    });
   });
 
   describe('forgotPassword', () => {

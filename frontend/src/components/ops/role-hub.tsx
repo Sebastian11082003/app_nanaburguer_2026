@@ -17,6 +17,7 @@ interface RoleHubProps {
   subtitle: string;
   links: HubLink[];
   onLogout?: () => void;
+  onChangeLocal?: () => void;
 }
 
 export function RoleHub({
@@ -25,6 +26,7 @@ export function RoleHub({
   subtitle,
   links,
   onLogout,
+  onChangeLocal,
 }: RoleHubProps) {
   const { restaurant } = useHydratedRestaurant();
 
@@ -57,14 +59,27 @@ export function RoleHub({
               {subtitle}
             </p>
           </div>
-          {onLogout && (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="btn-ghost min-h-11 shrink-0 text-sm"
-            >
-              Salir
-            </button>
+          {(onLogout || onChangeLocal) && (
+            <div className="flex shrink-0 flex-wrap gap-2">
+              {onChangeLocal && (
+                <button
+                  type="button"
+                  onClick={onChangeLocal}
+                  className="btn-ghost min-h-11 text-sm"
+                >
+                  Cambiar local
+                </button>
+              )}
+              {onLogout && (
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="btn-ghost min-h-11 text-sm"
+                >
+                  Salir
+                </button>
+              )}
+            </div>
           )}
         </div>
 

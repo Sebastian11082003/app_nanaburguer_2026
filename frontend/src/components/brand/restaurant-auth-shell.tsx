@@ -1,11 +1,13 @@
 "use client";
 
 import { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 
 import { AuthShell } from "@/src/components/brand/auth-shell";
 import { BrandMark } from "@/src/components/brand/brand-mark";
 import { TenantSlug } from "@/src/components/brand/tenant-slug";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
+import { changeLocal as changeLocalSession } from "@/src/lib/staff-session";
 
 interface RestaurantAuthShellProps {
   title: string;
@@ -31,25 +33,35 @@ export function RestaurantAuthShell({
   footerLabel,
   changeLocal = false,
 }: RestaurantAuthShellProps) {
+  const router = useRouter();
   const { restaurant, ready } = useHydratedRestaurant();
 
   if (!ready) {
     return <main className="p-8 text-muted">Cargando...</main>;
   }
 
-  const resolvedFooter = changeLocal
-    ? restaurant
-      ? `Cambiar local (${restaurant.slug})`
-      : "Identificar el local (slug del restaurante)"
-    : footerLabel;
+  const changeLocalLabel = restaurant
+    ? `Cambiar local (${restaurant.slug})`
+    : "Identificar el local (slug del restaurante)";
 
   return (
     <AuthShell
       eyebrow={eyebrow ?? (restaurant ? "Personal del local" : "Personal")}
       title={title}
       description={description}
-      footerHref={changeLocal ? "/restaurant/local-login" : footerHref}
-      footerLabel={resolvedFooter}
+      footerHref={footerHref}
+      footerLabel={footerLabel}
+      footerAction={
+        changeLocal
+          ? {
+              label: changeLocalLabel,
+              onClick: () => {
+                changeLocalSession();
+                router.push("/restaurant/login");
+              },
+            }
+          : undefined
+      }
       brand={
         restaurant ? (
           <BrandMark

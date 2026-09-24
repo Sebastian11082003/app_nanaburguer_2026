@@ -12,6 +12,7 @@ import {
 import { restaurantAdminNavigation } from "@/src/config/restaurant-navigation";
 import { useAuthHydrated } from "@/src/hooks/use-store-hydration";
 import { STATION_BY_ROLE } from "@/src/lib/stations";
+import { changeLocal, logoutStaffKeepLocal } from "@/src/lib/staff-session";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 
@@ -69,7 +70,12 @@ export default function RestaurantAdminLayout({
   }, [hydrated, user, router]);
 
   function handleLogout() {
-    logout();
+    logoutStaffKeepLocal();
+    router.push("/restaurant/login");
+  }
+
+  function handleChangeLocal() {
+    changeLocal();
     router.push("/restaurant/login");
   }
 
@@ -130,13 +136,22 @@ export default function RestaurantAdminLayout({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="btn-ghost px-3 py-2 text-xs sm:px-4 sm:text-sm"
-          >
-            Salir
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleChangeLocal}
+              className="btn-ghost px-3 py-2 text-xs sm:px-4 sm:text-sm"
+            >
+              Cambiar local
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="btn-ghost px-3 py-2 text-xs sm:px-4 sm:text-sm"
+            >
+              Salir
+            </button>
+          </div>
         </header>
 
         <div className="flex-1 p-4 sm:p-6 md:p-8">{children}</div>

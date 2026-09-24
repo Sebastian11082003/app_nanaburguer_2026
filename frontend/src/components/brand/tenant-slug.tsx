@@ -1,6 +1,6 @@
 /**
  * Visible tenant id. After restaurant-login, every restaurant surface
- * must show this — name alone is not enough in a multi-tenant ERP.
+ * must show this — name alone is not enough in a multi-tenant POS SaaS.
  */
 export function TenantSlug({ slug }: { slug: string }) {
   return (

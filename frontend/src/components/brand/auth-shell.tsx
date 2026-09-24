@@ -10,6 +10,8 @@ interface AuthShellProps {
   children: ReactNode;
   footerHref?: string;
   footerLabel?: string;
+  /** Prefer this over the footer link when the action must clear persist. */
+  footerAction?: { label: string; onClick: () => void };
   /**
    * What to render above the title. Defaults to the generic platform mark
    * — pass a tenant `<BrandMark name=.. logoUrl=.. />` explicitly on
@@ -26,6 +28,7 @@ export function AuthShell({
   children,
   footerHref = "/",
   footerLabel = "Volver al inicio",
+  footerAction,
   brand,
 }: AuthShellProps) {
   return (
@@ -51,12 +54,22 @@ export function AuthShell({
         </div>
 
         <div className="mt-6 text-center">
-          <Link
-            href={footerHref}
-            className="text-sm text-muted transition hover:text-paper"
-          >
-            {footerLabel}
-          </Link>
+          {footerAction ? (
+            <button
+              type="button"
+              onClick={footerAction.onClick}
+              className="text-sm text-muted transition hover:text-paper"
+            >
+              {footerAction.label}
+            </button>
+          ) : (
+            <Link
+              href={footerHref}
+              className="text-sm text-muted transition hover:text-paper"
+            >
+              {footerLabel}
+            </Link>
+          )}
         </div>
       </div>
     </main>
