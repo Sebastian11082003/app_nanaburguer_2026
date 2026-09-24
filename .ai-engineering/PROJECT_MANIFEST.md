@@ -2,21 +2,21 @@
 
 ## Información General
 
-**Nombre del Proyecto:** NanaBurguer SaaS
+**Nombre del Proyecto:** NanaBurguer / RestoOS
 
-**Versión:** 1.0.0
+**Versión:** 0.4.55
 
-**Estado:** MVP / beta en `dev`
+**Estado:** MVP / beta en `dev` (trabajo local)
 
-**Tipo de Proyecto:** ERP vertical gastronómico (SaaS multi-tenant)
+**Tipo de Proyecto:** POS SaaS para restaurantes y gastrobares (multi-tenant)
 
-**Dominio:** Operación de restaurantes (POS, cocina, caja, domicilio, admin)
+**Dominio:** Operación de salón (mesas, cocina, caja, domicilio, admin del local + plataforma)
 
 ---
 
 # Objetivo
 
-Construir una plataforma SaaS escalable para administrar restaurantes, pedidos, cocina, caja, clientes y reportes.
+Construir un POS SaaS (RestoOS) para que varios restaurantes operen pedidos, cocina, caja y domicilio. No es un ERP ni un software contable.
 
 ---
 
@@ -106,3 +106,4 @@ Consultar:
 - Documentar cambios importantes.
 - Mantener compatibilidad entre módulos.
 - `/restaurant/*` es mobile-first (DEC-009).
+- El producto es POS SaaS (DEC-008 / ADR-024), no ERP.

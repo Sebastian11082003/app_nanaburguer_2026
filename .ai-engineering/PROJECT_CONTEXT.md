@@ -6,7 +6,7 @@ Muchos restaurantes pequeños gestionan pedidos manualmente.
 
 ## Solución
 
-ERP vertical para restaurantes, entregado como SaaS multi-tenant. El MVP actual es el núcleo operativo (pedidos, cocina, caja, roles). No es un ERP horizontal (contabilidad, nómina, inventario) ni un POS de una sola tienda.
+**RestoOS**: POS SaaS multi-tenant para restaurantes y gastrobares (referencia: Loggro Restobar). El MVP es el núcleo de salón (pedidos, cocina, caja, roles, domicilio). No es un ERP, ni contabilidad/nómina, ni un POS de una sola tienda sin tenancy.
 
 ## Usuarios
 
@@ -27,4 +27,4 @@ ERP vertical para restaurantes, entregado como SaaS multi-tenant. El MVP actual 
 - SaaS multi-tenant: cada local se identifica por slug. Tras el login del restaurante, nombre + slug no se ocultan.
 - `/restaurant/*` es mobile-first: el POS se opera en teléfono.
 - Debe poder desplegarse en Docker.
-- Barra de calidad de ERP: el agente verifica flujos de tenant antes de pedir revisión humana. La revisión/testing del dueño es al cierre de beta en `dev`.
+- Barra de calidad del POS SaaS: el agente verifica flujos de tenant (slug, aislamiento, chrome de marca) antes de pedir revisión humana. La revisión/testing del dueño es al cierre de beta en `dev`.

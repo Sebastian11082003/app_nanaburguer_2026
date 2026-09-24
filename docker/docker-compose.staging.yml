@@ -1,0 +1,77 @@
+# Staging stack for RestoOS (API + frontend + Postgres).
+# Usage:
+#   cp docker/.env.staging.example docker/.env.staging
+#   # edit secrets
+#   docker compose -f docker/docker-compose.staging.yml --env-file docker/.env.staging up --build -d
+#
+# Stop other containers that bind 5432 first (local FoodLink / other DBs).
+
+services:
+  db:
+    image: postgres:15
+    container_name: restoos_staging_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - restoos_staging_pg:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    networks:
+      - restoos_staging_net
+
+  api:
+    build:
+      context: ../backend/api
+      dockerfile: Dockerfile.prod
+    container_name: restoos_staging_api
+    restart: unless-stopped
+    env_file:
+      - .env.staging
+    environment:
+      NODE_ENV: production
+      PORT: ${API_PORT:-3000}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3001}
+    ports:
+      - "${API_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - restoos_staging_net
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    container_name: restoos_staging_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+    ports:
+      - "${FRONTEND_PORT:-3001}:3000"
+    depends_on:
+      - api
+    networks:
+      - restoos_staging_net
+
+volumes:
+  restoos_staging_pg:
+
+networks:
+  restoos_staging_net:
+    driver: bridge

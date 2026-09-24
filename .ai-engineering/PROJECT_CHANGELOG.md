@@ -1,5 +1,31 @@
 # PROJECT CHANGELOG
 
+## v0.4.55
+
+- HU-026: puerto `BillingProvider` + simulador local. Emitir/rechazar guarda la respuesta sin pisar el recibo POS. No es DIAN/Factus (ADR-025).
+- QA: Jest 90/90. Smoke: accept → CUFE `SIM-` + provider `restoos-simulator`; print sin filtrar fiscal; segundo accept 400; reject 201.
+
+## v0.4.54
+
+- Cobro CASH y movimientos de caja exigen turno OPEN (`assertOpenSession`). El POS comprueba la sesión antes de cerrar el ticket.
+- Login: `html` arranca en `dark` + `forcedTheme` para quitar el overlay de hidratación de next-themes.
+- QA 2026-09-23: Jest 85/85; smoke CASH sin caja 400 / con caja 201; login plataforma y personal sin overlay.
+
+## v0.4.53
+
+- Migración: alinear columnas de `cash_session` con Prisma (abrir/cerrar caja dejaba de fallar 500 en la BD local).
+- Smoke local: health, plataforma, branding `Nana-neiva`, dine-in→cocina→cobro, pickup, reportes, turno de caja.
+
+## v0.4.52
+
+- Corte de QA del MVP local: `docs/mvp-production-readiness.md` (sustituye la auditoría v0.4.9).
+- Plataforma: nav solo Dashboard + Restaurantes (se eliminaron 404 de reports/billing/settings).
+
+## v0.4.51
+
+- DEC-008 corregido: RestoOS es POS SaaS multi-tenant (tipo Loggro Restobar), no ERP.
+- ADR-024. Contexto, manifiesto, alcance y sdd-mapping alineados.
+
 ## v0.1
 
 - Arquitectura inicial.
@@ -276,7 +302,7 @@
 
 ## v0.4.20
 
-- DEC-008: el producto se clasifica como ERP vertical de restaurantes. El MVP es el núcleo operativo.
+- DEC-008 (histórico): se clasificó el producto como ERP vertical. **Sustituido en v0.4.51 / ADR-024:** es POS SaaS (Loggro Restobar), no ERP.
 
 ## v0.4.19
 

@@ -270,7 +270,8 @@ So that kitchen staff can prepare the order.
 
 - The system must generate a kitchen ticket.
 - The order status must change to SENT_TO_KITCHEN.
-- The order must become locked for modification.
+- Quantity/notes edits and deleting a line are locked after CREATED.
+- Additional items may still be added until the order is CLOSED.
 
 ### Priority
 
@@ -701,14 +702,16 @@ Implemented
 ### Description
 
 As a cashier,  
-I want to generate electronic invoices connected to DIAN,  
-So that the restaurant complies with fiscal regulations.
+I want to generate an electronic invoice through a billing provider  
+and keep the provider’s response,  
+So that the restaurant can later connect DIAN/Factus without changing the POS flow.
 
 ### Acceptance Criteria
 
-- The system must integrate with external billing APIs.
-- The system must generate fiscal invoices.
-- The system must store external invoice responses.
+- The system must call a billing provider port (issue / reject).
+- The system must generate a fiscal identifier (CUFE in the local simulator).
+- The system must store the provider response without replacing the POS receipt snapshot.
+- Factus/DIAN production remains a future adapter behind the same port.
 
 ### Priority
 
@@ -716,7 +719,7 @@ Low
 
 ### Status
 
-Planned
+Implemented (local simulator; not DIAN)
 
 ---
 
@@ -765,6 +768,118 @@ So that I can complete orders digitally.
 ### Priority
 
 Low
+
+### Status
+
+Planned
+
+---
+
+# Sprint 5 — Salón piloto (superar Loggro Restobar)
+
+Incrementos para operar el turno en el restaurante. WhatsApp (HU-027),
+DIAN real y menú público siguen fuera.
+
+---
+
+## HU-029 — Change restaurant vs sign out
+
+**Actor:** Admin, Cashier, Waiter, Kitchen, Delivery
+
+### Description
+
+As staff,  
+I want “Cerrar sesión” to keep this restaurant identified and “Cambiar local” to clear it,  
+So that the next person on the same POS does not re-type the slug, and a different venue is a deliberate action.
+
+### Acceptance Criteria
+
+- Sign-out keeps the tenant slug/brand on `/restaurant/login`.
+- “Cambiar local” clears tenant + staff and shows the slug field.
+- If a slug is sent on staff-login, the email must belong to that restaurant.
+
+### Priority
+
+High
+
+### Status
+
+Implemented
+
+---
+
+## HU-030 — Second round: pending vs sent lines
+
+**Actor:** Waiter, Cashier, Admin
+
+### Description
+
+As a waiter,  
+I want new items on an occupied table to stay on the same ticket, marked pending until I send them to kitchen,  
+So that a second round does not open an empty extra order (Loggro) and kitchen only sees what I sent.
+
+### Acceptance Criteria
+
+- Tapping an occupied table resumes the same open order.
+- Lines added after SENT_TO_KITCHEN show as pending until “Enviar a cocina”.
+- Already sent lines stay locked (qty/notes) per HU-010.
+- Kitchen KDS receives only the newly sent lines (or a clear reprint of the delta).
+
+### Priority
+
+High
+
+### Status
+
+Planned
+
+---
+
+## HU-031 — Kitchen in the POS bar
+
+**Actor:** Admin, Cashier, Kitchen
+
+### Description
+
+As salon staff,  
+I want Cocina in the same POS navigation as Mesas,  
+So that I do not leave the floor app for a separate KDS site (Loggro digital comandas).
+
+### Acceptance Criteria
+
+- ADMIN and CASHIER see “Cocina” in the POS bar.
+- KITCHEN still lands on the KDS as home.
+- The board lists today’s tickets; it does not keep a multi-day uncleared backlog as the default view.
+
+### Priority
+
+High
+
+### Status
+
+Planned
+
+---
+
+## HU-032 — Navigation from assigned permissions
+
+**Actor:** Admin
+
+### Description
+
+As an administrator,  
+I want each person to see only the POS modules I assign,  
+So that a waiter is not limited to a hardcoded station map and I can grant extra functions without a new role.
+
+### Acceptance Criteria
+
+- ADMIN sees all POS modules.
+- WAITER default is Mesas + ticket; extra modules follow assigned permissions, not only `UserRole`.
+- DELIVERY home is the delivery queue, never the table floor.
+
+### Priority
+
+High
 
 ### Status
 

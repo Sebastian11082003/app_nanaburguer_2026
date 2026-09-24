@@ -4,9 +4,13 @@
 
 # Project Overview
 
-NanaBurguer is a multi-role restaurant operations SaaS platform designed to centralize restaurant workflows including dine-in orders, delivery management, pickup orders, payments, reports, and operational administration.
+**RestoOS** is a multi-tenant **POS SaaS** for restaurants and bars (commercial reference: Loggro Restobar). Nana Burger is the pilot tenant, not the product class.
 
-The system follows a modular monolith architecture using Clean Architecture principles and is designed for future SaaS scalability.
+It centralizes salon workflows: dine-in, pickup, delivery, kitchen, cash drawer, POS receipts, reports, and restaurant admin — plus a platform back-office to provision tenants.
+
+It is **not** an ERP, payroll system, or generic SME accounting suite. Inventory and electronic invoicing are out of the current MVP; adding them later does not change the product class.
+
+The system is a modular monolith (NestJS + Next.js + PostgreSQL) intended to run locally in Docker.
 
 ---
 
@@ -148,7 +152,7 @@ The current MVP does not include:
 
 Planned future integrations include:
 
-- DIAN electronic billing
+- Factus / DIAN as a real adapter on the HU-026 billing port
 - WhatsApp notifications
 - MercadoPago integration
 - Push notifications

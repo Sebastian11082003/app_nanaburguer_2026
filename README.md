@@ -2,7 +2,7 @@
 
 <div align="center">
 
-Enterprise Restaurant Management & POS SaaS Platform
+POS SaaS for restaurants and bars (RestoOS)
 
 Cloud-Native • Multi-Tenant Ready • Modular Architecture • API-First
 
@@ -33,7 +33,7 @@ Cloud-Native • Multi-Tenant Ready • Modular Architecture • API-First
 
 # 🧠 1. Project Vision
 
-NanaBurguer is a modern SaaS platform designed to digitalize restaurant operations through scalable backend architecture, modular domain separation, and enterprise-grade documentation practices.
+RestoOS (this repo: NanaBurguer) is a multi-tenant POS SaaS for restaurants and bars — not an ERP. It digitalizes salon operations (tables, kitchen, cash, delivery) with a modular monolith.
 
 The platform evolves from an MVP architecture toward a cloud-native scalable SaaS ecosystem.
 
@@ -243,6 +243,7 @@ backend/api/
 | [ADR-014](./docs/ADR/ADR-014.md) | Reporting Module                    |
 | [ADR-015](./docs/ADR/ADR-015.md) | Future Integrations                 |
 | [ADR-016](./docs/ADR/ADR-016.md) | Multi-Tenant Preparation            |
+| [ADR-024](./docs/ADR/ADR-024.md) | Product class: POS SaaS (not ERP)   |
 
 ---
 
@@ -352,4 +353,4 @@ npm run start:dev
 
 # 🌎 16. Final Architecture Vision
 
-NanaBurguer aims to evolve into a fully scalable SaaS ecosystem capable of supporting multiple restaurants under a centralized cloud infrastructure with isolated tenant operations and enterprise-grade architecture.
+RestoOS aims to stay a POS SaaS for many restaurants (isolated tenants), runnable locally in Docker and later on a single host — not an ERP suite.

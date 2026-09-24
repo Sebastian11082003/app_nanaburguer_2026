@@ -1,3 +1,4 @@
+/** Platform back-office only. Reports/billing/settings have no pages yet — do not link 404s. */
 export const platformNavigation = [
   {
     label: "Dashboard",
@@ -7,20 +8,5 @@ export const platformNavigation = [
   {
     label: "Restaurantes",
     href: "/platform/restaurants",
-  },
-
-  {
-    label: "Reportes",
-    href: "/platform/reports",
-  },
-
-  {
-    label: "Facturación",
-    href: "/platform/billing",
-  },
-
-  {
-    label: "Configuración",
-    href: "/platform/settings",
   },
 ];

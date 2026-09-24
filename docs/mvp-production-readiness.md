@@ -1,187 +1,159 @@
-# Auditoría: MVP funcional vs salida a producción
+# QA y salida del MVP (piloto local)
 
-Revisión cruzada de código (`dev` @ v0.4.9) contra el contrato escrito:
+Corte **v0.4.55**. Producto: POS SaaS RestoOS (ADR-024), no ERP. Entorno de trabajo: **local (Docker)**.
 
-- [functional-scope.md](functional/functional-scope.md)
-- [user-stories.md](functional/user-stories.md)
-- [bussines-rules.md](functional/bussines-rules.md)
-- [vision_alcance_actores.md](vision_alcance_actores.md)
-- [security-baseline.md](architecture/security-baseline.md)
-- [10-devops/local-setup.md](10-devops/local-setup.md)
+Este archivo sustituye la auditoría de v0.4.9. Varios “P0” de entonces ya están en código (caja de turno, poll de cocina, volume de logos, reportes con rango).
 
-No es una propuesta de features nuevas. Es qué falta **respecto de lo ya prometido** y qué falta **para poner un piloto en un VPS**.
+Contrato: [functional-scope.md](functional/functional-scope.md), [user-stories.md](functional/user-stories.md), [10-devops/local-setup.md](10-devops/local-setup.md).
 
 ---
 
 ## Veredicto
 
-El vertical operativo del MVP **existe**: login por rol, mesas, menú, órdenes DINE_IN / DELIVERY / PICKUP, cocina, cobro, factura POS (snapshot), domicilios, usuarios/roles, dashboard/reportes básicos, movimientos de caja, compose local + overlay HTTPS.
+El **turno de restaurante del MVP está construido**. Un local puede: entrar, armar mesa / llevar / domicilio, cocina, cobrar, imprimir recibo snapshot, abrir/cerrar caja, ver reportes del admin.
 
-Eso es un **MVP de piloto local**, no un **SaaS listo para producción pública**.
+Eso es un **MVP de piloto en la máquina** (o LAN). **No** es un SaaS público en VPS.
 
-Las HUs 001–025 están marcadas `Implemented`. Varias cumplen el flujo feliz; **no todas cumplen sus criterios de aceptación**. Las HUs 026–028 (Factus/DIAN, WhatsApp, pagos online) siguen `Planned` y el alcance funcional las deja **fuera**.
+QA: 🟡 — Jest **90/90**. Smoke API **2026-09-23**: mesa→cocina→CASH+factura+reportes; CASH sin turno 400. Login sin overlay. Next `localhost:3001`. Sin E2E UI.
 
-**Inventario no está implementado.** Tampoco está en el MVP. No hay modelo, API ni pantalla.
-
----
-
-## 1. Qué el contrato incluye y excluye
-
-### Dentro del MVP (hay que poder operar un turno)
-
-Autenticación y RBAC, usuarios, menú/categorías, órdenes dine-in, delivery y pickup, comanda de cocina, cobro, recibo POS, cierre de caja del día, reportes operativos, tenant en BD compartida.
-
-### Fuera del MVP (no bloquear el piloto)
-
-| Tema | Dónde lo dice el contrato |
-|---|---|
-| Inventario / insumos / recetas / stock | `functional-scope.md` → Current Technical Limitations |
-| Multi-sede | mismo + visión |
-| Facturación electrónica real (DIAN/Factus) | HU-026 Planned; `factusApiKey` existe y no se usa |
-| App del cliente / menú público / pedidos online | visión: Customer = Future |
-| Pagos online / MercadoPago | HU-028 Planned |
-| WhatsApp / push / notificaciones en tiempo real | HU-027 + limitaciones técnicas |
-| Impresora térmica ESC/POS | diferido a propósito; hoy `window.print()` |
+Inventario, DIAN real, WhatsApp, menú público e impresora térmica **siguen fuera**. No bloquean sacar este MVP.
 
 ---
 
-## 2. Inventario (respuesta directa)
+## 1. Qué sí funciona (código actual)
 
-No hay nada que “ya funcione”:
-
-- Prisma: no hay `Ingredient`, `Recipe`, `Stock`, `Purchase`, `Supplier`, ni campo `stock` en `MenuItem`.
-- Backend: no hay módulo.
-- Frontend: no hay ítem de nav.
-- Las ventas **no descuentan** insumos. `isAvailable` es un 86 manual (toggle), no stock.
-
-Si Nana Burger necesita saber “quedan 12 panes”, eso es **módulo nuevo**, no un hueco del MVP actual. Priorizarlo ahora contradice el alcance escrito y la regla 12 (no inventar features grandes).
-
----
-
-## 3. Qué sí está implementado (y se validó E2E local)
-
-| Dominio | Qué hay | Límite real |
+| Flujo | Estado | Evidencia |
 |---|---|---|
-| Plataforma | Login, crear tenant + admin, conteo de restaurantes | Sin ingresos consolidados, sin suspender tenant desde UI rica |
-| Auth | JWT staff + restaurant + platform; usuario inactivo no entra | Token 1 día (staff) / 7 días (platform). Sin refresh. Baseline pide 15 min |
-| Usuarios | CRUD, rol, activo, reset password por admin | Email `@unique` **global** + único por tenant: dos restaurantes no pueden compartir email |
-| Roles | 5 plantillas + matriz; JWT `permissions[]` | `@Permissions` solo en users/roles/reports/cash. El resto es `@Roles` de estación |
-| Menú | Categorías, productos, precio, disponible | Sin foto, sin costo, sin impuesto por ítem |
-| Mesas | CRUD, ocupación, transferir | — |
-| Mesero | Tomar/continuar, enviar cocina, comanda browser | Cocina no se actualiza sola (carga al entrar, sin poll) |
-| Cocina | Cola → preparando → listo | Sin poll; el tablero muestra **cantidad de ítems**, no las líneas (la comanda del mesero sí las tiene) |
-| Caja | Cobrar READY, POS pickup, despacho delivery, movimientos INCOME/EXPENSE | Pago **CASH** sí escribe `CashMovement` (`SALE_PAYMENT`). CARD/TRANSFER no. No hay **cierre de turno** (ver §4) |
-| Delivery | Alta con cliente/dirección, despachar, entregar | Pickup **sin hora estimada** (BR-017 / HU-014) |
-| Pagos | CASH/CARD/TRANSFER/OTHER configurables; cambio en efectivo; propina opcional | El 5% es **propina sugerida**, no recargo de servicio (BR-020 / HU-017) |
-| Factura POS | Snapshot + imprimir + “aceptar” (simula DIAN) | No es factura fiscal |
-| Reportes | Dashboard, ventas/día, top productos, mix de pago, resumen delivery | Sin filtro de fechas en UI; sin reporte por estado de orden; sin reporte pickup aparte; `salesByDay` agrupa por UTC |
-| Caja (libro) | Lista + alta de movimientos; saldo en UI | No hay sesión, arqueo, ni snapshot histórico de cierre |
-| Branding | Logo/nombre/color por tenant; login por slug | Logos en disco del contenedor API: **compose sin volume** `uploads/` → se pierden al recrear |
-| Deploy | Compose local :80/:3000; overlay Caddy HTTPS; gate de secretos de example | Falta VPS + DNS + secretos reales + backups |
+| Plataforma: login, crear tenant, inhabilitar/activar | OK | API + UI `/platform/restaurants` |
+| Login local (slug → personal; correo del restaurante como ADMIN) | OK | `restaurant-auth` + `staff-login` |
+| Mesas: ocupar, retomar, liberar vacío, transferir | OK | `TablesService` + POS |
+| Dine-in: ítems → cocina → listo → cobro | OK | E2E manual histórico |
+| Pickup / domicilio (crear, retomar, despachar, cobro caja) | OK | v0.4.30–v0.4.46 |
+| KDS: líneas del ticket + poll 8 s | OK | `kitchen-board.tsx` |
+| Caja de turno: abrir, preview por medio, cerrar con snapshot | OK | `CashSession` + UI admin/cajero |
+| Factura POS snapshot + imprimir + “aceptar” simulado | OK | no es DIAN |
+| Reportes admin: rango de fechas, ventas, productos, canales, por estado | OK | `/reports/*` + UI |
+| Roles/permisos + estaciones al crear tenant | OK | seed de plantillas |
+| Logos en volume Docker (`api_uploads`) + backup/restore script | OK | compose MVP |
+| Compose local `:80` + API `:3000` | **API + Next en host**, Postgres en Docker `nanaburguer_db` | Smoke 2026-09-21: health OK. Frontend `http://localhost:3001` |
 
 ---
 
-## 4. Huecos del MVP **documentado** (HUs “Implemented” incompletas)
+## 2. Qué no funciona / no entra en este MVP
 
-Estos sí cuentan como “hace falta implementar” para un MVP fiel al contrato. Ordenados por impacto en un turno real.
-
-### P0 — el restaurante no puede cerrar el día como promete el contrato
-
-**HU-025 / BR-022 / BR-023 — Cierre de caja**
-
-Criterio: totales del día, totales por medio de pago, resumen de cierre, **histórico de cierres**.
-
-Hoy: el libro mezcla egresos/ingresos manuales + **ingresos automáticos solo si el cobro fue CASH**. Tarjeta y transferencia no entran a `CashMovement`. No hay `CashSession` / `CashClosing` (apertura, arqueo, snapshot por turno). El “cuadre por medio de pago” de reportes es **histórico de toda la vida**, no del turno.
-
-Sin esto, el cajero de Nana no puede hacer el arqueo de fin de jornada que el propio alcance lista.
-
-### P0 — persistencia y backup si se sube a un VPS
-
-- Logos: `uploads/` no está en un volume de Docker → se pierden al redeploy.
-- Postgres sí tiene volume; **no hay backup automatizado ni runbook de restore**.
-- Baseline de seguridad pide backups; el compose no los tiene.
-
-Sin backup + volume de uploads, un piloto en VPS es frágil el primer día que se recrea el contenedor.
-
-### P1 — criterios de aceptación que el código no cumple
-
-| ID | Promesa | Realidad |
-|---|---|---|
-| HU-014 / BR-017 | Pickup con hora estimada | No hay campo ni UI |
-| HU-017 / BR-020 | Recargo de servicio 5% en el total y el recibo | `taxCents` siempre 0. El 5% es propina **sugerida** y opcional |
-| HU-023 | Órdenes agrupadas por estado, filtrable por fecha | No hay endpoint ni pantalla |
-| HU-012 | Cancelar **ítem** con autorización admin + motivo + auditoría | En `CREATED` se **borra**. Después de cocina el código dice “future per-item cancel”. Cortesía no es cancelación |
-| HU-020 / HU-021 / HU-022 | Filtro de fechas / tendencia mensual | `GET /reports/revenue-range` existe; la UI de ventas/productos/domicilios **no lo usa**. `salesByDay` es all-time en UTC |
-| Story map | Reporte de pickup | No existe; delivery summary mezcla o ignora pickup |
-| HU-010 / BR-010 | Tras enviar a cocina, la orden no se modifica | Luego se relajó a propósito (agregar ítems post-cocina). El contrato no se actualizó |
-| Visión Delivery vs HU-015 | Visión: delivery no actualiza logística. HU: sí | El código sigue la HU (despachar/entregar). La visión está desactualizada |
-
-### P1 — operación de cocina en un turno real
-
-`KitchenBoard` carga al montar. No hay poll ni websocket. El cocinero tiene que recargar la página para ver pedidos nuevos. Cada tarjeta muestra `#orden · N items`, no “2× Hamburguesa”. La comanda imprimible sí tiene las líneas.
-
-El alcance lista “notificaciones en tiempo real” como **fuera**; un poll de 5–10 s **y** pintar `order.items` **sí** son razonables para el MVP (no es WhatsApp ni push).
-
-### P1 — seguridad que el baseline exige y el código no tiene
-
-| Baseline | Estado |
+| Tema | Por qué no bloquea el piloto local |
 |---|---|
-| JWT 15 min + refresh | Staff 1d, platform 7d, sin refresh |
-| Rate limiting | No hay (ni Nest throttler ni proxy) |
-| `@Permissions` en todos los endpoints sensibles | Solo users/roles/reports/cash |
-| Email único por tenant, no global | `User.email @unique` global |
-| HSTS (HTTPS) | Caddy lo puede dar; el compose local no |
-| Logs con requestId / audit de acciones | Hay `OrderStatusHistory` + createdBy; no hay audit log general |
-
-Ampliar `@Permissions` a **todo** el monolito en un PR viola la regla 12. Cubrir solo lo que el siguiente incremento toque.
+| Inventario / recetas / kardex | Fuera del alcance funcional |
+| Facturación electrónica DIAN/Factus | HU-026 tiene simulador local (v0.4.55); Factus real sigue fuera |
+| WhatsApp, MercadoPago, app del cliente | HU-027/028 |
+| Impresora térmica ESC/POS | Scaffold; hoy `window.print()` |
+| Landing `/public/*` | “En construcción”; el local entra por `/restaurant/login` |
+| Reportes/facturación/config de **plataforma** | No hay pantallas; el nav ya no las enlaza (v0.4.52) |
+| Suite E2E (Playwright/Cypress) | QA manual + Jest |
+| VPS / DNS / HTTPS público | Recorte: trabajo local |
+| ERP / contabilidad / nómina | ADR-024 |
 
 ---
 
-## 5. Qué hace falta para **salir a producción** (ops, no producto)
+## 3. Huecos reales que sí importan para un día de Nana
 
-El overlay Caddy + gate de secretos **ya está escrito**. Falta trabajo de operador + un par de endurecimientos de artefacto:
+Ordenados para **sacar el MVP local**, no para paridad Loggro.
 
-1. VPS con Docker Compose ≥ 2.24, puertos 80/443.
-2. DNS `app.` + `api.` al VPS.
-3. `.env` real: `JWT_SECRET`, `POSTGRES_PASSWORD`, `PLATFORM_ADMIN_*`, `ALLOW_INSECURE_DEFAULTS=false`. Nunca los valores de example.
-4. Rebuild del frontend si cambia `NEXT_PUBLIC_API_URL`.
-5. Volume de `uploads/` + backup/restore de Postgres documentado y probado.
-6. Healthcheck ya existe (`/health`); falta alerta si cae (opcional en piloto de un tenant).
-7. No se provisiona VPS/DNS/Let’s Encrypt desde este agente.
+### P0 — probar el turno en el stack levantado
 
-AWS (`deployment-aws.md`) **no** es requisito del MVP. El runbook lo dice.
+No hay job CI que recorra mesa → cocina → cobro. Antes de usar el POS en el local hay que pasar el [smoke](#8-smoke-mínimo-del-mvp-local) con Docker arriba.
+
+### P1 — caja se puede saltar — **cerrado en v0.4.54**
+
+Pago CASH y movimientos de caja requieren sesión `OPEN`. El POS consulta el turno **antes** de cerrar el ticket. CARD/TRANSFER no exigen caja.
+
+### P1 — comanda e impresión
+
+Cocina/recibo dependen de la impresora del navegador/OS. En un teléfono de mesero es “compartir / imprimir”, no ticket térmico.
+
+### P1 — seguridad de piloto, no de SaaS público
+
+- JWT staff ~1 día, platform ~7 días; sin refresh (baseline pedía 15 min).
+- `@nestjs/throttler` está en `package.json` y **no** está cableado en `AppModule`.
+- Email de usuario único **global** (dos tenants no pueden repetir correo).
+- `@Permissions` no cubre todos los controllers (mucho sigue en `@Roles` de estación).
+
+Aceptable en local con `ALLOW_INSECURE_DEFAULTS=true`. No publicar así a internet.
+
+### P2 — contrato vs código (no paran un turno)
+
+| ID | Nota |
+|---|---|
+| HU-012 | Cancelar ítem post-cocina existe (ADMIN/CASHIER + motivo). Anular **ticket con productos** solo ADMIN. |
+| HU-017 | 5% en mesa va en `taxCents` (servicio). Propina sugerida al cobrar sigue aparte. |
+| HU-014 | `pickupAt` existe en POS mostrador y alta delivery. |
+| HU-010 | Ítems se pueden agregar después de cocina. Qty/notas y borrar línea solo en CREATED. |
+| HUs 001–025 | Marcadas Implemented; el happy path cubre el piloto. 026–028 Planned / fuera. |
+
+---
+
+## 4. Cobertura de pruebas
+
+| Capa | Qué hay | Qué falta |
+|---|---|---|
+| API Jest | 10 suites / **90 tests passing** (v0.4.55): caja + facturación electrónica simulada | Pagos, platform, KDS |
+| API e2e Nest | no hay carpeta `test/` e2e | — |
+| Frontend | 0 specs | POS, login, caja |
+| Manual | E2E dine-in + delivery documentado (v0.3.6) | Repetir smoke post v0.4.50 |
+
+---
+
+## 5. Cómo sacar el MVP (local)
+
+1. Levantar `docker compose -f docker-compose.yml up --build` **o** `docker-compose.dev.yml`.
+2. Pasar el smoke de la sección 8.
+3. Operar el turno en el navegador del teléfono/PC de la casa (LAN si hace falta `NEXT_PUBLIC_API_URL`).
+4. Backup: `docker/backup.sh` cuando haya datos reales.
+
+No hace falta VPS, inventario ni DIAN para declarar el MVP de salón listo.
 
 ---
 
 ## 6. Fuera de alcance (no implementar para “sacar el MVP”)
 
-- Inventario, compras, proveedores, recetas, merma.
-- Factus / DIAN real (el “aceptar factura” es simulación).
-- WhatsApp, MercadoPago, app del cliente, menú digital público.
-- Print-agent ESC/POS (scaffold en `print-agent/`; el usuario lo aplazó).
-- Multi-sede / subdominio por tenant.
-- Suite e2e automatizada (48 tests Jest unitarios; QA es 🟡).
-- Paridad Loggro (resoluciones, NIT fiscal, zonas de impresión, objetivos, etc.).
-- Landing pública `/public/*` (“under construction”) y nav de plataforma a `/platform/reports|billing|settings` (404). No bloquean el piloto de un tenant.
+- Inventario, compras, proveedores.
+- Factus / DIAN real.
+- WhatsApp, MercadoPago, menú digital público.
+- Print-agent USB.
+- Multi-sede.
+- Paridad visual Loggro.
+- Convertir el POS en ERP (ADR-024).
 
 ---
 
-## 7. Orden recomendado (estabilidad → clean → patrones)
+## 7. Orden si el smoke falla o el turno se traba
 
-Si el objetivo es **Nana Burger operando un día real en un VPS**:
+1. Stack / seed / login (P0).
+2. Vertical mesa → cocina → cobro → cierre de caja.
+3. Domicilio despacho + cobro.
+4. Recién ahí: impresora / LAN / credenciales del piloto Nana.
+5. Impresora térmica: solo si el usuario la pide.
 
-1. **Cierre de caja de turno** (sesión: apertura → ventas del turno por medio → egresos → snapshot de cierre). Eso cierra HU-025 de verdad.
-2. **Volume de uploads + backup/restore** en el runbook. Sin esto no se sube a VPS.
-3. **Poll de cocina + líneas del pedido en el tablero.** Desbloquea el KDS en un turno real sin websockets.
-4. Operador: VPS + DNS + secretos + HTTPS.
-5. Recién ahí, si el usuario lo pide: impresora térmica.
+---
 
-Si el objetivo es **cerrar el contrato de HUs** (después del piloto):
+## 8. Smoke mínimo del MVP local
 
-6. Hora estimada de pickup.
-7. Decidir: ¿el 5% es propina sugerida (actualizar BR-020) o recargo de servicio (implementarlo)?
-8. Cancelar ítem post-cocina con motivo (no borrar).
-9. Filtro de fechas en reportes + reporte por estado + pickup.
-10. Alinear visión Delivery y BR-010 con el código actual.
+Credenciales seed (`ALLOW_INSECURE_DEFAULTS=true`):
 
-Si el objetivo es **paridad Loggro / inventario**: módulo nuevo, alcance y HUs nuevas. No es el siguiente paso del MVP escrito.
+- Plataforma: `admin@nanaburger.com` / `123456` → `/platform/login`
+- Tenant demo `nana-neiva` (si existe): `admin@nana-neiva.test` / `123456` y `kitchen@nana-neiva.test` / `123456` → `/restaurant/login`
+
+| # | Paso | OK si |
+|---|---|---|
+| 1 | `GET /health` | `{"ok":true}` |
+| 2 | Platform login → lista restaurantes | 200; inhabilitar no borra datos |
+| 3 | Identificar slug + login admin del local | Chrome con logo/nombre/slug |
+| 4 | Abrir caja (fondo) | Sesión OPEN. Sin esto, cobro CASH y movimientos → 400 |
+| 5 | Mesa: producto → enviar cocina | Ticket en KDS con nombre de producto |
+| 6 | Cocina: cola → preparando → listo (esperar poll o avanzar) | Caja ve Listo |
+| 7 | Cobrar CASH | Sale + invoice snapshot (exige paso 4) |
+| 8 | Pickup o domicilio: crear, despachar, cobrar | Canal etiquetado (no “Mesa —”) |
+| 9 | Cerrar caja con contado | Snapshot en historial |
+| 10 | Reportes admin con rango de hoy | Números coherentes con el cobro |
+
+Si 1–7 y 9 pasan, el MVP de salón se puede usar. 8 es el segundo canal. 10 es control, no bloquea el primer turno.

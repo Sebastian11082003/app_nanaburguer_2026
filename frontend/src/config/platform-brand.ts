@@ -2,7 +2,7 @@
  * Identity of the SaaS PLATFORM itself — as opposed to any individual
  * tenant restaurant's brand (see `store/restaurant.store.ts`).
  *
- * This is a multi-tenant product meant to be sold to many different
+ * This is a multi-tenant POS SaaS (not an ERP) meant to be sold to many different
  * restaurants/gastrobares/etc, so the platform's own screens (landing
  * `/`, the platform admin back-office `/platform/*`, and `/restaurant/login`
  * until the operator types a slug that matches a restaurant)

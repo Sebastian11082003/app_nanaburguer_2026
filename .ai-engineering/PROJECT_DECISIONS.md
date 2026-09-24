@@ -83,7 +83,7 @@ Unificar SaaS operativo + futuro landing de pedidos online bajo la misma identid
 
 ## DEC-007
 
-Identidad de tenant obligatoria (ERP multi-tenant)
+Identidad de tenant obligatoria (POS SaaS multi-tenant)
 
 Después del login del restaurante, toda superficie `/restaurant/*` **ya autenticada** muestra **logotipo + nombre + slug**. Si hay `logoUrl`, el mark es esa imagen, no la letra del nombre.
 
@@ -93,7 +93,7 @@ El chrome compartido (`PosShell`, admin, hubs) lee `restaurant-auth` **después*
 
 Motivo:
 
-Esto es un ERP profesional, no un login suelto. El operador debe ver en qué tenant está. El dueño no debería tener que cazar huecos de marca en cada pantalla.
+Esto es un POS SaaS de varios locales, no un login suelto ni la marca de un solo cliente. El operador debe ver en qué tenant está. El dueño no debería tener que cazar huecos de marca en cada pantalla.
 
 ---
 
@@ -101,15 +101,21 @@ Esto es un ERP profesional, no un login suelto. El operador debe ver en qué ten
 
 Tipo de producto
 
-Clase: **ERP vertical de restaurantes** (SaaS multi-tenant).
+Clase: **POS SaaS para restaurantes y gastrobares** (multi-tenant).
 
-Hoy cubre el núcleo operativo: autenticación por tenant, RBAC, mesas/POS, KDS, domicilio/recoger, caja y reportes.
+Nombre de plataforma: **RestoOS**. Primer tenant piloto: Nana Burger (`nana-neiva`).
 
-Fuera del MVP (no inventar): inventario, contabilidad, nómina, Factus/DIAN, Rappi, app de cliente, sucursales reales.
+Referencia comercial: **Loggro Restobar** (en Loggro vive bajo “POS para bares y restaurantes”, no bajo “ERP para grandes empresas”).
+
+Hoy cubre el núcleo de salón: autenticación por tenant, RBAC, mesas/POS, KDS, domicilio/recoger, caja y reportes.
+
+Fuera del tipo de sistema (no fingir): ERP, contabilidad, nómina, plan de cuentas, software administrativo de Pyme.
+
+Fuera del MVP (módulos posteriores, si se piden): inventario, menú digital público, Factus/DIAN, Rappi, app de cliente, sucursales reales.
 
 Motivo:
 
-Un ERP se reconoce por tenant, roles, trazabilidad y módulos que no se pisan. Un POS suelto no exige eso. La visión es ERP; el incremento actual no debe fingir módulos que aún no existen.
+Un POS multi-tenant sigue siendo POS. Tenant, roles y trazabilidad no convierten el producto en ERP. Inventario o facturación electrónica, si llegan, son módulos de un Restobar — no un cambio de categoría. Ver [ADR-024](../docs/ADR/ADR-024.md).
 
 ---
 

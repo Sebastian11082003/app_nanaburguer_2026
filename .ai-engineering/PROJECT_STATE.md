@@ -20,7 +20,7 @@
 
 🟢 Frontend (build OK, verticales clave probados)
 
-🟡 QA (pruebas manuales/API OK; falta suite automatizada)
+🟡 QA (Jest API; sin E2E; smoke local documentado en mvp-production-readiness)
 
 🟡 Deployment (compose MVP local + overlay HTTPS/Caddy; secretos de example bloqueados en arranque público)
 
@@ -30,7 +30,13 @@
 
 ## Sprint Actual
 
-Sprint 4 — Delivery + validación E2E local
+Sprint 5 — Salón piloto (superar Loggro Restobar)
+
+- **HU-029** Cambiar local vs cerrar sesión — Implemented (este incremento)
+- **HU-030** Segunda ronda: líneas pendientes vs enviadas — Planned
+- **HU-031** Cocina en la barra POS — Planned
+- **HU-032** Nav por permisos asignados — Planned
+- Fuera del sprint: HU-027 WhatsApp, DIAN real, inventario como ERP
 
 ---
 
@@ -41,6 +47,39 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 ---
 
 ## Último avance
+
+### HU-026 simulador fiscal (v0.4.55)
+
+- `POST /invoices/:id/accept` y `reject` pasan por `BillingProvider`.
+- Payload en `responseJson.electronicBilling`; `GET /print` sigue siendo el ticket POS.
+- Factus/DIAN real no entra. HU-027/028 siguen Planned.
+- Smoke salón 2026-09-23: mesa→cocina (comanda “Burger smoke”)→READY→CASH 15750 (5% servicio)→invoice; reportes `revenue=45750`.
+
+### Caja OPEN + hidratación login (v0.4.54)
+
+- API: pago CASH y movimiento manual fallan sin sesión OPEN (`CASH_SESSION_REQUIRED`).
+- Frontend: `closeAndPayOrder` consulta el turno antes de `orders.close`, para no dejar tickets CLOSED sin cobro.
+- Login: `html` con clase `dark` y ThemeProvider `forcedTheme="dark"`.
+- QA 2026-09-23: Jest 85/85. Smoke API: movimiento y cobro CASH sin OPEN → 400; con OPEN → 201. Login `/platform/login` y `/restaurant/login` sin overlay de hidratación (el botón N de Next es Dev Tools, no un error). El cobro en UI no se recorrió: el relleno automático de contraseña está bloqueado en el navegador del agente.
+
+### QA del MVP local (v0.4.53)
+
+- Smoke contra Postgres local + API `localhost:3000` + Next `localhost:3001`.
+- Caja 500: la tabla `cash_session` tenía columnas snake_case viejas. Migración `20260922010000_align_cash_session_columns`. Abrir/cerrar turno OK.
+- Vertical salón OK: mesa → cocina → cobro CASH + factura. Pickup se crea. Reportes summary OK.
+- El slug real del piloto es `Nana-neiva` (no `nana-neiva`). `admin@nana-neiva.test` no existe; el branding público sí responde.
+
+### QA del MVP local (v0.4.52)
+
+- Corte de QA en `docs/mvp-production-readiness.md`: el turno de salón está construido; no hay E2E automatizado.
+- Plataforma: se quitaron enlaces a Reportes/Facturación/Configuración (404). Quedan Dashboard y Restaurantes.
+- Para sacar el MVP: levantar Docker y pasar el smoke de esa guía. Inventario/DIAN/VPS no bloquean.
+
+### Clase de producto: POS SaaS, no ERP (v0.4.51)
+
+- DEC-008 corregido: **RestoOS** es un POS SaaS multi-tenant (tipo Loggro Restobar), no un ERP.
+- Nana Burger es el tenant piloto, no el tipo de sistema.
+- ADR-024. Inventario, DIAN y contabilidad no redefinen la categoría.
 
 ### Inhabilitar tenant (v0.4.50)
 
@@ -184,10 +223,11 @@ Backend/Frontend Engineer (coordinado por Orchestrator)
 - Cocina (hub + KDS) y admin heredan el mismo logotipo/slug del tenant. El piso espera hidratar la marca antes de pintar.
 - Abrir mesa no truena si dos creates piden el mismo `orderNumber`. Seed deja un producto del tenant para poder vender.
 
-### Tipo de producto (DEC-008)
+### Tipo de producto (DEC-008, corregido en v0.4.51)
 
-- Clase: ERP vertical gastronómico (SaaS multi-tenant).
-- El beta en `dev` es el núcleo operativo, no un ERP horizontal ni un POS de una sola tienda.
+- Clase: POS SaaS para restaurantes y gastrobares (multi-tenant). Referencia: Loggro Restobar.
+- El beta en `dev` es el núcleo de salón. No es ERP ni POS de una sola tienda sin tenancy.
+- Ver [ADR-024](../docs/ADR/ADR-024.md).
 
 ### Identidad de tenant en el chrome (v0.4.19)
 
@@ -611,7 +651,7 @@ Para un piloto real (Nana operando un día en VPS), en este orden:
 1. Operador: VPS + DNS + secretos + HTTPS overlay.
 2. Impresora térmica — sigue diferida hasta que el usuario la pida.
 
-Inventario, Factus, WhatsApp y menú público **siguen fuera del MVP**.
+Inventario, Factus, WhatsApp y menú público **siguen fuera del MVP**. No se abren como “fase ERP”: el producto no es un ERP.
 
 - Ampliar `@Permissions` solo en controllers que el siguiente incremento toque.
 - Tests de roles/permisos + e2e cuando se toque auth/caja.
