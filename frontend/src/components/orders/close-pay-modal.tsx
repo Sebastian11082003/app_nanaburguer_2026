@@ -1,0 +1,237 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { formatCents } from "@/src/lib/money";
+import { useActivePaymentMethods } from "@/src/hooks/use-active-payment-methods";
+import { cashService } from "@/src/services/cash.service";
+import { PaymentMethod } from "@/src/services/payment.service";
+import { useAuthStore } from "@/src/store/auth.store";
+
+type Props = {
+  open: boolean;
+  totalCents: number;
+  subtotalCents?: number;
+  discountCents?: number;
+  taxCents?: number;
+  busy?: boolean;
+  onClose: () => void;
+  onConfirm: (payload: {
+    method: PaymentMethod;
+    receivedCents?: number;
+  }) => void;
+};
+
+/**
+ * Confirms close+pay using the restaurant's *active* payment methods.
+ * For CASH, collects amount received and shows change.
+ */
+export function ClosePayModal({
+  open,
+  totalCents,
+  subtotalCents,
+  discountCents,
+  taxCents,
+  busy = false,
+  onClose,
+  onConfirm,
+}: Props) {
+  const { methods, loading: loadingMethods, error: loadError } =
+    useActivePaymentMethods();
+  const [method, setMethod] = useState<PaymentMethod | null>(null);
+  const [receivedInput, setReceivedInput] = useState("");
+  const [shiftOpen, setShiftOpen] = useState<boolean | null>(null);
+  const role = useAuthStore((s) => s.user?.role);
+
+  useEffect(() => {
+    if (!open) return;
+    setReceivedInput((totalCents / 100).toFixed(0));
+    if (methods[0]?.method) {
+      setMethod((current) => current ?? methods[0].method);
+    }
+  }, [open, totalCents, methods]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    cashService
+      .currentSession()
+      .then((current) => {
+        if (!cancelled) setShiftOpen(Boolean(current.session));
+      })
+      .catch(() => {
+        if (!cancelled) setShiftOpen(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  const receivedPesos = Number(receivedInput.replace(",", "."));
+  const receivedCents = Number.isFinite(receivedPesos)
+    ? Math.round(receivedPesos * 100)
+    : NaN;
+  const changeCents =
+    method === "CASH" && Number.isFinite(receivedCents)
+      ? receivedCents - totalCents
+      : 0;
+  const cashOk =
+    method !== "CASH" ||
+    (Number.isFinite(receivedCents) && receivedCents >= totalCents);
+  // CASHIER cannot charge outside a shift (API also rejects). ADMIN still can.
+  const cashierNeedsShift = role === "CASHIER" && shiftOpen !== true;
+  const canConfirm =
+    !!method &&
+    cashOk &&
+    totalCents > 0 &&
+    !loadingMethods &&
+    methods.length > 0 &&
+    !cashierNeedsShift;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="close-pay-title"
+        className="w-full max-w-md rounded-t-2xl border border-zinc-800 bg-zinc-950 p-5 shadow-xl sm:rounded-2xl"
+      >
+        <h2 id="close-pay-title" className="text-xl font-bold">
+          Cerrar y cobrar
+        </h2>
+        <div className="mt-3 space-y-1 text-sm text-zinc-400">
+          {typeof subtotalCents === "number" && (
+            <p className="flex justify-between">
+              <span>Subtotal</span>
+              <span>{formatCents(subtotalCents)}</span>
+            </p>
+          )}
+          {(discountCents ?? 0) > 0 && (
+            <p className="flex justify-between text-amber-400">
+              <span>Descuento</span>
+              <span>-{formatCents(discountCents ?? 0)}</span>
+            </p>
+          )}
+          {(taxCents ?? 0) > 0 && (
+            <p className="flex justify-between">
+              <span>Servicio 5%</span>
+              <span>{formatCents(taxCents ?? 0)}</span>
+            </p>
+          )}
+          <p className="flex justify-between text-base font-semibold text-white">
+            <span>Total a cobrar</span>
+            <span>{formatCents(totalCents)}</span>
+          </p>
+        </div>
+
+        {shiftOpen === false && role === "CASHIER" && (
+          <p className="mt-3 text-sm text-amber-400">
+            No hay un turno de caja abierto. Ábrelo para cobrar.{" "}
+            <a href="/restaurant/cashier/cash" className="underline">
+              Abrir caja
+            </a>
+          </p>
+        )}
+        {shiftOpen === false && role !== "CASHIER" && (
+          <p className="mt-3 text-sm text-amber-400">
+            No hay un turno de caja abierto. El cobro queda, pero no entra en
+            el cuadre hasta que abras caja.{" "}
+            <a href="/restaurant/cashier/cash" className="underline">
+              Abrir caja
+            </a>
+          </p>
+        )}
+        {loadingMethods && (
+          <p className="mt-3 text-sm text-zinc-500">Cargando métodos...</p>
+        )}
+        {loadError && (
+          <p className="mt-3 text-sm text-red-400">{loadError}</p>
+        )}
+        {!loadingMethods && methods.length === 0 && !loadError && (
+          <p className="mt-3 text-sm text-amber-400">
+            No hay métodos de pago activos. Actívalos en Configuración.
+          </p>
+        )}
+
+        {methods.length > 0 && (
+          <fieldset className="mt-4 space-y-2">
+            <legend className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Método de pago
+            </legend>
+            <div className="grid grid-cols-2 gap-2">
+              {methods.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setMethod(option.method)}
+                  className={`min-h-11 rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                    method === option.method
+                      ? "border-white bg-white text-black"
+                      : "border-zinc-700 text-zinc-300 hover:border-white"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
+
+        {method === "CASH" && (
+          <label className="mt-4 block space-y-1 text-sm">
+            <span className="text-zinc-400">Recibido</span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={receivedInput}
+              disabled={busy}
+              onChange={(e) => setReceivedInput(e.target.value)}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-3 text-base"
+            />
+            <span
+              className={`block text-xs ${
+                changeCents < 0 ? "text-red-400" : "text-zinc-500"
+              }`}
+            >
+              {Number.isFinite(receivedCents)
+                ? `Cambio: ${formatCents(Math.max(changeCents, 0))}`
+                : "Ingresa un monto válido"}
+            </span>
+            <span className="block text-xs text-zinc-500">
+              El efectivo exige un turno de caja abierto (Admin/Caja → Caja).
+            </span>
+          </label>
+        )}
+
+        <div className="mt-5 flex gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={onClose}
+            className="min-h-11 flex-1 rounded-xl border border-zinc-700 py-2.5 text-sm font-semibold hover:bg-zinc-900 disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            disabled={busy || !canConfirm}
+            onClick={() => {
+              if (!method) return;
+              onConfirm({
+                method,
+                receivedCents: method === "CASH" ? receivedCents : undefined,
+              });
+            }}
+            className="min-h-11 flex-1 rounded-xl bg-white py-2.5 text-sm font-bold text-black disabled:opacity-40"
+          >
+            {busy ? "Procesando..." : "Confirmar cobro"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

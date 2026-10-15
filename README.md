@@ -1,116 +1,356 @@
-# 🍔 NanaBurguer 2026
+# 🍔 NanaBurguer SaaS Platform
 
-Restaurant Operations System (Single-Tenant MVP, SaaS-Ready)
+<div align="center">
 
----
+POS SaaS for restaurants and bars (RestoOS)
 
-## 📌 Overview
+Cloud-Native • Multi-Tenant Ready • Modular Architecture • API-First
 
-NanaBurguer is a cloud-based restaurant operations platform designed to manage:
-
-- Dine-in orders (tables)
-- Delivery & pickup orders
-- Order lifecycle management
-- Cashier closure
-- WhatsApp notifications
-- AWS deployment with Docker
-
-Built using a Modular Monolith + Clean Architecture approach.
+</div>
 
 ---
 
-## 🏗 Architecture
+# 📚 Table of Contents
 
-- Clean Architecture (Domain / Application / Infrastructure / Interfaces)
-- Modular Monolith
-- Dockerized production deployment
-- Nginx Reverse Proxy
-- AWS EC2 + RDS
-
-See `/docs/architecture` for diagrams.
-
----
-
-## 🛠 Tech Stack
-
-### Backend
-- Node.js
-- NestJS
-- Prisma ORM
-- PostgreSQL (AWS RDS)
-- JWT Authentication
-- Docker
-
-### Frontend
-- Ionic (Web + Mobile)
-- Angular
-- i18n (EN / ES)
-
-### DevOps
-- Docker Compose
-- Nginx
-- GitHub Actions (CI/CD)
-- AWS EC2
-- AWS RDS
-- CloudWatch
+- [1. Project Vision](#1-project-vision)
+- [2. Business Problem](#2-business-problem)
+- [3. System Objectives](#3-system-objectives)
+- [4. Platform Scope](#4-platform-scope)
+- [5. Actors & Roles](#5-actors--roles)
+- [6. Architecture Overview](#6-architecture-overview)
+- [7. Technology Stack](#7-technology-stack)
+- [8. Project Structure](#8-project-structure)
+- [9. Documentation Index](#9-documentation-index)
+- [10. Architecture Decision Records (ADR)](#10-architecture-decision-records-adr)
+- [11. Deployment Strategy](#11-deployment-strategy)
+- [12. Security](#12-security)
+- [13. Current MVP Status](#13-current-mvp-status)
+- [14. Future Roadmap](#14-future-roadmap)
+- [15. Local Development](#15-local-development)
+- [16. Final Architecture Vision](#16-final-architecture-vision)
 
 ---
 
-## 🔐 Security
+# 🧠 1. Project Vision
 
-- JWT authentication
-- Role-based access control (RBAC)
-- Rate limiting (Nginx)
-- Secure headers
-- Environment-based secrets
+RestoOS (this repo: NanaBurguer) is a multi-tenant POS SaaS for restaurants and bars — not an ERP. It digitalizes salon operations (tables, kitchen, cash, delivery) with a modular monolith.
 
-See `/docs/architecture/security-baseline.md`.
+The platform evolves from an MVP architecture toward a cloud-native scalable SaaS ecosystem.
 
----
+Main architectural goals:
 
-## 🌍 Internationalization
-
-- Default language: English
-- Optional: Spanish
-- Backend returns stable codes
-- UI handles translations
+- Restaurant operational centralization
+- Scalable modular backend
+- SaaS-ready architecture
+- Multi-tenant evolution
+- Cloud deployment readiness
+- Clean architecture principles
+- Future external integrations
 
 ---
 
-## 📊 Core Features (MVP)
+# ⚠️ 2. Business Problem
 
-- Authentication (Admin / Cashier / Waiter)
-- Menu management
+Many restaurants still rely on:
+
+- Paper workflows
+- WhatsApp coordination
+- Manual order tracking
+- Spreadsheet accounting
+- Non-centralized operations
+
+This creates:
+
+- Order mistakes
+- Lack of traceability
+- Poor reporting
+- Operational inefficiency
+- No scalability
+
+---
+
+# 🎯 3. System Objectives
+
+- Centralize restaurant operations
+- Improve order management
+- Enable reporting & analytics
+- Support multiple order flows
+- Provide scalable SaaS architecture
+- Prepare future cloud deployment
+- Support future external integrations
+
+---
+
+# 📦 4. Platform Scope
+
+## Included in MVP
+
+- Authentication & Authorization
+- RBAC Roles
 - Table management
-- Create and update orders
-- Order status lifecycle
-- Close order with payment method
-- Integration-ready architecture (WhatsApp / Siigo)
+- Dine-in orders
+- Pickup orders
+- Delivery registration
+- POS receipts
+- Reports
+- Swagger API Documentation
+- Dockerized environment
+- Prisma ORM
+- PostgreSQL
+
+## Planned Future Features
+
+- DIAN electronic invoicing
+- Factus integration
+- MercadoPago
+- WhatsApp notifications
+- Public Landing Page
+- Online ordering
+- AWS deployment
+- Multi-branch support
+- Real multi-tenant isolation
+- Mobile applications
 
 ---
 
-## 🚀 Deployment
+# 👥 5. Actors & Roles
 
-Production architecture:
-
-- EC2 (Docker)
-- Nginx Reverse Proxy
-- RDS PostgreSQL
-- HTTPS
-
-See `/docs/architecture/deployment-aws.md`.
-
----
-
-## 📈 Roadmap
-
-- Public ordering web
-- WhatsApp confirmation automation
-- Basic analytics dashboard
-- SaaS multi-tenant evolution (Phase 2)
+| Role     | Responsibilities                 |
+| -------- | -------------------------------- |
+| ADMIN    | Full platform administration     |
+| CASHIER  | Payments, invoices, cash closing |
+| WAITER   | Orders and table management      |
+| DELIVERY | Delivery & pickup registration   |
+| KITCHEN  | Kitchen ticket visualization     |
 
 ---
 
-## 📄 Documentation
+# 🏗 6. Architecture Overview
 
-Full architecture documentation is available in:
+Current architecture style:
+
+- Modular Monolith
+- Domain-Oriented Modules
+- API-First Backend
+- SaaS-ready structure
+- Cloud-ready deployment
+
+Main modules:
+
+- Auth
+- Users
+- Orders
+- Menu
+- Payments
+- Reports
+- Tables
+- Delivery
+- Sales
+- Restaurant
+
+---
+
+# ⚙️ 7. Technology Stack
+
+| Layer           | Technology        |
+| --------------- | ----------------- |
+| Backend         | NestJS            |
+| Language        | TypeScript        |
+| ORM             | Prisma ORM        |
+| Database        | PostgreSQL        |
+| Security        | JWT + RBAC        |
+| Validation      | DTO Validation    |
+| Documentation   | Swagger/OpenAPI   |
+| Containers      | Docker            |
+| Cloud Target    | AWS               |
+| Deployment      | Railway / AWS ECS |
+| Future Frontend | Next.js           |
+
+---
+
+# 📂 8. Project Structure
+
+```text
+backend/api/
+│
+├── prisma/
+│
+├── src/
+│   ├── common/
+│   ├── config/
+│   ├── infrastructure/
+│   ├── interfaces/
+│   ├── modules/
+│   │   ├── auth/
+│   │   ├── users/
+│   │   ├── orders/
+│   │   ├── payment/
+│   │   ├── reports/
+│   │   ├── menu/
+│   │   ├── delivery/
+│   │   ├── sales/
+│   │   ├── tables/
+│   │   └── restaurant/
+│   │
+│   ├── app.module.ts
+│   └── main.ts
+│
+├── docker/
+├── docs/
+└── README.md
+```
+
+---
+
+# 📖 9. Documentation Index
+
+| Documentation         | Path                                                                                |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| Functional Scope      | [functional/functional-scope.md](./docs/functional/functional-scope.md)             |
+| Business Rules        | [functional/business-rules.md](./docs/functional/business-rules.md)                 |
+| User Stories          | [functional/user-stories.md](./docs/functional/user-stories.md)                     |
+| StoryMap              | [functional/storymap.md](./docs/functional/storymap.md)                             |
+| Actors Vision & Scope | [functional/vision_alcance_actores.md](./docs/functional/vision_alcance_actores.md) |
+| C4 Context Diagram    | [architecture/c4-context.md](./docs/architecture/c4-context.md)                     |
+| C4 Container Diagram  | [architecture/c4-container.md](./docs/architecture/c4-container.md)                 |
+| Time line Diagram     | [time-line.md](./docs/architecture/time-line.md.md)                                 |
+| Deployment AWS        | [architecture/deployment-aws.md](./docs/architecture/deployment-aws.md)             |
+| Domain Model          | [architecture/domain-model.md](./docs/architecture/domain-model.md)                 |
+| Runtime View          | [architecture/runtime-view.md](./docs/architecture/runtime-view.md)                 |
+| Security Baseline     | [architecture/security-baseline.md](./docs/architecture/security-baseline.md)       |
+| ER Diagram            | [architecture/er-diagram.md](./docs/architecture/er-diagram.md)                     |
+
+---
+
+# 🧾 10. Architecture Decision Records (ADR)
+
+| ADR                              | Description                         |
+| -------------------------------- | ----------------------------------- |
+| [ADR-000](./docs/ADR/ADR-000.md) | ADR Index & Architecture Governance |
+| [ADR-001](./docs/ADR/ADR-001.md) | Modular Monolith Architecture       |
+| [ADR-002](./docs/ADR/ADR-002.md) | NestJS Backend Framework            |
+| [ADR-003](./docs/ADR/ADR-003.md) | Prisma ORM                          |
+| [ADR-004](./docs/ADR/ADR-004.md) | PostgreSQL Database                 |
+| [ADR-005](./docs/ADR/ADR-005.md) | JWT + RBAC Security                 |
+| [ADR-006](./docs/ADR/ADR-006.md) | Dockerized Development              |
+| [ADR-007](./docs/ADR/ADR-007.md) | Swagger/OpenAPI                     |
+| [ADR-008](./docs/ADR/ADR-008.md) | SaaS Architecture                   |
+| [ADR-009](./docs/ADR/ADR-009.md) | Domain Separation                   |
+| [ADR-010](./docs/ADR/ADR-010.md) | DTO Validation                      |
+| [ADR-011](./docs/ADR/ADR-011.md) | AWS Deployment Strategy             |
+| [ADR-012](./docs/ADR/ADR-012.md) | Config Management                   |
+| [ADR-013](./docs/ADR/ADR-013.md) | Guards & Decorators                 |
+| [ADR-014](./docs/ADR/ADR-014.md) | Reporting Module                    |
+| [ADR-015](./docs/ADR/ADR-015.md) | Future Integrations                 |
+| [ADR-016](./docs/ADR/ADR-016.md) | Multi-Tenant Preparation            |
+| [ADR-024](./docs/ADR/ADR-024.md) | Product class: POS SaaS (not ERP)   |
+
+---
+
+# ☁️ 11. Deployment Strategy
+
+Current:
+
+- Local Docker Environment
+
+Target:
+
+- AWS ECS
+- AWS RDS PostgreSQL
+- AWS CloudWatch
+- AWS Load Balancer
+- CI/CD Pipelines
+
+---
+
+# 🔐 12. Security
+
+Implemented:
+
+- JWT Authentication
+- Role-Based Authorization
+- Protected Endpoints
+- DTO Validation
+- Guards
+- Decorators
+
+Future:
+
+- API Gateway
+- WAF
+- Audit Logs
+- Security Monitoring
+
+---
+
+# 📊 13. Current MVP Status
+
+| Area             | Status      |
+| ---------------- | ----------- |
+| Backend API      | Completed   |
+| Swagger          | Completed   |
+| RBAC             | Completed   |
+| Prisma ORM       | Completed   |
+| Docker           | Completed   |
+| Reports          | In Progress |
+| AWS Deployment   | Planned     |
+| DIAN Integration | Future      |
+| MercadoPago      | Future      |
+
+---
+
+# 🚀 14. Future Roadmap
+
+Phase 1:
+
+- Production deployment
+- Reports & analytics
+- Infrastructure stabilization
+
+Phase 2:
+
+- Factus integration
+- MercadoPago
+- WhatsApp notifications
+
+Phase 3:
+
+- Multi-tenant architecture
+- Multi-branch support
+- Analytics dashboards
+- Mobile app
+
+---
+
+# 🐳 15. Local Development
+
+## Install dependencies
+
+```bash
+npm install
+```
+
+## Prisma
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+```
+
+## Docker
+
+```bash
+docker-compose up --build
+```
+
+## Run backend
+
+```bash
+npm run start:dev
+```
+
+---
+
+# 🌎 16. Final Architecture Vision
+
+RestoOS aims to stay a POS SaaS for many restaurants (isolated tenants), runnable locally in Docker and later on a single host — not an ERP suite.

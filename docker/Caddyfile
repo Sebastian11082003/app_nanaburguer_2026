@@ -1,0 +1,12 @@
+# HTTPS overlay. Requires two DNS names on the same VPS.
+# FRONTEND_HOST and API_HOST must be different (e.g. app. vs api.).
+
+{$FRONTEND_HOST} {
+	encode gzip
+	reverse_proxy frontend:3000
+}
+
+{$API_HOST} {
+	encode gzip
+	reverse_proxy api:3000
+}

@@ -1,0 +1,455 @@
+# PROJECT CHANGELOG
+
+## DEC-012 — trabajo local y rama `qa`
+
+- Desarrollo en local. Rama `qa` desde `main`; PRs hacia `qa`. VPS/producción solo si el usuario lo pide.
+
+## Dirección UI C — pase de servicio
+
+- Referencias documentadas (Mobbin/CAKE/Cyllo, Godly editorial, Web Anatomy use-case nav, Land-book bordes/bottom nav, Stitch A/B/C). Elegida C. Originalidad 8 / encaje 9.
+- Cromo: mesas-sello, tiras de canal, KDS en papel térmico, login talón, riel de estaciones (abajo en móvil). Sin pills ni glass.
+
+## AI Engineering OS `b71085f` (regla 13 UI)
+
+- Framework fijado a `main` `b71085f`. Interfaz: `standards/ui-ux-design.md`. DEC-011.
+
+## Demo térmica ESC/POS
+
+- Print-agent local (`127.0.0.1:19100`): comanda y recibo 80mm. POS caja, domicilio y mesa abren la comanda al enviar a cocina. Configuración: ticket de prueba.
+
+## Sprint 5 — tap de mesa
+
+- El piso usa enlaces reales (`<Link href>`) en vez de `router.push`. La barra POS solo intercepta el click si hay un ticket vacío que hay que soltar.
+
+- Smoke local: cocina cola→preparando→listo, cobro CASH ticket #5, recibo, M1 libre.
+- El modal de cobro precarga métodos (deja de pintar “no hay métodos activos” mientras carga).
+
+- Cocina en la barra POS (admin/caja). KDS por defecto: tickets de hoy.
+- Nav POS por permisos asignados: el mesero puede ganar módulos sin otro `UserRole`; domicilio no usa Mesas.
+
+## Sprint 5 — HU-030
+
+- Segunda ronda en el mismo ticket: `sentToKitchenAt` por línea. Pendiente editable; enviado bloqueado. Comanda/KDS muestran el delta.
+
+## v0.4.55
+
+- HU-026: puerto `BillingProvider` + simulador local. Emitir/rechazar guarda la respuesta sin pisar el recibo POS. No es DIAN/Factus (ADR-025).
+- QA: Jest 90/90. Smoke: accept → CUFE `SIM-` + provider `restoos-simulator`; print sin filtrar fiscal; segundo accept 400; reject 201.
+
+## v0.4.54
+
+- Cobro CASH y movimientos de caja exigen turno OPEN (`assertOpenSession`). El POS comprueba la sesión antes de cerrar el ticket.
+- Login: `html` arranca en `dark` + `forcedTheme` para quitar el overlay de hidratación de next-themes.
+- QA 2026-09-23: Jest 85/85; smoke CASH sin caja 400 / con caja 201; login plataforma y personal sin overlay.
+
+## v0.4.53
+
+- Migración: alinear columnas de `cash_session` con Prisma (abrir/cerrar caja dejaba de fallar 500 en la BD local).
+- Smoke local: health, plataforma, branding `Nana-neiva`, dine-in→cocina→cobro, pickup, reportes, turno de caja.
+
+## v0.4.52
+
+- Corte de QA del MVP local: `docs/mvp-production-readiness.md` (sustituye la auditoría v0.4.9).
+- Plataforma: nav solo Dashboard + Restaurantes (se eliminaron 404 de reports/billing/settings).
+
+## v0.4.51
+
+- DEC-008 corregido: RestoOS es POS SaaS multi-tenant (tipo Loggro Restobar), no ERP.
+- ADR-024. Contexto, manifiesto, alcance y sdd-mapping alineados.
+
+## v0.1
+
+- Arquitectura inicial.
+
+## v0.2
+
+- Backend inicial.
+
+## v0.3
+
+- Frontend inicial.
+
+## v0.3.1
+
+- Estabilización crítica Backend:
+  - Fix identidad JWT (`userId`) en controllers operativos.
+  - Remoción de logs sensibles en login y guards.
+  - Permiso `KITCHEN` en transición de estado de órdenes.
+
+## v0.3.2
+
+- Higiene estructural Frontend:
+  - Layouts App Router activos (`layout.tsx`).
+  - Rutas dinámicas `[id]` corregidas.
+  - Logins por rol (cashier/waiter/kitchen/delivery).
+  - Auth staff/platform con persist + cookies + Bearer en `api.ts`.
+  - Middleware de protección admin/platform.
+
+## v0.3.3
+
+- Vertical operativo Frontend (mesero → cocina → caja):
+  - Services orders/menu/payments + tables con `label`.
+  - UI mesero: mesas, crear orden, enviar a cocina.
+  - UI cocina: cola, preparando, listas.
+  - UI cajero: cerrar orden READY + pago CASH.
+
+## v0.3.4
+
+- Admin restaurante: UI menú (categorías/productos) y usuarios (listar/crear).
+
+## v0.3.5
+
+- Sistema visual de marca NANA Burger:
+  - Tokens CSS, tipografías, atmósfera y motion.
+  - Landing, logins, portal de roles, home restaurante.
+  - Shells admin/platform y hubs operativos.
+
+## v0.3.6
+
+- Delivery end-to-end:
+  - Servicio frontend `/deliveries` (list, dispatch, deliver, markPrinted).
+  - Detalle de pedido delivery con acción de entrega.
+  - Despacho de domicilios desde caja.
+- Validación E2E completa en entorno local (Docker + Postgres + API + Next):
+  onboarding SaaS, vertical DINE_IN completo (orden→cocina→cierre→pago con
+  invoice snapshot), vertical DELIVERY completo (orden→despacho→entrega).
+
+## v0.3.7
+
+- Suite de tests unitarios backend (Jest + mocks de Prisma):
+  AuthService, OrdersService, TenantGuard, RolesGuard.
+  36/36 tests passing. Cubre auth, ciclo de vida de órdenes y aislamiento
+  de tenant (multi-tenant security).
+
+## v0.4.0
+
+- Órdenes como documentación: toda respuesta de órdenes incluye ahora
+  `items.menuItem.name`, `createdBy` y `updatedBy` (fuente única
+  `ORDER_INCLUDE` en `OrdersService`).
+- Detalle de orden (admin/caja/mesero) muestra quién la creó y, si está
+  cerrada, quién la cerró/facturó.
+- Lista de órdenes admin conectada a datos reales con filtro de estado.
+- Módulo de facturación completo: lista + detalle/impresión (recibo) +
+  aceptar (simulación DIAN). `InvoicesController` ahora restringido a
+  ADMIN/CASHIER (antes sin `@Roles`).
+- Comanda imprimible (`KitchenTicket`) al enviar la orden a cocina desde
+  el mesero.
+
+## v0.4.1
+
+- Separación marca de plataforma (genérica) vs. marca de tenant
+  (dinámica, por restaurante). Nuevo `config/platform-brand.ts`.
+- `BrandMark` generalizado (props `name`/`logoUrl` + fallback monograma).
+- Fix de seguridad: `RestaurantController` sin tenant scoping →
+  reemplazado por `/restaurants/me` (siempre el propio tenant del JWT).
+- Nueva pantalla Admin → Restaurante para gestionar logo/nombre/contacto
+  por tenant (autoservicio, sin intervención manual en BD).
+
+## v0.3.9
+
+- Responsive/mobile crítico: el panel admin no tenía navegación visible
+  en pantallas pequeñas (sidebar `hidden lg:flex` sin alternativa).
+- Nuevo `MobileNavDrawer`/`MobileNavTrigger` reutilizable (hamburguesa +
+  drawer), conectado en admin y plataforma.
+- Plataforma: sidebar ahora se oculta en móvil en vez de exprimir el
+  contenido.
+- `flex-wrap`, tipografía responsiva y `overflow-x-hidden` en pantallas
+  de mesero, cocina, delivery y hubs de rol.
+
+## v0.3.8
+
+- Fix: mesas no mostraban ocupación (sin `activeOrder`); orden cancelada
+  bloqueaba la mesa permanentemente; transferencia de mesa no validaba
+  destino libre. Ver `PROJECT_STATE.md` para el detalle completo.
+- Nueva constante compartida `ACTIVE_ORDER_STATUSES` como fuente única
+  de verdad de qué estados de orden "ocupan" una mesa.
+- Frontend: ocupación visible en `TableCard`, modal de transferencia de
+  mesa funcional, detalle de mesa en admin implementado.
+- 5 tests de regresión nuevos (41/41 passing en total).
+- Comentarios de documentación agregados a los archivos tocados
+  (servicios, componentes, tipos) explicando propósito e invariantes.
+
+
+
+
+
+
+## v0.4.0
+
+- Admin opera mesas/ordenes como mesero (CreateOrderScreen compartido).
+- Cerrar y cobrar con modal de metodo (efectivo con cambio).
+
+## v0.4.1
+
+- Metodos de pago por restaurante (RestaurantPaymentMethod).
+- Admin Configuracion: activar/renombrar metodos.
+- Validacion de metodo activo al pagar; methodLabel en factura.
+
+## v0.4.2
+
+- Editar cantidad/notas de items (CREATED); agregar post-cocina.
+- Opcion No imprimir comanda.
+- Descuento a nivel orden + cortesia por linea (admin).
+- Scaffold print-agent/ para impresora termica USB (Fase 2).
+
+## v0.4.3
+
+- Fase 3: roles custom + matriz de permisos (Permission, Role, RolePermission).
+- 5 plantillas de sistema por tenant; JWT incluye permissions.
+- Admin: /restaurant/admin/roles + alta de usuarios por roleId.
+- PermissionsGuard en endpoints sensibles (users, roles).
+
+## v0.4.5
+
+- Compose de MVP desplegable: sin IP de AWS muerta; `NEXT_PUBLIC_API_URL` en build; CORS por env.
+- API en Docker: `prisma migrate deploy` + seed idempotente al arrancar.
+- Create/list de restaurantes de platform ya no serializa hashes ni `factusApiKey`.
+- Runbook: `docs/10-devops/local-setup.md`.
+
+## v0.4.60
+
+- Cancelar ítem después de cocina es el permiso `ORDERS_CANCEL_ITEM` (caja y admin encendido; mesero apagado). Se habilita o inhabilita en Roles. Las plantillas del sistema ya no pierden esos toggles al recargar.
+
+## v0.4.59
+
+- El cajero no cobra si no hay turno de caja abierto. El admin sí puede (aviso, el cobro no entra al cuadre hasta abrir caja).
+
+## v0.4.58
+
+- Caja tiene Recibos en el chrome POS: lista de comprobantes del local y detalle imprimible, sin entrar al layout de admin.
+
+## v0.4.57
+
+- Hora de recoger se puede corregir con el Llevar ya en cocina. Tras cobrar se abre el recibo para imprimir. El cobro avisa si no hay turno de caja abierto (no bloquea). Backlog vivo en `.ai-engineering/BACKLOG.md` (GitHub Projects aún no existe en la cuenta).
+
+## v0.4.56
+
+- Tras cancelar todas las líneas, caja/mesero pueden Liberar mesa (ya no queda roja a $0). Cocina oculta esos tickets vacíos. Transferir mesa también desde caja. No se cobra un ticket sin productos vivos.
+
+## v0.4.55
+
+- Turno de revisión: Liberar mesa vacía desde el detalle admin; cancelar ítem ahí mismo. El piso no pinta Llevar/Domicilios por un borrador CREATED vacío. Admin puede cambiar el correo del personal (si es el Gmail del local, también actualiza el contacto del restaurante). Desactivar sigue siendo el “borrado” (se conserva el historial).
+
+## v0.4.54
+
+- Revisión POS: cancelar ítem desde Ventas, Llevar y domicilio; hora de recoger visible en cocina/comanda/listas; cobro muestra Servicio 5%; piso se actualiza solo; recibo no pone propina $0 junto al recargo.
+
+## v0.4.53
+
+- Ticket: recargo de servicio 5% en constante; cocina y comanda marcan ítems CANCELADO; el recibo y el top de productos no cuentan líneas anuladas. Órdenes admin filtra preparando / en camino / anuladas.
+
+## v0.4.52
+
+- Windows: `update-local.bat` en la raíz hace checkout + pull de `dev`. GitHub no empuja solo a tu disco.
+
+## v0.4.51
+
+- Un solo login del local: `/restaurant/local-login` redirige a `/restaurant/login`. El admin del restaurante no pasa por una segunda pantalla de rol. El slug es opcional (solo logo).
+
+## v0.4.50
+
+- Plataforma: inhabilitar/activar un tenant (`PATCH /platform/restaurants/:id`). El personal no entra; los datos siguen. Para mora o falta de pago, no hace falta borrar el restaurante.
+
+## v0.4.49
+
+- Acceso del local identifica por correo del restaurante, no por slug+email a la vez (`Nana-neiva` ya no bloquea `nanaburguer-neiva@gmail.com`).
+
+## v0.4.48
+
+- El correo del restaurante (el del alta del tenant) entra en `/restaurant/login` como ADMIN: si no hay User, se verifica `restaurantPasswordHash` y se crea el admin. Ya no exige un segundo correo distinto.
+
+## v0.4.47
+
+- Login de personal: marca de plataforma (RestoOS) hasta identificar el slug a mano. Nombre y logo del local solo cuando el lookup público coincide.
+
+## v0.4.46
+
+- Alta de pedido: el rol `DELIVERY` no puede elegir Pickup. Solo crea domicilio (dirección obligatoria).
+
+## v0.4.45
+
+- Piso: el rol `DELIVERY` ya no ve la tarjeta Llevar. Su canal es Domicilios (`/restaurant/delivery/active`).
+
+## v0.4.44
+
+- Despacho de domicilio: el pedido pasa a `OUT_FOR_DELIVERY` (si no está cobrado). Cocina deja de ver el ticket; el rider marca entregado solo en `Delivery` para no sacar el pedido de la cola activa antes del cobro.
+
+## v0.4.43
+
+- Seed demo: usuario KITCHEN (`kitchen@nana-neiva.test`) para operar la cola.
+
+## v0.4.42
+
+- Llevar/Ventas: SENT_TO_KITCHEN o IN_PREPARATION → En cocina; READY → Listo.
+
+## v0.4.41
+
+- Cocina (cola/comanda): Llevar/Domicilio con nombre, no Mesa —.
+
+## v0.4.40
+
+- Domicilios de caja lista PENDING/DISPATCHED/DELIVERED mientras la orden sigue abierta (Cobrar tras despachar).
+
+## v0.4.39
+
+- Ventas (caja/admin): domicilio abierto muestra En camino / Entregado.
+
+## v0.4.38
+
+- Borrador CREATED vacío de Llevar/domicilio: botón Descartar (no vuelve el auto-cancel al navegar).
+
+## v0.4.37
+
+- Dispatch de domicilio rechaza CREATED/CANCELED. Caja no despacha el borrador; el repartidor no ve cobrados sin despachar.
+
+## v0.4.36
+
+- Ventas de caja: filtro Abiertas por defecto (no mezcla CANCELED/CLOSED). Listas / Cerradas / Todas.
+
+## v0.4.35
+
+- Caja/admin cobran domicilio desde el alta y el detalle. Despacho tiene Nuevo pedido y Cobrar.
+
+## v0.4.34
+
+- Ventas (caja y admin) etiquetan mesa / Llevar / Domicilio con el nombre del cliente.
+
+## v0.4.33
+
+- Pickup guarda nombre/teléfono en `Delivery` para retomar Llevar. La cola `/deliveries` filtra solo domicilio.
+
+## v0.4.32
+
+- Ticket CREATED vacío: auto-liberar solo en DINE_IN. Domicilio/pickup no se cancelan al cambiar de pestaña.
+- Repartidor puede listar y ver `GET /deliveries` (Pedidos activos).
+
+## v0.4.31
+
+- Domicilio: lista y retoma tickets abiertos. CREATED ya no ofrece Entregado; abre Continuar.
+
+## v0.4.30
+
+- Mostrador lista pickups abiertos (el piso Llevar deja de ser un callejón). `activeOnly` en listado de órdenes.
+
+## v0.4.29
+
+- Seed del tenant demo: ADMIN de restaurante (`admin@nana-neiva.test`) para anular tickets con ítems.
+- Cerrar orden responde con la `Sale` creada (el cobro no depende de un GET extra).
+
+## v0.4.28
+
+- Salir de un ticket CREATED vacío libera la mesa (y el canal de mostrador/domicilio). Domicilios resalta el alta. Admin Ventas queda en el chrome POS.
+
+## v0.4.27
+
+- Piso: ocupada sin total dice “Sin cuenta”. Cobro huérfano redirige a Ventas. Anular en detalle confirma. Domicilio activo abre “Nuevo pedido”.
+
+## v0.4.26
+
+- Caja retoma el ticket de mesa desde Ventas. Cancelar con productos queda en admin. Mesero/órdenes redirige al piso.
+
+## v0.4.25
+
+- Liberar mesa vacía (CREATED sin ítems) para no dejar el piso en rojo a $0. Admin Domicilios = despacho. Caja apunta a mesa/Ventas.
+
+## v0.4.24
+
+- Mesa desde el piso abre el ticket en el POS (admin incluido). Domicilio pinta el nombre del producto en la línea.
+
+## v0.4.23
+
+- Mesas y Vender dejan de ser el mismo enlace. Mostrador es Vender; el mesero vende desde la mesa. Canales Llevar/Domicilios solo si el rol puede abrirlos.
+
+## v0.4.22
+
+- DEC-009: `/restaurant/*` es mobile-first (teléfono de mesero/caja). Barra de cobro/cocina fija, tap 44px, login y piso sin overflow horizontal.
+
+## v0.4.21
+
+- El chrome del tenant pinta el logotipo (`logoUrl`), no el monograma. Branding se refresca por slug.
+- Cerrar sesión de personal conserva el local; “Cambiar local” lo suelta.
+- Hub de cocina, KDS y admin pintan el logotipo del tenant.
+- Crear orden reutiliza el ticket de la mesa si choca el número (tenant). Menú demo de `nana-neiva`.
+
+## v0.4.20
+
+- DEC-008 (histórico): se clasificó el producto como ERP vertical. **Sustituido en v0.4.51 / ADR-024:** es POS SaaS (Loggro Restobar), no ERP.
+
+## v0.4.19
+
+- Chrome de tenant: `RestaurantAuthShell` obliga nombre/slug en login, recover y reset.
+- POS, admin y hubs muestran el slug. DEC-007 fija la identidad multi-tenant.
+
+## v0.4.18
+
+- El login único de personal (y recuperar acceso) muestran el slug/nombre del restaurante cuando ya hay sesión del local.
+- `/restaurant` no salta el login del local si aún no hay tenant persistido.
+
+## v0.4.17
+
+- Barra POS en caja/mesero/domicilio. Hubs redirigen al piso.
+- Servicio 5% en mesa, cancelar ítem con motivo, hora de recoger.
+
+## v0.4.16
+
+- Login único de personal (correo + contraseña) y recuperar acceso.
+- Piso de mesas compartido; nav filtrada por rol (mesero/caja/domicilio).
+
+## v0.4.15
+
+- Personal de estación al crear restaurante (cajero/mesero/cocina/domicilio) + botón para tenants que solo tienen admin.
+- `POST /users/station-staff` completa estaciones faltantes.
+
+## v0.4.14
+
+- Reportes: filtro de fechas UTC + órdenes por estado + split domicilio/pickup.
+
+## v0.4.13
+
+- Volume Docker `api_uploads` para `/app/uploads` (logos).
+- Scripts `docker/backup.sh` y `restore.sh`; runbook de backup/restore.
+
+## v0.4.12
+
+- KDS: líneas del pedido en cola/preparando/listas y poll cada 8s (pausa con la pestaña oculta).
+
+## v0.4.11
+
+- Cierre de caja de turno: `CashSession` (abrir / preview / cerrar con snapshot).
+- HU-025: totales del período, por medio de pago, e histórico de cierres.
+- Ventas CASH siguen en el libro; el preview las toma de `Payment` para no duplicar `SALE_PAYMENT`.
+
+## v0.4.10
+
+- Auditoría MVP vs producción: `docs/mvp-production-readiness.md`.
+- Inventario confirmado fuera de alcance (sin modelo/API/UI).
+- Huecos reales del contrato: cierre de caja de turno, persistencia de logos, poll de cocina, HUs 014/017/023/012 incompletas.
+## v0.4.9
+
+- Cierre de huecos operativos: detalle de usuario (activar/rol/password), 86 de producto, POS mostrador, despacho de domicilios en el hub de caja.
+- Listados de usuario ya no serializan `passwordHash`.
+- Rutas “En construcción” redirigen a la pantalla que ya opera.
+- Dashboard de plataforma cuenta tenants reales.
+
+## v0.4.8
+
+- Dashboard y reportes admin leen `GET /reports/*` (ya existía). Caja admin/cajero lee `GET/POST /cash`.
+- `/reports` ahora exige ADMIN/CASHIER + `REPORTS_VIEW` (antes RolesGuard era no-op).
+- `salesByDay` agrupa con Prisma (`Sale`), no SQL crudo sobre `sale` (tabla real `"Sale"`).
+
+## v0.4.7
+
+- Arranque público: la API rechaza `JWT_SECRET` de los `.env*.example` salvo `ALLOW_INSECURE_DEFAULTS=true` (solo local).
+- Seed: email/password por env; no planta `123456` en un VPS. `SEED_ON_BOOT` puede apagar el seed.
+- Tests: AuthService mockea `RolesService`; totales de orden incluyen `discountCents`.
+
+## v0.4.6
+
+- Overlay HTTPS: `docker-compose.https.yml` + Caddy (Let's Encrypt). El compose local de puertos 80/3000 no cambia.
+- Runbook: sección VPS en `docs/10-devops/local-setup.md`.
+
+## v0.4.4
+
+- Adopción SDD sin reescribir: `docs/sdd-mapping.md` inventaría 00–15 sobre las rutas actuales.
+- Job **Documentación viva** (`.github/workflows/living-docs.yml`) mapeado a `docs/` y `.ai-engineering/`, no a carpetas 00–15 inexistentes.
+- No se movió documentación histórica.
