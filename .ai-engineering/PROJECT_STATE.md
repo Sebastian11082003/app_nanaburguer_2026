@@ -32,21 +32,44 @@
 
 Sprint 5 — Salón piloto (superar Loggro Restobar)
 
-- **HU-029** Cambiar local vs cerrar sesión — Implemented (este incremento)
-- **HU-030** Segunda ronda: líneas pendientes vs enviadas — Planned
-- **HU-031** Cocina en la barra POS — Planned
-- **HU-032** Nav por permisos asignados — Planned
+- **HU-029** Cambiar local vs cerrar sesión — Implemented
+- **HU-030** Segunda ronda: líneas pendientes vs enviadas — Implemented
+- **HU-031** Cocina en la barra POS — Implemented
+- **HU-032** Nav por permisos asignados — Implemented
 - Fuera del sprint: HU-027 WhatsApp, DIAN real, inventario como ERP
+- **UI:** dirección C (pase/comanda) evaluada e implementada en cromo operativo. Originalidad 8 / encaje 9.
 
 ---
 
 ## Agente Activo
 
-Backend/Frontend Engineer (coordinado por Orchestrator)
+Orchestrator; UI Designer **antes** de Frontend Engineer en cualquier cambio de interfaz.
 
 ---
 
 ## Último avance
+
+### Impresora térmica demo (2026-10-06)
+
+- `print-agent` ESC/POS 80mm en `127.0.0.1:19100` (Windows USB o TCP :9100). Comanda (mesa/llevar/domicilio) y recibo POS. Fallback `window.print()` 80mm.
+- Prueba: Configuración → Impresora térmica.
+
+### Smoke MVP local (2026-10-06)
+
+- Mesa: cocina → CASH → recibo. Llevar #8: cocina → CASH $150. Reportes: $1.238 / 6 ventas efectivo.
+- El piso abre mesa/Llevar por enlace. Lista Llevar actualiza el total al agregar ítems.
+
+### HU-031 y HU-032 (Sprint 5)
+
+- ADMIN y CASHIER ven Cocina en la barra POS (`/restaurant/app/kitchen`); cocina sigue entrando al KDS.
+- El tablero lista tickets del día (America/Bogota), no un backlog de varios días.
+- La barra POS del mesero arranca en Mesas; módulos extra salen de permisos (`KITCHEN_OPERATE`, `CASH_MANAGE`, etc.). El rider no aterriza en el piso.
+
+### HU-030 segunda ronda (Sprint 5)
+
+- Tocar una mesa ocupada sigue reanudando el mismo ticket.
+- Líneas nuevas quedan pendientes hasta Enviar a cocina; las ya enviadas no cambian cantidad/notas.
+- La comanda de ronda y el KDS marcan el delta (NUEVO). No es un segundo ticket vacío como en Loggro.
 
 ### HU-026 simulador fiscal (merge Sprint 5)
 
@@ -421,11 +444,9 @@ asociados), similar a cómo se documentan las facturas.
 - Módulo de facturación completo: lista (`/restaurant/admin/invoices`) +
   detalle/impresión con formato de recibo desde el snapshot congelado
   de la factura + acción "Marcar como aceptada" (simulación DIAN).
-- Nuevo `KitchenTicket`: comanda imprimible (`window.print()`) disparada
-  automáticamente al enviar la orden a cocina desde el mesero, con
-  botón "Ver comanda" para reimprimir. No es integración real con
-  impresora térmica (ESC/POS) — depende de la impresora predeterminada
-  del sistema operativo del dispositivo del mesero/cocina.
+- `KitchenTicket`: al enviar a cocina (mesa, llevar, domicilio) abre
+  la comanda. Imprimir usa el print-agent ESC/POS; si no hay agente,
+  `window.print()` 80mm.
 
 **Validado E2E contra API real:** `createdBy`/`updatedBy`/
 `menuItem.name` confirmados en las respuestas; mesa se libera
@@ -646,9 +667,10 @@ repitan literalmente lo que la línea de código ya dice. Ver
 - UI: +/− cantidad, no imprimir comanda, agregar ítems post-cocina,
   descuento y cortesía (admin).
 
-### Print agent (Fase 2)
+### Print agent (Fase 2 / demo)
 
-- Scaffold en `print-agent/README.md` (USB ESC/POS D300/D200).
+- Agente local ESC/POS: comanda + recibo, Windows (`copy /B`) o TCP :9100.
+- HTTP del agente en `:19100` para no chocar con el RAW de la térmica.
 
 ### Roles custom + permisos (Fase 3 / v0.4.3)
 
@@ -664,7 +686,7 @@ Cierre de turno (v0.4.11), poll de cocina (v0.4.12) y volume/backup de logos (v0
 Para un piloto real (Nana operando un día en VPS), en este orden:
 
 1. Operador: VPS + DNS + secretos + HTTPS overlay.
-2. Impresora térmica — sigue diferida hasta que el usuario la pida.
+2. Impresora térmica — demo local con print-agent; en VPS sigue siendo el PC de caja.
 
 Inventario, Factus, WhatsApp y menú público **siguen fuera del MVP**. No se abren como “fase ERP”: el producto no es un ERP.
 

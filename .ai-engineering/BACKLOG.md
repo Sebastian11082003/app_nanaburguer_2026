@@ -14,6 +14,7 @@ Rama de integración: `dev`.
 
 | ID | Estado | Qué |
 |---|---|---|
+| UX-01 | hecho | Dirección C (pase/comanda) evaluada e implementada en shell, piso, KDS y login |
 | OPS-01 | hecho v0.4.56 | Liberar mesa vacía post-cocina; KDS sin tickets a $0; transferir mesa desde caja |
 | OPS-02 | hecho v0.4.57 | Editar hora de recoger con el ticket ya en cocina |
 | OPS-03 | hecho v0.4.57 | Tras cobrar, abrir recibo imprimible (caja y admin) |
@@ -28,7 +29,7 @@ Rama de integración: `dev`.
 |---|---|---|
 | OUT-01 | Inventario / recetas / stock | Fuera del MVP escrito |
 | OUT-02 | Factus / DIAN real | HU-026 Planned |
-| OUT-03 | Impresora térmica ESC/POS | Hoy `window.print()` |
+| OUT-03 | Impresora térmica ESC/POS | Hecho para demo: `print-agent` :19100 + POS/comanda/recibo. DIAN/red en local sigue aparte |
 | OUT-04 | Rappi / QR / Nequi / pagos online | Fuera de alcance |
 | OUT-05 | WhatsApp / push | HU-027 |
 

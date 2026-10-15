@@ -75,6 +75,13 @@ Como mínimo deberás revisar:
 - package.json
 - tsconfig.json
 - configuración del proyecto
+- `docs/12-ux-ui/` (regla 13: dirección de diseño antes de código de interfaz)
+
+---
+
+# Interfaz (regla 13)
+
+No implementar ni cerrar UI sin `docs/12-ux-ui/design-direction.md` evaluado (originalidad ≥ 7, encaje ≥ 8). Estándar del OS `b71085f`: `standards/ui-ux-design.md`. Si la UI actual es genérica, el próximo incremento visual abre dirección nueva.
 
 ---
 

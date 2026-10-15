@@ -1,5 +1,32 @@
 # PROJECT CHANGELOG
 
+## Dirección UI C — pase de servicio
+
+- Referencias documentadas (Mobbin/CAKE/Cyllo, Godly editorial, Web Anatomy use-case nav, Land-book bordes/bottom nav, Stitch A/B/C). Elegida C. Originalidad 8 / encaje 9.
+- Cromo: mesas-sello, tiras de canal, KDS en papel térmico, login talón, riel de estaciones (abajo en móvil). Sin pills ni glass.
+
+## AI Engineering OS `b71085f` (regla 13 UI)
+
+- Framework fijado a `main` `b71085f`. Interfaz: `standards/ui-ux-design.md`. DEC-011.
+
+## Demo térmica ESC/POS
+
+- Print-agent local (`127.0.0.1:19100`): comanda y recibo 80mm. POS caja, domicilio y mesa abren la comanda al enviar a cocina. Configuración: ticket de prueba.
+
+## Sprint 5 — tap de mesa
+
+- El piso usa enlaces reales (`<Link href>`) en vez de `router.push`. La barra POS solo intercepta el click si hay un ticket vacío que hay que soltar.
+
+- Smoke local: cocina cola→preparando→listo, cobro CASH ticket #5, recibo, M1 libre.
+- El modal de cobro precarga métodos (deja de pintar “no hay métodos activos” mientras carga).
+
+- Cocina en la barra POS (admin/caja). KDS por defecto: tickets de hoy.
+- Nav POS por permisos asignados: el mesero puede ganar módulos sin otro `UserRole`; domicilio no usa Mesas.
+
+## Sprint 5 — HU-030
+
+- Segunda ronda en el mismo ticket: `sentToKitchenAt` por línea. Pendiente editable; enviado bloqueado. Comanda/KDS muestran el delta.
+
 ## v0.4.55
 
 - HU-026: puerto `BillingProvider` + simulador local. Emitir/rechazar guarda la respuesta sin pisar el recibo POS. No es DIAN/Factus (ADR-025).

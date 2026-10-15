@@ -144,3 +144,17 @@ Las plantillas de sistema ya no se resetean en cada carga: un código nuevo del 
 Motivo:
 
 HU-012 pedía autorización. OPS-06: no darlo al mesero de fábrica, pero sí poder habilitarlo sin otro deploy.
+
+---
+
+## DEC-011
+
+UI/UX bajo AI Engineering OS `b71085f` (regla 13)
+
+La interfaz sigue `standards/ui-ux-design.md`. No se implementa ni se cierra un cambio de UI sin `docs/12-ux-ui/design-direction.md` (plantilla del OS) evaluado: originalidad ≥ 7, encaje con el producto ≥ 8. Diseño con Mobbin, Godly, Web Anatomy, Land-book y al menos tres direcciones Stitch. Sin logo ni nombre, la pantalla no puede parecer de otro producto.
+
+DEC-006 (tokens de marca) y DEC-009 (mobile-first) alimentan el ADN; no autorizan recortar color sobre el layout actual si ese layout es genérico.
+
+Motivo:
+
+El POS ya existe y se ve como un panel oscuro genérico. El framework exige dirección con referencias antes de más código de interfaz.

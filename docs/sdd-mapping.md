@@ -20,7 +20,7 @@ Nada de lo listado aquí se movió en este incremento. Los documentos nuevos sí
 | 09-microservices | mapeado (monolito) | [architecture/module-boundaries.md](architecture/module-boundaries.md) — un módulo de catálogo, no microservicios. |
 | 10-devops | mapeado | [10-devops/local-setup.md](10-devops/local-setup.md), [architecture/deployment-aws.md](architecture/deployment-aws.md), `docker/` |
 | 11-quality | parcial | Jest en backend (auth, roles, órdenes, guards, caja, delivery, users, reportes, env, alta de estaciones). Sin E2E. Corte de piloto: [mvp-production-readiness.md](mvp-production-readiness.md). |
-| 12-ux-ui | parcial | Login único; Cambiar local vs cerrar sesión (HU-029). Cancelar ítem (`ORDERS_CANCEL_ITEM`). Liberar mesa vacía post-cocina. Recoge en KDS/comanda. Cobro con Servicio 5% y Recibos en chrome de caja. Cajero no cobra sin turno. Despachar saca el ticket del KDS. Rider en cola, no en mesas. Plataforma: Dashboard + Restaurantes. |
+| 12-ux-ui | dirección C | `docs/12-ux-ui/` — pase de cocina / comanda. Originalidad 8, encaje 9. Implementado en shell, piso, KDS, login (OS `b71085f` regla 13). |
 | 13-operations | parcial | Runbook MVP + HTTPS/Caddy + secretos, volume de logos y backup/restore en [10-devops/local-setup.md](10-devops/local-setup.md). Piloto = Docker local; VPS fuera. [mvp-production-readiness.md](mvp-production-readiness.md). |
 | 14-training | parcial | Setup en [README.md](../README.md). No hay onboarding técnico aparte. |
 | 15-project-control | mapeado | `.ai-engineering/PROJECT_STATE.md`, `PROJECT_DECISIONS.md`, `PROJECT_CHANGELOG.md`, [BACKLOG.md](../.ai-engineering/BACKLOG.md). GitHub Projects todavía no está creado (token del agente es solo lectura). |

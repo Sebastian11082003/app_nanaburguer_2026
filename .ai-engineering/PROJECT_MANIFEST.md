@@ -61,15 +61,18 @@ Infraestructura:
 - Software Architect
 - Backend Engineer
 - Frontend Engineer
+- UI Designer
 - QA Engineer
 - Documentation Engineer
 - Code Reviewer
 
 ---
 
-# Punto de entrada del Framework
+**Punto de entrada del Framework**
 
-AI_ENGINEERING_OS/MASTER.md
+AI Engineering OS `main` `b71085f` — `C:/Users/USER/projects/AI_ENGINEERING_OS/MASTER.md`
+
+Regla 13 (UI): no implementar interfaz genérica. Dirección en `docs/12-ux-ui/` antes del código.
 
 ---
 
@@ -107,3 +110,4 @@ Consultar:
 - Mantener compatibilidad entre módulos.
 - `/restaurant/*` es mobile-first (DEC-009).
 - El producto es POS SaaS (DEC-008 / ADR-024), no ERP.
+- UI: DEC-011 / regla 13. No código de interfaz sin dirección evaluada.

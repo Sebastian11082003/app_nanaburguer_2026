@@ -21,6 +21,7 @@
       "docs": [
         "docs/architecture/**",
         "docs/sdd-mapping.md",
+        "docs/12-ux-ui/**",
         "docs/mvp-production-readiness.md",
         ".ai-engineering/PROJECT_STATE.md",
         ".ai-engineering/PROJECT_CHANGELOG.md",
