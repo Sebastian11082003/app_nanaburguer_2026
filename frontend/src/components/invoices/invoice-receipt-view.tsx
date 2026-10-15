@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { printReceipt } from "@/src/lib/print-ticket";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { resolveAssetUrl } from "@/src/lib/resolve-asset-url";
@@ -35,6 +36,7 @@ export function InvoiceReceiptView({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [printHint, setPrintHint] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -64,6 +66,7 @@ export function InvoiceReceiptView({
     try {
       setBusy(true);
       setError("");
+      setMessage("");
       await invoicesService.accept(invoiceId);
       setMessage("Factura electrónica simulada emitida (no es DIAN)");
       await load();
@@ -78,6 +81,7 @@ export function InvoiceReceiptView({
     try {
       setBusy(true);
       setError("");
+      setMessage("");
       await invoicesService.reject(invoiceId, "Rechazada en caja");
       setMessage("Factura rechazada");
       await load();
@@ -112,8 +116,17 @@ export function InvoiceReceiptView({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => window.print()}
-            className="rounded-xl border border-zinc-700 px-4 py-2 text-sm transition hover:bg-zinc-900"
+            disabled={!receipt}
+            onClick={async () => {
+              if (!receipt) return;
+              const mode = await printReceipt(receipt);
+              setPrintHint(
+                mode === "thermal"
+                  ? "Enviado a la térmica"
+                  : "Elige la impresora térmica en el diálogo",
+              );
+            }}
+            className="rounded-xl border border-zinc-700 px-4 py-2 text-sm transition hover:bg-zinc-900 disabled:opacity-40"
           >
             Imprimir
           </button>
@@ -128,6 +141,7 @@ export function InvoiceReceiptView({
 
       {error && <p className="text-red-500">{error}</p>}
       {message && <p className="text-emerald-400">{message}</p>}
+      {printHint && <p className="text-sm text-zinc-400 print:hidden">{printHint}</p>}
 
       {receipt ? (
         <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 print:border-none print:bg-white print:text-black">

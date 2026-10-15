@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { ThermalPrinterPanel } from "@/src/components/settings/thermal-printer-panel";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import {
   paymentMethodsService,
@@ -169,6 +170,8 @@ export default function AdminSettingsPage() {
           </ul>
         )}
       </section>
+
+      <ThermalPrinterPanel />
     </div>
   );
 }

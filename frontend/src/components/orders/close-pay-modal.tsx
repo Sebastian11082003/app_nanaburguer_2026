@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
-import {
-  paymentMethodsService,
-  RestaurantPaymentMethod,
-} from "@/src/services/payment-methods.service";
+import { useActivePaymentMethods } from "@/src/hooks/use-active-payment-methods";
 import { cashService } from "@/src/services/cash.service";
 import { PaymentMethod } from "@/src/services/payment.service";
 import { useAuthStore } from "@/src/store/auth.store";
@@ -40,9 +36,8 @@ export function ClosePayModal({
   onClose,
   onConfirm,
 }: Props) {
-  const [methods, setMethods] = useState<RestaurantPaymentMethod[]>([]);
-  const [loadingMethods, setLoadingMethods] = useState(false);
-  const [loadError, setLoadError] = useState("");
+  const { methods, loading: loadingMethods, error: loadError } =
+    useActivePaymentMethods();
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [receivedInput, setReceivedInput] = useState("");
   const [shiftOpen, setShiftOpen] = useState<boolean | null>(null);
@@ -50,31 +45,15 @@ export function ClosePayModal({
 
   useEffect(() => {
     if (!open) return;
-
-    let cancelled = false;
     setReceivedInput((totalCents / 100).toFixed(0));
-    setLoadError("");
-    setLoadingMethods(true);
+    if (methods[0]?.method) {
+      setMethod((current) => current ?? methods[0].method);
+    }
+  }, [open, totalCents, methods]);
 
-    paymentMethodsService
-      .getAll(true)
-      .then((rows) => {
-        if (cancelled) return;
-        setMethods(rows);
-        setMethod(rows[0]?.method ?? null);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setMethods([]);
-        setMethod(null);
-        setLoadError(
-          getErrorMessage(err, "No se pudieron cargar los métodos de pago"),
-        );
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingMethods(false);
-      });
-
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
     cashService
       .currentSession()
       .then((current) => {
@@ -83,11 +62,10 @@ export function ClosePayModal({
       .catch(() => {
         if (!cancelled) setShiftOpen(null);
       });
-
     return () => {
       cancelled = true;
     };
-  }, [open, totalCents]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -167,6 +145,9 @@ export function ClosePayModal({
         )}
         {loadingMethods && (
           <p className="mt-3 text-sm text-zinc-500">Cargando métodos...</p>
+        )}
+        {loadError && (
+          <p className="mt-3 text-sm text-red-400">{loadError}</p>
         )}
         {!loadingMethods && methods.length === 0 && !loadError && (
           <p className="mt-3 text-sm text-amber-400">

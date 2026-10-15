@@ -1,23 +1,51 @@
-# RestoOS Print Agent (Phase 2 — scaffold)
+# RestoOS Print Agent
 
-Local bridge between the RestoOS web app and a USB ESC/POS thermal
-printer (Digital POS D300 / D200, 80mm).
+Puente local entre el POS (navegador) y una impresora térmica ESC/POS 80mm
+(Digital POS D300/D200 u otra Epson-compatible). Corre **solo en el PC de caja**.
 
-## Status
+## Arranque (demo)
 
-Scaffold only. The web app currently prints comandas via the browser
-(`KitchenTicket`). This agent will:
+En PowerShell, en esta carpeta:
 
-1. Run on the restaurant POS PC (Windows).
-2. Expose `POST http://127.0.0.1:9100/print` with ESC/POS payload or
-   structured ticket JSON.
-3. Talk to the printer over USB using `node-escpos` (or equivalent).
+```
+npm start
+```
 
-## Planned next steps
+Escucha `http://127.0.0.1:19100` (no uses 9100: ese puerto es el RAW de la térmica).
+El POS detecta `/health` y manda comanda/recibo sin el diálogo de Windows.
 
-- [ ] `npm init` + Express (or Fastify) listener on localhost only
-- [ ] ESC/POS renderer for kitchen ticket + invoice
-- [ ] Frontend toggle: browser print vs local agent
-- [ ] Auto-discovery / health check from the admin Settings page
+### Windows (USB instalada como impresora)
 
-Do not expose this agent on the public network.
+1. Configuración → Impresoras: anota el nombre exacto (ej. `POS-80`, `D300`).
+2. Compártela (clic derecho → Propiedades de impresora → Compartir) para que exista `\\localhost\Nombre`.
+3. Opcional: márcarla como predeterminada.
+4. Antes de `npm start`:
+
+```
+$env:PRINT_TARGET = "windows"
+$env:PRINT_PRINTER = "POS-80"
+```
+
+Si `PRINT_PRINTER` va vacío, usa la impresora predeterminada de Windows.
+
+### Red (IP, puerto RAW 9100)
+
+```
+$env:PRINT_TARGET = "tcp"
+$env:PRINT_HOST = "192.168.1.50"
+$env:PRINT_PORT = "9100"
+```
+
+## Probar
+
+```
+curl http://127.0.0.1:19100/health
+curl -Method POST http://127.0.0.1:19100/print/test
+```
+
+En el POS: Configuración → Impresora térmica → Imprimir prueba.
+
+Si el agente no está arriba, comanda y recibo siguen usando el diálogo del
+navegador en formato 80mm (elige la térmica ahí).
+
+No publiques este puerto a internet.
