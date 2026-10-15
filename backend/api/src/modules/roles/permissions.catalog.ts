@@ -147,6 +147,7 @@ export const SYSTEM_ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'INVOICES_VIEW',
     'DELIVERY_MANAGE',
     'REPORTS_VIEW',
+    'KITCHEN_OPERATE',
   ],
   WAITER: [
     'TABLES_VIEW',

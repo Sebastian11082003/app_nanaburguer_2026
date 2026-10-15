@@ -456,6 +456,108 @@ describe('OrdersService', () => {
     });
   });
 
+  describe('updateItem', () => {
+    it('lets a waiter edit quantity on a pending line after the ticket is in kitchen', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        type: OrderType.DINE_IN,
+        discountCents: 0,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-2',
+        orderId: 'order-1',
+        quantity: 1,
+        notes: null,
+        isComplimentary: false,
+        unitPriceCents: 4000,
+        sentToKitchenAt: null,
+        canceledAt: null,
+      });
+      (prisma.orderItem as { findMany: jest.Mock }).findMany.mockResolvedValue([
+        { lineTotalCents: 8000, canceledAt: null },
+      ]);
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+      });
+
+      await service.updateItem(
+        'order-1',
+        'line-2',
+        { quantity: 2 },
+        'restaurant-1',
+      );
+
+      const [[itemUpdate]] = (prisma.orderItem as { update: jest.Mock }).update
+        .mock.calls;
+      expect(itemUpdate.data.quantity).toBe(2);
+      expect(itemUpdate.data.lineTotalCents).toBe(8000);
+    });
+
+    it('locks quantity on a line already sent to kitchen', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-1',
+        sentToKitchenAt: new Date(),
+        canceledAt: null,
+      });
+
+      await expect(
+        service.updateItem(
+          'order-1',
+          'line-1',
+          { quantity: 3 },
+          'restaurant-1',
+        ),
+      ).rejects.toThrow(
+        'Quantity/notes can only be edited before the line is sent to kitchen',
+      );
+    });
+  });
+
+  describe('removeItem', () => {
+    it('hard-deletes a pending line on a ticket already in kitchen', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+        type: OrderType.DINE_IN,
+        discountCents: 0,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-2',
+        sentToKitchenAt: null,
+      });
+      (prisma.orderItem as { findMany: jest.Mock }).findMany.mockResolvedValue([]);
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+      });
+
+      await service.removeItem('order-1', 'line-2', 'restaurant-1');
+
+      expect((prisma.orderItem as { delete: jest.Mock }).delete).toHaveBeenCalled();
+    });
+
+    it('rejects removing a line kitchen already received', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+      });
+      (prisma.orderItem as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'line-1',
+        sentToKitchenAt: new Date(),
+      });
+
+      await expect(
+        service.removeItem('order-1', 'line-1', 'restaurant-1'),
+      ).rejects.toThrow(
+        'Items can only be removed before the line is sent to kitchen',
+      );
+    });
+  });
+
   describe('updateStatus', () => {
     it('throws NotFound for an order outside the tenant scope', async () => {
       (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue(null);
@@ -530,6 +632,37 @@ describe('OrdersService', () => {
       );
 
       expect(prisma.order.update).toHaveBeenCalled();
+    });
+
+    it('stamps unsent live lines when sending to kitchen', async () => {
+      (prisma.order as { findFirst: jest.Mock }).findFirst.mockResolvedValue({
+        id: 'order-1',
+        items: [{ canceledAt: null }],
+      });
+      (prisma.orderItem as { updateMany: jest.Mock }).updateMany.mockResolvedValue({
+        count: 1,
+      });
+      (prisma.order as { update: jest.Mock }).update.mockResolvedValue({
+        id: 'order-1',
+        status: OrderStatus.SENT_TO_KITCHEN,
+      });
+
+      await service.updateStatus(
+        'order-1',
+        OrderStatus.SENT_TO_KITCHEN,
+        'restaurant-1',
+        'user-1',
+      );
+
+      const [[stampArgs]] = (
+        prisma.orderItem as { updateMany: jest.Mock }
+      ).updateMany.mock.calls;
+      expect(stampArgs.where).toEqual({
+        orderId: 'order-1',
+        canceledAt: null,
+        sentToKitchenAt: null,
+      });
+      expect(stampArgs.data.sentToKitchenAt).toBeInstanceOf(Date);
     });
 
     it('rejects advancing a ticket with no live lines', async () => {
@@ -842,6 +975,16 @@ describe('OrdersService', () => {
 
       const [[callArgs]] = (prisma.order as { findMany: jest.Mock }).findMany.mock.calls;
       expect(callArgs.where.restaurantId).toBe('restaurant-1');
+    });
+
+    it('limits kitchenView findAll to the current local kitchen day', async () => {
+      (prisma.order as { findMany: jest.Mock }).findMany.mockResolvedValue([]);
+
+      await service.findAll('restaurant-1', { kitchenView: true });
+
+      const [[callArgs]] = (prisma.order as { findMany: jest.Mock }).findMany.mock.calls;
+      expect(callArgs.where.restaurantId).toBe('restaurant-1');
+      expect(callArgs.where.createdAt.gte).toBeInstanceOf(Date);
     });
 
     it('filters findAll to open statuses when activeOnly is set', async () => {

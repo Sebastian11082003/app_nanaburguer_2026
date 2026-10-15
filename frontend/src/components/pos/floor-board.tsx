@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { getErrorMessage } from "@/src/lib/get-error-message";
@@ -34,23 +34,19 @@ function OccupancyAmount({ cents }: { cents: number }) {
   );
 }
 
-function ChannelCard({
+function OccupancyCard({
+  href,
   title,
   occupied,
   totalCents,
-  onClick,
 }: {
+  href?: string;
   title: string;
   occupied: boolean;
   totalCents: number;
-  onClick: () => void;
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40 sm:min-h-[140px]"
-    >
+  const body = (
+    <>
       <div
         className={`w-1.5 shrink-0 ${occupied ? "bg-red-500" : "bg-emerald-400"}`}
       />
@@ -63,7 +59,20 @@ function ChannelCard({
         </h2>
         {occupied && <OccupancyAmount cents={totalCents} />}
       </div>
-    </button>
+    </>
+  );
+
+  const className =
+    "flex min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40 sm:min-h-[140px]";
+
+  if (!href) {
+    return <div className={`${className} cursor-default`}>{body}</div>;
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {body}
+    </Link>
   );
 }
 
@@ -76,8 +85,8 @@ function ChannelCard({
 const FLOOR_POLL_MS = 8000;
 
 export function FloorBoard() {
-  const router = useRouter();
-  const role = useAuthStore((s) => s.user?.role);
+  const user = useAuthStore((s) => s.user);
+  const role = user?.role;
   const [tables, setTables] = useState<Table[]>([]);
   const [pickup, setPickup] = useState({ count: 0, totalCents: 0 });
   const [delivery, setDelivery] = useState({ count: 0, totalCents: 0 });
@@ -113,13 +122,9 @@ export function FloorBoard() {
     return () => window.clearInterval(id);
   }, [load]);
 
-  function openTable(table: Table) {
-    if (!canOpenTable(role)) return;
-    router.push(`${tableOrderHref()}?tableId=${table.id}`);
-  }
-
-  const pickupHrefForRole = pickupHref(role);
-  const deliveryHrefForRole = deliveryHref(role);
+  const pickupHrefForRole = pickupHref(user);
+  const deliveryHrefForRole = deliveryHref(user);
+  const allowTables = canOpenTable(role);
 
   if (loading) return <p className="text-muted">Cargando mesas...</p>;
   if (error) return <p className="text-danger">{error}</p>;
@@ -129,46 +134,34 @@ export function FloorBoard() {
       {tables.map((table) => {
         const occupied = Boolean(table.activeOrder);
         return (
-          <button
+          <OccupancyCard
             key={table.id}
-            type="button"
-            onClick={() => openTable(table)}
-            className="flex min-h-[132px] overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 text-left transition hover:-translate-y-0.5 hover:border-flame/40 sm:min-h-[140px]"
-          >
-            <div
-              className={`w-1.5 shrink-0 ${
-                occupied ? "bg-red-500" : "bg-emerald-400"
-              }`}
-            />
-            <div className="flex flex-1 flex-col p-3 sm:p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted sm:text-xs sm:tracking-[0.16em]">
-                {occupied ? "Ocupada" : "Disponible"}
-              </p>
-              <h2 className="mt-1.5 font-display text-base leading-tight sm:mt-2 sm:text-xl">
-                Mesa {table.label}
-              </h2>
-              {occupied && (
-                <OccupancyAmount cents={table.activeOrder?.totalCents ?? 0} />
-              )}
-            </div>
-          </button>
+            href={
+              allowTables
+                ? `${tableOrderHref()}?tableId=${table.id}`
+                : undefined
+            }
+            title={`Mesa ${table.label}`}
+            occupied={occupied}
+            totalCents={table.activeOrder?.totalCents ?? 0}
+          />
         );
       })}
 
       {pickupHrefForRole ? (
-        <ChannelCard
+        <OccupancyCard
+          href={pickupHrefForRole}
           title="Llevar · Recoger"
           occupied={pickup.count > 0}
           totalCents={pickup.totalCents}
-          onClick={() => router.push(pickupHrefForRole)}
         />
       ) : null}
       {deliveryHrefForRole ? (
-        <ChannelCard
+        <OccupancyCard
+          href={deliveryHrefForRole}
           title="Domicilios"
           occupied={delivery.count > 0}
           totalCents={delivery.totalCents}
-          onClick={() => router.push(deliveryHrefForRole)}
         />
       ) : null}
     </div>

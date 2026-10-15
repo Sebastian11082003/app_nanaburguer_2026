@@ -5,9 +5,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 
 import { BrandMark } from "@/src/components/brand/brand-mark";
-import { releaseEmptyTicketIfNeeded } from "@/src/lib/empty-ticket-leave";
+import {
+  hasEmptyTicketReleaser,
+  releaseEmptyTicketIfNeeded,
+} from "@/src/lib/empty-ticket-leave";
 import { changeLocal, logoutStaffKeepLocal } from "@/src/lib/staff-session";
-import { isPosNavActive, posNavForRole } from "@/src/lib/pos-nav";
+import { isPosNavActive, posNavForUser } from "@/src/lib/pos-nav";
+import { tenantThemeStyle } from "@/src/lib/tenant-theme";
 import { useAuthStore } from "@/src/store/auth.store";
 import { useRestaurantStore } from "@/src/store/restaurant.store";
 
@@ -21,10 +25,9 @@ export function PosShell({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const restaurant = useRestaurantStore((s) => s.restaurant);
   const [menuOpen, setMenuOpen] = useState(false);
-  const nav = posNavForRole(user?.role);
+  const nav = posNavForUser(user);
 
   async function leaveTo(href: string) {
-    // Empty CREATED tickets must die here — a plain Link would leave the floor red.
     await releaseEmptyTicketIfNeeded();
     router.push(href);
   }
@@ -42,7 +45,10 @@ export function PosShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-ink text-paper">
+    <div
+      className="min-h-screen overflow-x-hidden bg-ink text-paper"
+      style={tenantThemeStyle(restaurant?.primaryColor)}
+    >
       <header className="sticky top-0 z-30 border-b border-white/10 bg-black/80 pt-[env(safe-area-inset-top)] backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-2.5 sm:gap-4 sm:px-6 sm:py-3">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
@@ -102,6 +108,7 @@ export function PosShell({ children }: { children: ReactNode }) {
                 key={item.key}
                 href={item.href}
                 onClick={(e) => {
+                  if (!hasEmptyTicketReleaser()) return;
                   e.preventDefault();
                   void leaveTo(item.href);
                 }}

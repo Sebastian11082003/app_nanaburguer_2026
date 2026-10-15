@@ -52,6 +52,10 @@ export function setEmptyTicketReleaser(orderId: string | null) {
   };
 }
 
+export function hasEmptyTicketReleaser(): boolean {
+  return releaser !== null;
+}
+
 export async function releaseEmptyTicketIfNeeded() {
   const fn = releaser;
   releaser = null;

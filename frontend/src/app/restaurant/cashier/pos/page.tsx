@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { KitchenTicket } from "@/src/components/orders/kitchen-ticket";
 import { OrderItemRow } from "@/src/components/orders/order-item-row";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
@@ -18,6 +19,7 @@ import {
   isEmptyOpenTicket,
   releaseEmptyTicketIfNeeded,
 } from "@/src/lib/empty-ticket-leave";
+import { pendingKitchenLines } from "@/src/lib/kitchen-lines";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderProgressLabel } from "@/src/lib/order-channel-label";
@@ -49,6 +51,7 @@ export default function CashierPosPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [ticketOpen, setTicketOpen] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -118,8 +121,7 @@ export default function CashierPosPage() {
         quantity: 1,
       });
       setOrder(updated);
-    } catch (err: unknown) {
-      setError(getErrorMessage(err, "No se pudo agregar el producto"));
+      await loadOpenPickups();
     } finally {
       setBusy(false);
     }
@@ -134,12 +136,19 @@ export default function CashierPosPage() {
     try {
       setBusy(true);
       setError("");
-      const updated = await ordersService.updateStatus(
-        order.id,
-        "SENT_TO_KITCHEN",
-      );
-      setOrder(updated);
-      setMessage(`Pedido #${updated.orderNumber} enviado a cocina`);
+      const pending = pendingKitchenLines(order);
+      if (pending.length > 0) {
+        const updated = await ordersService.updateStatus(
+          order.id,
+          "SENT_TO_KITCHEN",
+        );
+        setOrder(updated);
+        setMessage(`Pedido #${updated.orderNumber} enviado a cocina`);
+        await loadOpenPickups();
+      } else {
+        setMessage("Comanda lista para imprimir");
+      }
+      setTicketOpen(true);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo enviar a cocina"));
     } finally {
@@ -195,7 +204,8 @@ export default function CashierPosPage() {
 
   async function handleCancelItem(itemId: string) {
     if (!order) return;
-    if (order.status === "CREATED") {
+    const line = order.items.find((item) => item.id === itemId);
+    if (!line?.sentToKitchenAt) {
       try {
         setBusy(true);
         setError("");
@@ -241,12 +251,21 @@ export default function CashierPosPage() {
     }
   }
 
-  const canEdit = !order || order.status === "CREATED";
+  const canAddItems =
+    !order || (order.status !== "CLOSED" && order.status !== "CANCELED");
   const canEditPickup =
     !order || (order.status !== "CLOSED" && order.status !== "CANCELED");
   const canDiscard = isEmptyOpenTicket(order);
   const kitchenDisabled =
-    busy || !order || order.status !== "CREATED" || !hasLiveLines(order);
+    busy ||
+    !order ||
+    !hasLiveLines(order) ||
+    order.status === "CLOSED" ||
+    order.status === "CANCELED";
+  const kitchenButtonLabel =
+    pendingKitchenLines(order).length > 0
+      ? "Enviar a cocina"
+      : "Imprimir comanda";
   const chargeDisabled =
     busy ||
     !order ||
@@ -308,7 +327,9 @@ export default function CashierPosPage() {
                   : ""}
               </span>
               <span className="text-sm font-bold tabular-nums">
-                {formatCents(open.totalCents)}
+                {formatCents(
+                  order?.id === open.id ? order.totalCents : open.totalCents,
+                )}
               </span>
             </button>
             );
@@ -327,14 +348,14 @@ export default function CashierPosPage() {
               placeholder="Nombre del cliente"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              disabled={!canEdit}
+              disabled={!canAddItems}
             />
             <input
               className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-base"
               placeholder="Teléfono (opcional)"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
-              disabled={!canEdit}
+              disabled={!canAddItems}
             />
             <label className="block text-sm text-zinc-400">
               Hora de recoger
@@ -376,7 +397,7 @@ export default function CashierPosPage() {
               <button
                 key={item.id}
                 type="button"
-                disabled={busy || !canEdit}
+                disabled={busy || !canAddItems}
                 onClick={() => handleAddItem(item.id)}
                 className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4 text-left hover:border-white/40 disabled:opacity-40"
               >
@@ -414,7 +435,9 @@ export default function CashierPosPage() {
                     ? handleCancelItem
                     : undefined
                 }
-                cancelLabel={order?.status === "CREATED" ? "Quitar" : "Cancelar"}
+                cancelLabel={
+                  line.sentToKitchenAt ? "Cancelar" : "Quitar"
+                }
               />
             ))}
           </ul>
@@ -435,7 +458,7 @@ export default function CashierPosPage() {
               onClick={handleSendToKitchen}
               className="w-full rounded-xl border border-zinc-700 py-3 font-bold disabled:opacity-40"
             >
-              Enviar a cocina
+              {kitchenButtonLabel}
             </button>
             <button
               type="button"
@@ -478,7 +501,7 @@ export default function CashierPosPage() {
             onClick={handleSendToKitchen}
             className="min-h-11 flex-1 rounded-xl border border-zinc-700 px-3 py-3 text-sm font-bold disabled:opacity-40"
           >
-            Enviar a cocina
+            {kitchenButtonLabel}
           </button>
           <button
             type="button"
@@ -503,6 +526,13 @@ export default function CashierPosPage() {
         onClose={() => setPayOpen(false)}
         onConfirm={handlePay}
       />
+      {order && ticketOpen && (
+        <KitchenTicket
+          order={order}
+          deltaOnly
+          onClose={() => setTicketOpen(false)}
+        />
+      )}
     </main>
   );
 }

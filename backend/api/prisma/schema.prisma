@@ -395,6 +395,8 @@ model OrderItem {
   /// Soft-cancel after the ticket left CREATED (HU-012). Kept for audit.
   canceledAt      DateTime?
   cancelReason    String?
+  /// When set, kitchen already received this line (HU-030). Null = pending.
+  sentToKitchenAt DateTime?
 
   order    Order    @relation(fields: [orderId], references: [id])
   menuItem MenuItem @relation(fields: [menuItemId], references: [id])

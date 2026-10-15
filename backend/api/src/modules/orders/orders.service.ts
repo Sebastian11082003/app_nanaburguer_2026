@@ -23,6 +23,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { AddItemDto } from './dto/add-item.dto';
 import { TransferTableDto } from './dto/transfer-table.dto';
 import { FindOrdersDto } from './dto/find-orders.dto';
+import { startOfKitchenDay } from './kitchen-day';
 
 /**
  * OrdersService is the core of the operational flow: creating orders,
@@ -287,7 +288,10 @@ export class OrdersService {
         throw new NotFoundException('Order not found');
       }
 
-      if (order.status === OrderStatus.CLOSED) {
+      if (
+        order.status === OrderStatus.CLOSED ||
+        order.status === OrderStatus.CANCELED
+      ) {
         throw new BadRequestException('Order closed');
       }
 
@@ -352,8 +356,8 @@ export class OrdersService {
   // UPDATE ITEM
   // ================================
   /**
-   * Edits a line item. Quantity/notes only while CREATED; cortesía
-   * (`isComplimentary`) allowed until the order is closed/canceled.
+   * Edits a line item. Quantity/notes only on lines not yet sent to
+   * kitchen (HU-030); cortesía allowed until the order is closed/canceled.
    */
   async updateItem(
     orderId: string,
@@ -385,20 +389,20 @@ export class OrdersService {
         throw new BadRequestException('Order is closed or canceled');
       }
 
-      const editingQtyOrNotes =
-        dto.quantity !== undefined || dto.notes !== undefined;
-      if (editingQtyOrNotes && order.status !== OrderStatus.CREATED) {
-        throw new BadRequestException(
-          'Quantity/notes can only be edited before the order is sent to kitchen',
-        );
-      }
-
       const item = await tx.orderItem.findFirst({
         where: { id: itemId, orderId },
       });
 
       if (!item) {
         throw new NotFoundException('Order item not found');
+      }
+
+      const editingQtyOrNotes =
+        dto.quantity !== undefined || dto.notes !== undefined;
+      if (editingQtyOrNotes && (item.sentToKitchenAt || item.canceledAt)) {
+        throw new BadRequestException(
+          'Quantity/notes can only be edited before the line is sent to kitchen',
+        );
       }
 
       const quantity = dto.quantity ?? item.quantity;
@@ -507,11 +511,9 @@ export class OrdersService {
   // REMOVE ITEM
   // ================================
   /**
-   * Removes a line item while the order is still being built (status
-   * CREATED, i.e. never sent to kitchen). This is a hard delete — safe
-   * only at this stage because nothing downstream (kitchen ticket, sales
-   * report) has seen the item yet. Once the order leaves CREATED, use
-   * `cancelItem` (audit trail), not this one.
+   * Hard-deletes a line that kitchen has not received yet (HU-030).
+   * Safe because no comanda/KDS stamp exists. After `sentToKitchenAt`,
+   * use `cancelItem` (audit trail).
    */
   async removeItem(
     orderId: string,
@@ -527,10 +529,11 @@ export class OrdersService {
         throw new NotFoundException('Order not found');
       }
 
-      if (order.status !== OrderStatus.CREATED) {
-        throw new BadRequestException(
-          'Items can only be removed before the order is sent to kitchen',
-        );
+      if (
+        order.status === OrderStatus.CLOSED ||
+        order.status === OrderStatus.CANCELED
+      ) {
+        throw new BadRequestException('Order is closed or canceled');
       }
 
       const item = await tx.orderItem.findFirst({
@@ -539,6 +542,12 @@ export class OrdersService {
 
       if (!item) {
         throw new NotFoundException('Order item not found');
+      }
+
+      if (item.sentToKitchenAt) {
+        throw new BadRequestException(
+          'Items can only be removed before the line is sent to kitchen',
+        );
       }
 
       await tx.orderItem.delete({ where: { id: itemId } });
@@ -663,54 +672,69 @@ export class OrdersService {
     userId: string,
     role?: UserRole,
   ) {
-    const order = await this.prisma.order.findFirst({
-      where: {
-        id: orderId,
-        restaurantId,
-      },
-      include: {
-        items: {
-          select: { canceledAt: true },
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findFirst({
+        where: {
+          id: orderId,
+          restaurantId,
         },
-      },
-    });
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
-    const live = hasLiveOrderLines(order.items);
-
-    if (status === OrderStatus.CANCELED && role && role !== UserRole.ADMIN) {
-      if (live) {
-        throw new ForbiddenException(
-          'Solo un ticket vacío se puede liberar sin ser admin',
-        );
-      }
-    } else if (
-      status !== OrderStatus.CANCELED &&
-      status !== OrderStatus.CLOSED &&
-      !live
-    ) {
-      throw new BadRequestException('No live items on this ticket');
-    }
-
-    return this.prisma.order.update({
-      where: {
-        id: orderId,
-      },
-
-      data: {
-        status,
-
-        updatedBy: {
-          connect: {
-            id: userId,
+        include: {
+          items: {
+            select: { canceledAt: true },
           },
         },
-      },
+      });
 
-      include: OrdersService.ORDER_INCLUDE,
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+
+      const live = hasLiveOrderLines(order.items);
+
+      if (status === OrderStatus.CANCELED && role && role !== UserRole.ADMIN) {
+        if (live) {
+          throw new ForbiddenException(
+            'Solo un ticket vacío se puede liberar sin ser admin',
+          );
+        }
+      } else if (
+        status !== OrderStatus.CANCELED &&
+        status !== OrderStatus.CLOSED &&
+        !live
+      ) {
+        throw new BadRequestException('No live items on this ticket');
+      }
+
+      if (status === OrderStatus.SENT_TO_KITCHEN) {
+        await tx.orderItem.updateMany({
+          where: {
+            orderId,
+            canceledAt: null,
+            sentToKitchenAt: null,
+          },
+          data: {
+            sentToKitchenAt: new Date(),
+          },
+        });
+      }
+
+      return tx.order.update({
+        where: {
+          id: orderId,
+        },
+
+        data: {
+          status,
+
+          updatedBy: {
+            connect: {
+              id: userId,
+            },
+          },
+        },
+
+        include: OrdersService.ORDER_INCLUDE,
+      });
     });
   }
 
@@ -927,6 +951,10 @@ export class OrdersService {
 
         ...(query.tableId && {
           tableId: query.tableId,
+        }),
+
+        ...(query.kitchenView && {
+          createdAt: { gte: startOfKitchenDay() },
         }),
       },
 

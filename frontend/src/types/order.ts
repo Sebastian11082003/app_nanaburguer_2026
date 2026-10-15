@@ -21,6 +21,8 @@ export interface OrderItem {
   isComplimentary?: boolean;
   canceledAt?: string | null;
   cancelReason?: string | null;
+  /** ISO timestamp when kitchen received this line. Null = pending (HU-030). */
+  sentToKitchenAt?: string | null;
   /** Product name, so tickets/receipts can show "2x Hamburguesa" instead of "2x item". */
   menuItem?: { name: string } | null;
 }

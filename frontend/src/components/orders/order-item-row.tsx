@@ -24,6 +24,16 @@ export function OrderItemRow({
         {canceled ? "CANCELADO · " : ""}
         {orderLineLabel(item)}
         {item.notes && !canceled ? ` · ${item.notes}` : ""}
+        {!canceled && item.sentToKitchenAt ? (
+          <span className="ml-2 text-[10px] font-bold uppercase text-zinc-500">
+            Enviado
+          </span>
+        ) : null}
+        {!canceled && !item.sentToKitchenAt ? (
+          <span className="ml-2 text-[10px] font-bold uppercase text-sky-400">
+            Pendiente
+          </span>
+        ) : null}
       </span>
       <span className="flex shrink-0 items-center gap-2 whitespace-nowrap">
         {formatCents(canceled ? 0 : item.lineTotalCents)}

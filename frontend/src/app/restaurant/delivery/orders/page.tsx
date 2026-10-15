@@ -4,6 +4,7 @@ import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { ClosePayModal } from "@/src/components/orders/close-pay-modal";
+import { KitchenTicket } from "@/src/components/orders/kitchen-ticket";
 import { useEmptyTicketLeave } from "@/src/hooks/use-empty-ticket-leave";
 import { closeAndPayOrder } from "@/src/lib/close-and-pay";
 import { posReceiptHref } from "@/src/lib/invoice-href";
@@ -13,6 +14,7 @@ import {
   isEmptyOpenTicket,
   releaseEmptyTicketIfNeeded,
 } from "@/src/lib/empty-ticket-leave";
+import { pendingKitchenLines } from "@/src/lib/kitchen-lines";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
 import { orderLineLabel } from "@/src/lib/order-line-label";
@@ -48,6 +50,7 @@ function DeliveryCreateOrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [busy, setBusy] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [ticketOpen, setTicketOpen] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -195,12 +198,18 @@ function DeliveryCreateOrderPage() {
     try {
       setBusy(true);
       setError("");
-      const updated = await ordersService.updateStatus(
-        order.id,
-        "SENT_TO_KITCHEN",
-      );
-      setOrder(updated);
-      setMessage(`Pedido #${updated.orderNumber} enviado a cocina`);
+      const pending = pendingKitchenLines(order);
+      if (pending.length > 0) {
+        const updated = await ordersService.updateStatus(
+          order.id,
+          "SENT_TO_KITCHEN",
+        );
+        setOrder(updated);
+        setMessage(`Pedido #${updated.orderNumber} enviado a cocina`);
+      } else {
+        setMessage("Comanda lista para imprimir");
+      }
+      setTicketOpen(true);
     } catch (err: unknown) {
       setError(getErrorMessage(err, "No se pudo enviar a cocina"));
     } finally {
@@ -286,6 +295,16 @@ function DeliveryCreateOrderPage() {
     order.totalCents <= 0 ||
     order.status === "CLOSED" ||
     order.status === "CANCELED";
+  const kitchenSendDisabled =
+    busy ||
+    !order ||
+    !hasLiveLines(order) ||
+    order.status === "CLOSED" ||
+    order.status === "CANCELED";
+  const kitchenButtonLabel =
+    pendingKitchenLines(order).length > 0
+      ? "Enviar a cocina"
+      : "Imprimir comanda";
   const afterCreateHref =
     role === "CASHIER" || role === "ADMIN"
       ? "/restaurant/cashier/delivery"
@@ -444,7 +463,11 @@ function DeliveryCreateOrderPage() {
               <button
                 key={item.id}
                 type="button"
-                disabled={busy || (order?.status !== undefined && order.status !== "CREATED")}
+                disabled={
+                  busy ||
+                  (order != null &&
+                    (order.status === "CLOSED" || order.status === "CANCELED"))
+                }
                 onClick={() => handleAddItem(item.id)}
                 className="panel-surface p-4 text-left transition hover:border-flame/40 disabled:opacity-40"
               >
@@ -482,11 +505,11 @@ function DeliveryCreateOrderPage() {
           <div className="mt-6 hidden space-y-3 lg:block">
             <button
               type="button"
-              disabled={busy || !order || order.status !== "CREATED"}
+              disabled={kitchenSendDisabled}
               onClick={handleSendToKitchen}
               className="btn-primary w-full disabled:opacity-40"
             >
-              Enviar a cocina
+              {kitchenButtonLabel}
             </button>
             {canCharge ? (
               <button
@@ -527,11 +550,11 @@ function DeliveryCreateOrderPage() {
             <>
           <button
             type="button"
-            disabled={busy || !order || order.status !== "CREATED"}
+            disabled={kitchenSendDisabled}
             onClick={handleSendToKitchen}
             className="btn-primary min-h-11 flex-1 disabled:opacity-40"
           >
-            Enviar a cocina
+            {kitchenButtonLabel}
           </button>
           {canCharge ? (
             <button
@@ -558,6 +581,13 @@ function DeliveryCreateOrderPage() {
           busy={busy}
           onClose={() => setPayOpen(false)}
           onConfirm={handlePay}
+        />
+      ) : null}
+      {order && ticketOpen ? (
+        <KitchenTicket
+          order={order}
+          deltaOnly
+          onClose={() => setTicketOpen(false)}
         />
       ) : null}
     </main>

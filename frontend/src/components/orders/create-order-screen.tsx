@@ -19,6 +19,10 @@ import {
 } from "@/src/lib/empty-ticket-leave";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
+import {
+  isPendingKitchenLine,
+  pendingKitchenLines,
+} from "@/src/lib/kitchen-lines";
 import { orderLineLabel } from "@/src/lib/order-line-label";
 import { menuService } from "@/src/services/menu.service";
 import { ordersService } from "@/src/services/orders.service";
@@ -75,6 +79,7 @@ export function CreateOrderScreen({
   const [message, setMessage] = useState("");
   const [transferOpen, setTransferOpen] = useState(false);
   const [ticketOpen, setTicketOpen] = useState(false);
+  const [ticketDeltaOnly, setTicketDeltaOnly] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   /** When true, "Enviar a cocina" skips opening the printable comanda. */
   const [skipPrint, setSkipPrint] = useState(false);
@@ -247,7 +252,7 @@ export function CreateOrderScreen({
   async function handleSendToKitchen() {
     if (!order) return;
 
-    if (!order.items?.length) {
+    if (!hasLiveLines(order)) {
       setError("Agrega al menos un producto antes de enviar a cocina");
       return;
     }
@@ -256,7 +261,8 @@ export function CreateOrderScreen({
       setBusy(true);
       setError("");
 
-      if (order.status === "CREATED") {
+      const pending = pendingKitchenLines(order);
+      if (pending.length > 0) {
         const updated = await ordersService.updateStatus(
           order.id,
           "SENT_TO_KITCHEN",
@@ -264,13 +270,19 @@ export function CreateOrderScreen({
         setOrder(updated);
         setMessage(
           skipPrint
-            ? "Orden enviada a cocina (sin imprimir)"
-            : "Orden enviada a cocina",
+            ? pending.length === (order.items?.filter((i) => !i.canceledAt).length ?? 0)
+              ? "Orden enviada a cocina (sin imprimir)"
+              : "Nueva ronda enviada a cocina (sin imprimir)"
+            : pending.length === (order.items?.filter((i) => !i.canceledAt).length ?? 0)
+              ? "Orden enviada a cocina"
+              : "Nueva ronda enviada a cocina",
         );
+        setTicketDeltaOnly(true);
       } else {
         setMessage(
           skipPrint ? "Comanda lista (sin imprimir)" : "Comanda lista para imprimir",
         );
+        setTicketDeltaOnly(true);
       }
 
       if (!skipPrint) {
@@ -388,7 +400,9 @@ export function CreateOrderScreen({
     [categories],
   );
 
-  const canEditLines = Boolean(order) && order?.status === "CREATED";
+  const pendingCount = pendingKitchenLines(order).length;
+  const kitchenButtonLabel =
+    pendingCount > 0 ? "Enviar a cocina" : "Imprimir comanda";
   const canAddItems =
     !!order &&
     order.status !== "CLOSED" &&
@@ -435,8 +449,6 @@ export function CreateOrderScreen({
       currentUser?.role === "CASHIER" ||
       currentUser?.role === "ADMIN" ||
       hasPermission(currentUser, "ORDERS_DISCOUNT"));
-  const kitchenButtonLabel =
-    order?.status === "CREATED" ? "Enviar a cocina" : "Imprimir comanda";
   const kitchenDisabled =
     busy ||
     !order ||
@@ -464,7 +476,10 @@ export function CreateOrderScreen({
               {order && !!order.items?.length && (
                 <button
                   type="button"
-                  onClick={() => setTicketOpen(true)}
+                  onClick={() => {
+                    setTicketDeltaOnly(false);
+                    setTicketOpen(true);
+                  }}
                   className="min-h-11 text-zinc-400 hover:text-white"
                 >
                   Ver comanda
@@ -584,7 +599,9 @@ export function CreateOrderScreen({
           )}
 
           <ul className="mt-4 space-y-3">
-            {(order?.items ?? []).map((line) => (
+            {(order?.items ?? []).map((line) => {
+              const pendingLine = isPendingKitchenLine(line);
+              return (
               <li
                 key={line.id}
                 className={`flex items-start justify-between gap-3 text-sm ${
@@ -603,6 +620,14 @@ export function CreateOrderScreen({
                       <span className="ml-2 text-[10px] font-bold uppercase text-red-400 no-underline">
                         Cancelado
                       </span>
+                    ) : order?.status !== "CREATED" && pendingLine ? (
+                      <span className="ml-2 text-[10px] font-bold uppercase text-sky-400 no-underline">
+                        Pendiente
+                      </span>
+                    ) : order?.status !== "CREATED" && !pendingLine ? (
+                      <span className="ml-2 text-[10px] font-bold uppercase text-zinc-500 no-underline">
+                        Enviado
+                      </span>
                     ) : null}
                   </p>
                   {line.notes && (
@@ -610,7 +635,7 @@ export function CreateOrderScreen({
                       &quot;{line.notes}&quot;
                     </p>
                   )}
-                  {canEditLines && (
+                  {pendingLine && (
                     <div className="mt-1.5 flex items-center gap-2">
                       <button
                         type="button"
@@ -658,7 +683,7 @@ export function CreateOrderScreen({
                       ? formatCents(0)
                       : formatCents(line.lineTotalCents)}
                   </span>
-                  {canEditLines && !line.canceledAt && (
+                  {pendingLine && (
                     <button
                       type="button"
                       disabled={busy}
@@ -669,7 +694,7 @@ export function CreateOrderScreen({
                       ✕
                     </button>
                   )}
-                  {!canEditLines &&
+                  {!pendingLine &&
                     canCancelItem &&
                     !line.canceledAt && (
                       <button
@@ -684,7 +709,8 @@ export function CreateOrderScreen({
                     )}
                 </div>
               </li>
-            ))}
+            );
+            })}
           </ul>
 
           {!order?.items?.length && (
@@ -855,7 +881,11 @@ export function CreateOrderScreen({
       </div>
 
       {order && ticketOpen && (
-        <KitchenTicket order={order} onClose={() => setTicketOpen(false)} />
+        <KitchenTicket
+          order={order}
+          deltaOnly={ticketDeltaOnly}
+          onClose={() => setTicketOpen(false)}
+        />
       )}
     </>
   );

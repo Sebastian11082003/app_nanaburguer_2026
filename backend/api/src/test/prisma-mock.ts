@@ -12,6 +12,7 @@ function createDelegateMock() {
     findMany: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
+    updateMany: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
     groupBy: jest.fn(),

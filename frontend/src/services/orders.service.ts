@@ -11,6 +11,7 @@ export interface FindOrdersParams {
   type?: string;
   tableId?: string;
   activeOnly?: boolean;
+  kitchenView?: boolean;
 }
 
 /**

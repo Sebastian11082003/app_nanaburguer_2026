@@ -5,20 +5,15 @@ import { useRouter } from "next/navigation";
 
 import { PosShell } from "@/src/components/pos/pos-shell";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
+import { canAccessPosStation } from "@/src/lib/pos-nav";
+import { homeForRole } from "@/src/services/user-auth.service";
 import { useAuthStore } from "@/src/store/auth.store";
-import { UserRole } from "@/src/types/auth";
 
 type Station = "floor" | "cashier" | "waiter" | "delivery";
 
-const ALLOW: Record<Station, UserRole[]> = {
-  floor: ["ADMIN", "CASHIER", "WAITER", "DELIVERY"],
-  cashier: ["ADMIN", "CASHIER"],
-  waiter: ["ADMIN", "CASHIER", "WAITER"],
-  delivery: ["ADMIN", "CASHIER", "DELIVERY"],
-};
-
 /**
- * Same POS chrome as the floor. Station only decides who may open the route.
+ * Same POS chrome as the floor. Station decides who may open the route:
+ * role default plus extra permissions (HU-032). Riders never land on Mesas.
  */
 export function StaffPosLayout({
   children,
@@ -40,11 +35,9 @@ export function StaffPosLayout({
       router.replace("/restaurant/login");
       return;
     }
-    const current = user?.role;
-    if (current && !ALLOW[station].includes(current)) {
-      router.replace(
-        current === "KITCHEN" ? "/restaurant/kitchen" : "/restaurant/app",
-      );
+    if (!user?.role) return;
+    if (!canAccessPosStation(user, station)) {
+      router.replace(homeForRole(user.role));
     }
   }, [router, isAuthenticated, role, station]);
 
