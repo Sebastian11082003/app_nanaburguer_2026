@@ -12,6 +12,7 @@ export interface StaffRestaurant {
   name: string;
   slug: string;
   logoUrl?: string | null;
+  primaryColor?: string | null;
 }
 
 export interface StaffLoginResponse {

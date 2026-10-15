@@ -9,6 +9,7 @@ interface RestaurantLoginResponse {
     name: string;
     slug: string;
     logoUrl: string | null;
+    primaryColor?: string | null;
   };
 }
 
@@ -17,6 +18,7 @@ export interface RestaurantBranding {
   name: string;
   slug: string;
   logoUrl: string | null;
+  primaryColor?: string | null;
 }
 
 export const restaurantAuthService = {
@@ -38,6 +40,7 @@ export const restaurantAuthService = {
       name: data.name,
       slug: data.slug ?? slug.trim().toLowerCase(),
       logoUrl: data.logoUrl ?? null,
+      primaryColor: data.primaryColor ?? null,
     };
   },
 };

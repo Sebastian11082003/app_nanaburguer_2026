@@ -11,6 +11,7 @@ interface Restaurant {
   name: string;
   slug: string;
   logoUrl?: string | null;
+  primaryColor?: string | null;
 }
 
 interface State {

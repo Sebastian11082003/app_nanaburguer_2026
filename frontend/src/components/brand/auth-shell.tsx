@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ReactNode } from "react";
 
 import { PlatformMark } from "@/src/components/brand/platform-mark";
+import { tenantThemeStyle } from "@/src/lib/tenant-theme";
 
 interface AuthShellProps {
   eyebrow?: string;
@@ -19,6 +20,7 @@ interface AuthShellProps {
    * (e.g. its role login pages), never the other way around.
    */
   brand?: ReactNode;
+  primaryColor?: string | null;
 }
 
 export function AuthShell({
@@ -30,9 +32,13 @@ export function AuthShell({
   footerLabel = "Volver al inicio",
   footerAction,
   brand,
+  primaryColor,
 }: AuthShellProps) {
   return (
-    <main className="brand-atmosphere brand-noise relative flex min-h-screen items-center justify-center overflow-x-hidden px-4 py-6 sm:py-10">
+    <main
+      className="brand-atmosphere brand-noise relative flex min-h-screen items-center justify-center overflow-x-hidden px-4 py-6 sm:py-10"
+      style={tenantThemeStyle(primaryColor)}
+    >
       <div className="brand-grid pointer-events-none absolute inset-0" />
       <div className="animate-glow pointer-events-none absolute left-1/2 top-0 h-64 w-[min(36rem,100%)] -translate-x-1/2 rounded-full bg-flame/20 blur-3xl" />
 

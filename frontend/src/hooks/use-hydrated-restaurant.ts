@@ -44,12 +44,14 @@ export function useHydratedRestaurant() {
         if (!latest || latest.slug !== current.slug) return;
         if (
           branding.logoUrl !== latest.logoUrl ||
-          branding.name !== latest.name
+          branding.name !== latest.name ||
+          branding.primaryColor !== latest.primaryColor
         ) {
           useRestaurantStore.getState().setTenantPreview({
             ...latest,
             name: branding.name,
             logoUrl: branding.logoUrl,
+            primaryColor: branding.primaryColor,
           });
         }
       } catch {

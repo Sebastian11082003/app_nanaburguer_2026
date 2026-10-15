@@ -42,13 +42,14 @@ export default function RestaurantSettingsPage() {
 
   /** Pushes the given logo/name into the persisted tenant session so it shows up everywhere immediately. */
   const syncBrandToStore = useCallback(
-    (name: string, logoUrl: string | null) => {
+    (name: string, logoUrl: string | null, primaryColor?: string | null) => {
       if (accessToken && restaurant) {
         setRestaurantAuth(accessToken, {
           id: restaurant.id,
           slug: restaurant.slug,
           name,
           logoUrl,
+          primaryColor: primaryColor ?? restaurant.primaryColor,
         });
       }
     },
@@ -95,7 +96,11 @@ export default function RestaurantSettingsPage() {
 
       // Keep the persisted tenant session in sync so the new branding
       // shows up immediately across the app, not just after a re-login.
-      syncBrandToStore(updated.name, updated.logoUrl ?? null);
+      syncBrandToStore(
+        updated.name,
+        updated.logoUrl ?? null,
+        updated.primaryColor,
+      );
 
       setMessage("Configuración guardada");
     } catch (err: unknown) {
@@ -128,7 +133,11 @@ export default function RestaurantSettingsPage() {
 
       const updated = await restaurantService.uploadLogo(file);
       setForm((prev) => ({ ...prev, logoUrl: updated.logoUrl ?? "" }));
-      syncBrandToStore(updated.name, updated.logoUrl ?? null);
+      syncBrandToStore(
+        updated.name,
+        updated.logoUrl ?? null,
+        updated.primaryColor,
+      );
 
       setMessage("Logo actualizado");
     } catch (err: unknown) {

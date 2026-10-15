@@ -105,6 +105,7 @@ export default function StaffLoginPage() {
             }
           : undefined
       }
+      primaryColor={identified ? branding.primaryColor : undefined}
       brand={
         identified ? (
           <BrandMark

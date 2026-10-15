@@ -141,7 +141,14 @@ export class AuthService {
 
     const restaurant = await this.prisma.restaurant.findFirst({
       where: { id: user.restaurantId },
-      select: { id: true, name: true, slug: true, logoUrl: true, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        primaryColor: true,
+        isActive: true,
+      },
     });
 
     if (!restaurant) {

@@ -57,6 +57,7 @@ export class RestaurantAuthService {
         // NEVER use this — only screens inside a resolved tenant context
         // (post restaurant-login) should render it.
         logoUrl: restaurant.logoUrl,
+        primaryColor: restaurant.primaryColor,
       },
     };
   }
@@ -71,7 +72,7 @@ export class RestaurantAuthService {
         slug: { equals: normalized, mode: 'insensitive' },
         isActive: true,
       },
-      select: { name: true, slug: true, logoUrl: true },
+      select: { name: true, slug: true, logoUrl: true, primaryColor: true },
     });
 
     return restaurant;
