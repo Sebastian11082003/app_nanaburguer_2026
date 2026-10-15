@@ -12,13 +12,13 @@ Contrato: [functional-scope.md](functional/functional-scope.md), [user-stories.m
 
 El **turno de restaurante del MVP está construido**. Un local puede: entrar, armar mesa / llevar / domicilio, cocina, cobrar, imprimir recibo snapshot, abrir/cerrar caja, ver reportes del admin.
 
-**Actualizado en `dev` (v0.4.60 + Sprint 5):** cierre de turno, poll, cancelar ítem (`ORDERS_CANCEL_ITEM`), Liberar mesa post-cocina, KDS limpio, transferir desde caja, hora de recoger editable, recibo al cobrar, Recibos en chrome de caja, cajero no cobra sin turno, HU-026 simulador local, HU-029 cambiar local. Backlog en `.ai-engineering/BACKLOG.md`.
+**Actualizado en `dev` (Sprint 5 HU-031/032):** Cocina en la barra POS; KDS del día; nav por permisos. Además HU-030 ronda 2, cierre de turno, poll, cancelar ítem, Liberar mesa, transferir, Recibos, caja, HU-026, HU-029. Backlog en `.ai-engineering/BACKLOG.md`.
 
 Eso es un **MVP de piloto en la máquina** (o LAN). **No** es un SaaS público en VPS.
 
-QA: 🟡 — Jest **90/90**. Smoke API **2026-09-23**: mesa→cocina→CASH+factura+reportes; CASH sin turno 400. Login sin overlay. Next `localhost:3001`. Sin E2E UI.
+**Actualizado 2026-10-06:** Sprint 5 cerrado (HU-029–032). Smoke local: mesa→cocina→CASH+recibo; Llevar #8 cocina→CASH $150; reportes $1.238 / 6 ventas efectivo. Jest **123/123**. Next `localhost:3001`. Sin E2E UI.
 
-Inventario, DIAN real, WhatsApp, menú público e impresora térmica **siguen fuera**. No bloquean sacar este MVP.
+Inventario, DIAN real, WhatsApp y menú público **siguen fuera**. La térmica ESC/POS entra en el demo local (`print-agent`).
 
 ---
 
@@ -48,7 +48,7 @@ Inventario, DIAN real, WhatsApp, menú público e impresora térmica **siguen fu
 | Inventario / recetas / kardex | Fuera del alcance funcional |
 | Facturación electrónica DIAN/Factus | HU-026 tiene simulador local (v0.4.55); Factus real sigue fuera |
 | WhatsApp, MercadoPago, app del cliente | HU-027/028 |
-| Impresora térmica ESC/POS | Scaffold; hoy `window.print()` |
+| Impresora térmica ESC/POS | Demo local: `print-agent` en :19100 (USB/TCP). Sin agente, `window.print()` 80mm |
 | Landing `/public/*` | “En construcción”; el local entra por `/restaurant/login` |
 | Reportes/facturación/config de **plataforma** | No hay pantallas; el nav ya no las enlaza (v0.4.52) |
 | Suite E2E (Playwright/Cypress) | QA manual + Jest |
@@ -71,7 +71,7 @@ Pago CASH y movimientos de caja requieren sesión `OPEN`. El POS consulta el tur
 
 ### P1 — comanda e impresión
 
-Cocina/recibo dependen de la impresora del navegador/OS. En un teléfono de mesero es “compartir / imprimir”, no ticket térmico.
+En el PC de caja: `print-agent` (ESC/POS 80mm). En un teléfono de mesero sigue el diálogo del navegador.
 
 ### P1 — seguridad de piloto, no de SaaS público
 
@@ -133,8 +133,8 @@ No hace falta VPS, inventario ni DIAN para declarar el MVP de salón listo.
 1. Stack / seed / login (P0).
 2. Vertical mesa → cocina → cobro → cierre de caja.
 3. Domicilio despacho + cobro.
-4. Recién ahí: impresora / LAN / credenciales del piloto Nana.
-5. Impresora térmica: solo si el usuario la pide.
+4. Recién ahí: LAN / credenciales del piloto Nana.
+5. Térmica: `cd print-agent` → `npm start`; Configuración → Imprimir prueba.
 
 ---
 
@@ -157,5 +157,6 @@ Credenciales seed (`ALLOW_INSECURE_DEFAULTS=true`):
 | 8 | Pickup o domicilio: crear, despachar, cobrar | Canal etiquetado (no “Mesa —”) |
 | 9 | Cerrar caja con contado | Snapshot en historial |
 | 10 | Reportes admin con rango de hoy | Números coherentes con el cobro |
+| 11 | Térmica: print-agent + Imprimir prueba / comanda | Ticket 80mm (o diálogo 80mm si el agente está apagado) |
 
-Si 1–7 y 9 pasan, el MVP de salón se puede usar. 8 es el segundo canal. 10 es control, no bloquea el primer turno.
+Si 1–7 y 9 pasan, el MVP de salón se puede usar. 8 es el segundo canal. 10 es control. 11 es el demo de impresora.

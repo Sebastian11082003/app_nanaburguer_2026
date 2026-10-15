@@ -5,7 +5,8 @@ Cómo levantar RestoOS / NanaBurguer con el código que ya existe. No sustituye 
 ## Qué queda fuera
 
 - RDS, ALB, AWS gestionado.
-- Factus, WhatsApp, impresora térmica.
+- Factus, WhatsApp.
+- Impresora térmica: no va en Docker. En el PC de caja: `print-agent` (`npm start`, puerto 19100).
 - Pedidos públicos online.
 
 ## Un comando (MVP)
@@ -62,6 +63,28 @@ PLATFORM_ADMIN_PASSWORD=<password propio, mínimo 8>
 ```
 
 El navegador llama a la API en el puerto 3000. Abre 80 y 3000 en el host.
+
+## Primer VPS (Hetzner, HTTP por IP)
+
+Esto no se puede crear desde el repo: hace falta tu cuenta y tarjeta en [Hetzner Cloud](https://console.hetzner.cloud/).
+
+1. New project → **Add server**.
+2. Location: Falkenstein o Helsinki.
+3. Image: **Ubuntu 24.04**.
+4. Type: **CX22** (2 vCPU, 4 GB RAM) o el pack de **4 GB**.
+5. SSH key (mejor) o password de root.
+6. Create → copia la **IPv4**.
+7. Firewall: TCP **22**, **80**, **3000**.
+
+En el servidor (como root), con el código en `/opt/nanaburguer`:
+
+```bash
+PUBLIC_IP=TU.IP.PUBLICA bash docker/bootstrap-vps.sh
+```
+
+El script instala Docker, genera secretos en `docker/.env` y levanta el compose. Guarda el password de `PLATFORM_ADMIN_*` que imprime.
+
+Cuando tengas dominio (`app.` + `api.`), pasa al overlay HTTPS de abajo (rebuild).
 
 ## HTTPS en un VPS (Caddy)
 
