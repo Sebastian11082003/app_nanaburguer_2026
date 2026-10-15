@@ -1,5 +1,9 @@
 # PROJECT CHANGELOG
 
+## DEC-012 — trabajo local y rama `qa`
+
+- Desarrollo en local. Rama `qa` desde `main`; PRs hacia `qa`. VPS/producción solo si el usuario lo pide.
+
 ## Dirección UI C — pase de servicio
 
 - Referencias documentadas (Mobbin/CAKE/Cyllo, Godly editorial, Web Anatomy use-case nav, Land-book bordes/bottom nav, Stitch A/B/C). Elegida C. Originalidad 8 / encaje 9.

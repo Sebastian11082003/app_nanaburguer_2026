@@ -158,3 +158,22 @@ DEC-006 (tokens de marca) y DEC-009 (mobile-first) alimentan el ADN; no autoriza
 Motivo:
 
 El POS ya existe y se ve como un panel oscuro genérico. El framework exige dirección con referencias antes de más código de interfaz.
+
+---
+
+## DEC-012
+
+Trabajo local y rama `qa`
+
+Hasta que el usuario pida lo contrario, el desarrollo corre en máquina local (sin VPS ni deploy a producción).
+
+Flujo Git:
+
+- Integración diaria: `dev`.
+- QA: rama `qa` (creada desde `main`; recibe merge vía PR, no rebase/force).
+- Cada entrega lista para validar: commit en la rama de trabajo → push → **un PR hacia `qa`** (`gh pr create`). Si el historial en `dev` ya es lineal, un PR `dev` → `qa` cubre el sprint; no hace falta un PR por commit.
+- Producción / VPS (`main` u otro entorno remoto): solo cuando el usuario lo pida de forma explícita.
+
+Motivo:
+
+Separar validación (qa) de producción y evitar deploys no pedidos.
