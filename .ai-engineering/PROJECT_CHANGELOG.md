@@ -1,5 +1,10 @@
 # PROJECT CHANGELOG
 
+## OPS-10 — smoke salón local (2026-10-18)
+
+- Docker Desktop + `nanaburguer_db` en **5437** (5432 ocupado por otro Postgres; no se detuvo).
+- `smoke-salon-mvp.mjs`: mesa Burger smoke → cocina → cobro CASH + invoice; reportes 7 ventas.
+
 ## HU-034 — print-agent print sin cuelgue WMI
 
 - `/print` y `/print/test` con `PRINT_TARGET=file` no llaman WMI.

@@ -16,7 +16,7 @@ El **turno de restaurante del MVP está construido**. Un local puede: entrar, ar
 
 Eso es un **MVP de piloto en la máquina** (o LAN). **No** es un SaaS público en VPS.
 
-**Actualizado 2026-10-06:** Sprint 5 cerrado (HU-029–032). Smoke local: mesa→cocina→CASH+recibo; Llevar #8 cocina→CASH $150; reportes $1.238 / 6 ventas efectivo. Jest **123/123**. Next `localhost:3001`. Sin E2E UI.
+**Actualizado 2026-10-18:** `smoke-salon-mvp.mjs` OK en local (mesa Burger smoke → cocina → CASH + invoice; reports 7 ventas). Postgres `nanaburguer_db` en **5437** porque **5432** lo usa otro contenedor. Sprint 5 HU-029–034. Sin E2E UI.
 
 Inventario, DIAN real, WhatsApp y menú público **siguen fuera**. La térmica ESC/POS entra en el demo local (`print-agent`).
 

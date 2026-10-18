@@ -51,11 +51,17 @@ Orchestrator; UI Designer **antes** de Frontend Engineer en cualquier cambio de 
 
 ## Último avance
 
+### Smoke salón local (2026-10-18)
+
+- Docker Desktop arrancó. `5432` lo tenía `task_movil_db`; no se tocó. `nanaburguer_db` en host **5437** (volumen existente).
+- `prisma migrate deploy`: sin pendientes. API Nest en host `:3000`.
+- `backend/api/scripts/smoke-salon-mvp.mjs`: health → platform → staff → caja OPEN → mesa Burger smoke → cocina → READY → cobro CASH + invoice → reports `revenue=139500 sales=7 orders=9`.
+
 ### HU-034 print-agent print path (2026-10-18)
 
 - `POST /print` y `/print/test` con `PRINT_TARGET=file` escriben el ticket sin WMI.
 - `auto` en Windows sin impresora nombrada: lookup con timeout y, si queda vacío, archivo (no cuelga el POS).
-- Tests HTTP del agente (`node --test src/*.spec.js`). Docker Desktop estaba parado; smoke mesa→cocina→cobro sigue pendiente de stack local.
+- Tests HTTP del agente (`node --test src/*.spec.js`).
 
 ### HU-033 print-agent health (2026-10-18)
 

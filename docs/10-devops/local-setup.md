@@ -35,6 +35,8 @@ GitHub no actualiza tu PC. En la raíz del repo: doble clic en `update-local.bat
 
 Si el tenant demo `nana-neiva` ya existe, el seed crea `admin@nana-neiva.test` y `kitchen@nana-neiva.test` / `123456` cuando `ALLOW_INSECURE_DEFAULTS=true` y aún no hay esos roles. Caja/mesero no pueden anular un ticket con productos; el ADMIN sí. Cocina entra al KDS con su propio login.
 
+Si el host **5432** ya lo usa otro Postgres (Supabase, campus, `task_movil_db`), no lo pares. Arranca `nanaburguer_db` en **5437** y apunta `DATABASE_URL` a ese puerto. Smoke: `node backend/api/scripts/smoke-salon-mvp.mjs`.
+
 La API aplica `prisma migrate deploy` y el seed al arrancar. El seed es idempotente.
 
 El compose local pone `ALLOW_INSECURE_DEFAULTS=true`: JWT y password de seed documentados (`admin@nanaburger.com` / `123456`) están permitidos. En un host público eso debe ser `false`.

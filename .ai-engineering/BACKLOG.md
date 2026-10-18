@@ -24,6 +24,7 @@ Rama de integración: `dev`.
 | OPS-07 | hecho v0.4.58 | Recibos en el chrome de caja (lista + imprimir, sin pasar por admin) |
 | OPS-08 | hecho HU-033 | Print-agent `/health` no espera WMI en Windows; lookup con timeout |
 | OPS-09 | hecho HU-034 | Print-agent `/print` no cuelga WMI; `file` / auto sin térmica |
+| OPS-10 | hecho 2026-10-18 | Smoke `smoke-salon-mvp.mjs` local: mesa→cocina→CASH+invoice+reportes. DB `nanaburguer_db:5437` (5432 ocupado, no se mató) |
 
 ## Después del piloto (no inventar ahora)
 
