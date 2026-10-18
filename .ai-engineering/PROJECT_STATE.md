@@ -37,6 +37,7 @@ Sprint 5 — Salón piloto (superar Loggro Restobar)
 - **HU-031** Cocina en la barra POS — Implemented
 - **HU-032** Nav por permisos asignados — Implemented
 - **HU-033** Print-agent `/health` no cuelga en Windows — Implemented
+- **HU-034** Print-agent `/print` no cuelga WMI; fallback archivo — Implemented
 - Fuera del sprint: HU-027 WhatsApp, DIAN real, inventario como ERP
 - **UI:** dirección C (pase/comanda) evaluada e implementada en cromo operativo. Originalidad 8 / encaje 9.
 
@@ -49,6 +50,12 @@ Orchestrator; UI Designer **antes** de Frontend Engineer en cualquier cambio de 
 ---
 
 ## Último avance
+
+### HU-034 print-agent print path (2026-10-18)
+
+- `POST /print` y `/print/test` con `PRINT_TARGET=file` escriben el ticket sin WMI.
+- `auto` en Windows sin impresora nombrada: lookup con timeout y, si queda vacío, archivo (no cuelga el POS).
+- Tests HTTP del agente (`node --test src/*.spec.js`). Docker Desktop estaba parado; smoke mesa→cocina→cobro sigue pendiente de stack local.
 
 ### HU-033 print-agent health (2026-10-18)
 

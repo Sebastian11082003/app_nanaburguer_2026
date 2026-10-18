@@ -1,5 +1,11 @@
 # PROJECT CHANGELOG
 
+## HU-034 — print-agent print sin cuelgue WMI
+
+- `/print` y `/print/test` con `PRINT_TARGET=file` no llaman WMI.
+- `auto` sin térmica en Windows cae a archivo tras el timeout de lookup.
+- Tests HTTP de `/health` y `/print/test`.
+
 ## HU-033 — print-agent health en Windows
 
 - `/health` deja de esperar WMI. El POS detecta el agente en el PC de caja aunque `Get-CimInstance` se cuelgue.

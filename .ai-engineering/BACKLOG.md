@@ -23,6 +23,7 @@ Rama de integración: `dev`.
 | OPS-06 | hecho v0.4.60 | Cancelar ítem post-cocina: caja/admin por defecto; permiso `ORDERS_CANCEL_ITEM` para habilitar/inhabilitar |
 | OPS-07 | hecho v0.4.58 | Recibos en el chrome de caja (lista + imprimir, sin pasar por admin) |
 | OPS-08 | hecho HU-033 | Print-agent `/health` no espera WMI en Windows; lookup con timeout |
+| OPS-09 | hecho HU-034 | Print-agent `/print` no cuelga WMI; `file` / auto sin térmica |
 
 ## Después del piloto (no inventar ahora)
 

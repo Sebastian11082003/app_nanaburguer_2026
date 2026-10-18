@@ -909,3 +909,30 @@ High
 ### Status
 
 Implemented
+
+---
+
+## HU-034 — Print-agent print path must not hang on Windows
+
+**Actor:** Cashier / Admin (PC de caja)
+
+### Description
+
+As a cashier on Windows,  
+I want Imprimir prueba and kitchen/receipt jobs to finish even when WMI printer lookup is empty or hung,  
+So that Configuración does not look offline after `/health` already succeeded.
+
+### Acceptance Criteria
+
+- `POST /print` and `POST /print/test` do not wait on hung `Get-CimInstance Win32_Printer`.
+- `PRINT_TARGET=file` writes the ticket and returns 200 without USB/TCP.
+- `auto` on Windows with no named printer after lookup timeout falls back to file instead of hanging.
+- HTTP tests cover `/health` and `/print/test` (`node --test`).
+
+### Priority
+
+High
+
+### Status
+
+Implemented

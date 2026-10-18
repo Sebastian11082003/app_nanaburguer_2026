@@ -6,7 +6,7 @@ Cómo levantar RestoOS / NanaBurguer con el código que ya existe. No sustituye 
 
 - RDS, ALB, AWS gestionado.
 - Factus, WhatsApp.
-- Impresora térmica: no va en Docker. En el PC de caja: `print-agent` (`npm start`, puerto 19100). `GET /health` no espera WMI; si PowerShell se cuelga, el agente sigue online.
+- Impresora térmica: no va en Docker. En el PC de caja: `print-agent` (`npm start`, puerto 19100). `GET /health` no espera WMI; `POST /print` con `PRINT_TARGET=file` (o `auto` sin impresora) tampoco cuelga el POS.
 - Pedidos públicos online.
 
 ## Un comando (MVP)

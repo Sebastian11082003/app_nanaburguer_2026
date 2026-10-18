@@ -14,6 +14,8 @@ npm start
 Escucha `http://127.0.0.1:19100` (no uses 9100: ese puerto es el RAW de la térmica).
 El POS detecta `/health` (respuesta inmediata; no espera WMI de Windows) y manda comanda/recibo sin el diálogo del navegador.
 
+`POST /print` y `/print/test` tampoco esperan WMI: con `PRINT_TARGET=file` escriben el ticket en disco; en `auto` sin impresora Windows (tras el timeout de lookup) caen a archivo en vez de colgar el POS.
+
 ### Windows (USB instalada como impresora)
 
 1. Configuración → Impresoras: anota el nombre exacto (ej. `POS-80`, `D300`).

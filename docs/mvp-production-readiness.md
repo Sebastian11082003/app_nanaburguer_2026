@@ -48,7 +48,7 @@ Inventario, DIAN real, WhatsApp y menú público **siguen fuera**. La térmica E
 | Inventario / recetas / kardex | Fuera del alcance funcional |
 | Facturación electrónica DIAN/Factus | HU-026 tiene simulador local (v0.4.55); Factus real sigue fuera |
 | WhatsApp, MercadoPago, app del cliente | HU-027/028 |
-| Impresora térmica ESC/POS | Demo local: `print-agent` en :19100 (USB/TCP). `/health` no espera WMI (HU-033). Sin agente, `window.print()` 80mm |
+| Impresora térmica ESC/POS | Demo local: `print-agent` en :19100 (USB/TCP). `/health` y `/print` no esperan WMI (HU-033/034). `PRINT_TARGET=file` o auto sin térmica. Sin agente, `window.print()` 80mm |
 | Landing `/public/*` | “En construcción”; el local entra por `/restaurant/login` |
 | Reportes/facturación/config de **plataforma** | No hay pantallas; el nav ya no las enlaza (v0.4.52) |
 | Suite E2E (Playwright/Cypress) | QA manual + Jest |

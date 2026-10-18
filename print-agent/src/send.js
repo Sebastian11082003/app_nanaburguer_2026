@@ -160,23 +160,53 @@ function sendFile(buffer) {
   return { mode: "file", path: dest };
 }
 
-async function sendBuffer(buffer) {
-  const mode = target();
-  const named = printerName();
-  const host = tcpHost();
-
+/**
+ * Decide USB / TCP / file without talking to WMI.
+ * `lookupDefault` means auto on Windows with no env/cache name: try the
+ * default printer with timeout, then file so /print does not hang like /health used to.
+ */
+function pickOutput(mode, named, host, cacheDefault, platform) {
   if (mode === "tcp" || (mode === "auto" && host)) {
-    return sendTcp(buffer, host, tcpPort());
-  }
-  if (mode === "windows" || (mode === "auto" && process.platform === "win32")) {
-    const printer = named || printerCache.defaultName || (await defaultWindowsPrinter());
-    return sendWindows(buffer, printer);
+    return { kind: "tcp", host, port: tcpPort() };
   }
   if (mode === "file") {
-    return sendFile(buffer);
+    return { kind: "file" };
+  }
+  if (mode === "windows") {
+    return { kind: "windows", printer: named || cacheDefault };
+  }
+  if (mode === "auto" && platform === "win32") {
+    const printer = named || cacheDefault;
+    if (printer) return { kind: "windows", printer };
+    return { kind: "windows", printer: "", lookupDefault: true };
   }
   if (host) {
-    return sendTcp(buffer, host, tcpPort());
+    return { kind: "tcp", host, port: tcpPort() };
+  }
+  return { kind: "file" };
+}
+
+async function sendBuffer(buffer) {
+  const chosen = pickOutput(
+    target(),
+    printerName(),
+    tcpHost(),
+    printerCache.defaultName,
+    process.platform,
+  );
+
+  let kind = chosen.kind;
+  let printer = chosen.printer;
+  if (chosen.lookupDefault) {
+    printer = await defaultWindowsPrinter();
+    kind = printer ? "windows" : "file";
+  }
+
+  if (kind === "tcp") {
+    return sendTcp(buffer, chosen.host, chosen.port);
+  }
+  if (kind === "windows") {
+    return sendWindows(buffer, printer);
   }
   return sendFile(buffer);
 }
@@ -221,6 +251,7 @@ module.exports = {
   refreshPrinterCache,
   listWindowsPrinters,
   parsePrinterNames,
+  pickOutput,
   withTimeout,
   resetPrinterCacheForTests,
 };

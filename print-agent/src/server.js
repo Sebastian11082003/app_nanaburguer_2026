@@ -29,56 +29,68 @@ async function readJson(req) {
   return JSON.parse(raw);
 }
 
-const server = http.createServer(async (req, res) => {
-  try {
-    if (req.method === "OPTIONS") {
-      sendJson(res, 204, {});
-      return;
-    }
+function createServer() {
+  return http.createServer(async (req, res) => {
+    try {
+      if (req.method === "OPTIONS") {
+        sendJson(res, 204, {});
+        return;
+      }
 
-    if (req.method === "GET" && req.url === "/health") {
-      // Sync: WMI discovery runs in the background after listen.
-      sendJson(res, 200, healthSnapshot());
-      return;
-    }
+      if (req.method === "GET" && req.url === "/health") {
+        // Sync: WMI discovery runs in the background after listen.
+        sendJson(res, 200, healthSnapshot());
+        return;
+      }
 
-    if (req.method === "POST" && (req.url === "/print" || req.url === "/print/test")) {
-      const body =
-        req.url === "/print/test"
-          ? {
-              type: "kitchen",
-              title: "PRUEBA TERMICA",
-              channel: "RestoOS",
-              orderNumber: 0,
-              at: new Date().toLocaleString("es-CO"),
-              lines: [{ qty: 1, name: "Ticket de prueba", notes: "Digital POS 80mm" }],
-            }
-          : await readJson(req);
+      if (req.method === "POST" && (req.url === "/print" || req.url === "/print/test")) {
+        const body =
+          req.url === "/print/test"
+            ? {
+                type: "kitchen",
+                title: "PRUEBA TERMICA",
+                channel: "RestoOS",
+                orderNumber: 0,
+                at: new Date().toLocaleString("es-CO"),
+                lines: [{ qty: 1, name: "Ticket de prueba", notes: "Digital POS 80mm" }],
+              }
+            : await readJson(req);
 
-      const bytes = renderJob(body);
-      const sent = await sendBuffer(bytes);
-      console.log("[print-agent] printed", {
-        type: body.type ?? "kitchen",
-        bytes: bytes.length,
-        ...sent,
+        const bytes = renderJob(body);
+        const sent = await sendBuffer(bytes);
+        console.log("[print-agent] printed", {
+          type: body.type ?? "kitchen",
+          bytes: bytes.length,
+          ...sent,
+        });
+        sendJson(res, 200, { ok: true, bytes: bytes.length, ...sent });
+        return;
+      }
+
+      sendJson(res, 404, { ok: false, error: "Not found" });
+    } catch (err) {
+      console.error("[print-agent]", err);
+      sendJson(res, 500, {
+        ok: false,
+        error: err instanceof Error ? err.message : "Print failed",
       });
-      sendJson(res, 200, { ok: true, bytes: bytes.length, ...sent });
-      return;
     }
-
-    sendJson(res, 404, { ok: false, error: "Not found" });
-  } catch (err) {
-    console.error("[print-agent]", err);
-    sendJson(res, 500, {
-      ok: false,
-      error: err instanceof Error ? err.message : "Print failed",
-    });
-  }
-});
-
-server.listen(PORT, HOST, () => {
-  console.log(`RestoOS print-agent http://${HOST}:${PORT}`);
-  void refreshPrinterCache().catch((err) => {
-    console.error("[print-agent] printer lookup skipped", err instanceof Error ? err.message : err);
   });
-});
+}
+
+function start() {
+  const server = createServer();
+  server.listen(PORT, HOST, () => {
+    console.log(`RestoOS print-agent http://${HOST}:${PORT}`);
+    void refreshPrinterCache().catch((err) => {
+      console.error("[print-agent] printer lookup skipped", err instanceof Error ? err.message : err);
+    });
+  });
+  return server;
+}
+
+if (require.main === module) {
+  start();
+}
+
+module.exports = { createServer, start };
