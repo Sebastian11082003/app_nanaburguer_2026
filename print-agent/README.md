@@ -12,7 +12,7 @@ npm start
 ```
 
 Escucha `http://127.0.0.1:19100` (no uses 9100: ese puerto es el RAW de la térmica).
-El POS detecta `/health` y manda comanda/recibo sin el diálogo de Windows.
+El POS detecta `/health` (respuesta inmediata; no espera WMI de Windows) y manda comanda/recibo sin el diálogo del navegador.
 
 ### Windows (USB instalada como impresora)
 

@@ -1,3 +1,12 @@
+/**
+ * Send ESC/POS bytes to a Windows USB printer, TCP :9100, or a file.
+ *
+ * Windows WMI (Get-CimInstance Win32_Printer) can hang for tens of seconds.
+ * /health must never wait on that: the POS abort is 4s and the Configuración
+ * panel looked "offline" even when the agent was up. Printer discovery is
+ * cached in the background with a hard timeout.
+ */
+
 const { execFile } = require("child_process");
 const fs = require("fs");
 const net = require("net");
@@ -6,6 +15,15 @@ const path = require("path");
 const { promisify } = require("util");
 
 const execFileAsync = promisify(execFile);
+
+/** Kill hung PowerShell before the POS 4s AbortSignal.timeout. */
+const PS_TIMEOUT_MS = 1500;
+
+const printerCache = {
+  printers: [],
+  defaultName: "",
+  updatedAt: 0,
+};
 
 function target() {
   return (process.env.PRINT_TARGET || "auto").toLowerCase();
@@ -27,43 +45,52 @@ function filePath() {
   return process.env.PRINT_FILE || path.join(os.tmpdir(), "restoos-last-ticket.bin");
 }
 
+function withTimeout(promise, ms, fallback) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error("timeout")), ms);
+  });
+  return Promise.race([promise, timeout])
+    .catch(() => fallback)
+    .finally(() => clearTimeout(timer));
+}
+
+function parsePrinterNames(stdout) {
+  return String(stdout || "")
+    .split(/\r?\n/)
+    .map((row) => row.trim())
+    .filter(Boolean);
+}
+
+async function runPowerShell(command) {
+  const { stdout } = await execFileAsync(
+    "powershell.exe",
+    ["-NoProfile", "-Command", command],
+    { windowsHide: true, timeout: PS_TIMEOUT_MS },
+  );
+  return stdout;
+}
+
 async function listWindowsPrinters() {
   if (process.platform !== "win32") return [];
-  try {
-    const { stdout } = await execFileAsync(
-      "powershell.exe",
-      [
-        "-NoProfile",
-        "-Command",
-        "Get-CimInstance Win32_Printer | Select-Object -ExpandProperty Name",
-      ],
-      { windowsHide: true },
-    );
-    return stdout
-      .split(/\r?\n/)
-      .map((row) => row.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
+  const stdout = await withTimeout(
+    runPowerShell("Get-CimInstance Win32_Printer | Select-Object -ExpandProperty Name"),
+    PS_TIMEOUT_MS,
+    "",
+  );
+  return parsePrinterNames(stdout);
 }
 
 async function defaultWindowsPrinter() {
   if (process.platform !== "win32") return "";
-  try {
-    const { stdout } = await execFileAsync(
-      "powershell.exe",
-      [
-        "-NoProfile",
-        "-Command",
-        "(Get-CimInstance Win32_Printer | Where-Object { $_.Default -eq $true }).Name",
-      ],
-      { windowsHide: true },
-    );
-    return stdout.trim();
-  } catch {
-    return "";
-  }
+  const stdout = await withTimeout(
+    runPowerShell(
+      "(Get-CimInstance Win32_Printer | Where-Object { $_.Default -eq $true }).Name",
+    ),
+    PS_TIMEOUT_MS,
+    "",
+  );
+  return String(stdout || "").trim();
 }
 
 function sendTcp(buffer, host, port) {
@@ -89,25 +116,20 @@ function sendTcp(buffer, host, port) {
 }
 
 async function printerPort(name) {
-  try {
-    const { stdout } = await execFileAsync(
-      "powershell.exe",
-      [
-        "-NoProfile",
-        "-Command",
-        `(Get-CimInstance Win32_Printer | Where-Object { $_.Name -eq '${name.replace(/'/g, "''")}' }).PortName`,
-      ],
-      { windowsHide: true },
-    );
-    return stdout.trim();
-  } catch {
-    return "";
-  }
+  const stdout = await withTimeout(
+    runPowerShell(
+      `(Get-CimInstance Win32_Printer | Where-Object { $_.Name -eq '${name.replace(/'/g, "''")}' }).PortName`,
+    ),
+    PS_TIMEOUT_MS,
+    "",
+  );
+  return String(stdout || "").trim();
 }
 
 async function copyRaw(tmp, dest) {
   await execFileAsync("cmd.exe", ["/c", "copy", "/B", tmp, dest], {
     windowsHide: true,
+    timeout: 8000,
   });
 }
 
@@ -147,7 +169,7 @@ async function sendBuffer(buffer) {
     return sendTcp(buffer, host, tcpPort());
   }
   if (mode === "windows" || (mode === "auto" && process.platform === "win32")) {
-    const printer = named || (await defaultWindowsPrinter());
+    const printer = named || printerCache.defaultName || (await defaultWindowsPrinter());
     return sendWindows(buffer, printer);
   }
   if (mode === "file") {
@@ -159,8 +181,11 @@ async function sendBuffer(buffer) {
   return sendFile(buffer);
 }
 
-async function status() {
-  const printers = await listWindowsPrinters();
+/**
+ * Immediate /health body. Never calls WMI.
+ * printer comes from env, then last successful discovery, then TCP host.
+ */
+function healthSnapshot() {
   const named = printerName();
   const host = tcpHost();
   const mode = target();
@@ -168,10 +193,34 @@ async function status() {
     ok: true,
     service: "restoos-print-agent",
     target: mode,
-    printer: named || (await defaultWindowsPrinter()) || host || "file",
-    printers,
+    printer: named || printerCache.defaultName || host || "file",
+    printers: printerCache.printers,
     tcp: host ? `${host}:${tcpPort()}` : null,
   };
 }
 
-module.exports = { sendBuffer, status, listWindowsPrinters };
+async function refreshPrinterCache() {
+  const printers = await listWindowsPrinters();
+  const defaultName = await defaultWindowsPrinter();
+  printerCache.printers = printers;
+  printerCache.defaultName = defaultName;
+  printerCache.updatedAt = Date.now();
+  return { printers, defaultName };
+}
+
+function resetPrinterCacheForTests(next = {}) {
+  printerCache.printers = next.printers || [];
+  printerCache.defaultName = next.defaultName || "";
+  printerCache.updatedAt = next.updatedAt || 0;
+}
+
+module.exports = {
+  PS_TIMEOUT_MS,
+  sendBuffer,
+  healthSnapshot,
+  refreshPrinterCache,
+  listWindowsPrinters,
+  parsePrinterNames,
+  withTimeout,
+  resetPrinterCacheForTests,
+};

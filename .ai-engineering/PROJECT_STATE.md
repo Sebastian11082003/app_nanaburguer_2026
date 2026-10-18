@@ -36,6 +36,7 @@ Sprint 5 — Salón piloto (superar Loggro Restobar)
 - **HU-030** Segunda ronda: líneas pendientes vs enviadas — Implemented
 - **HU-031** Cocina en la barra POS — Implemented
 - **HU-032** Nav por permisos asignados — Implemented
+- **HU-033** Print-agent `/health` no cuelga en Windows — Implemented
 - Fuera del sprint: HU-027 WhatsApp, DIAN real, inventario como ERP
 - **UI:** dirección C (pase/comanda) evaluada e implementada en cromo operativo. Originalidad 8 / encaje 9.
 
@@ -48,6 +49,11 @@ Orchestrator; UI Designer **antes** de Frontend Engineer en cualquier cambio de 
 ---
 
 ## Último avance
+
+### HU-033 print-agent health (2026-10-18)
+
+- `GET /health` responde al instante (env + caché). `Get-CimInstance Win32_Printer` ya no bloquea el probe del POS.
+- Lookup de impresoras en segundo plano, PowerShell con timeout 1.5s (`print-agent` tests `node --test`).
 
 ### Impresora térmica demo (2026-10-06)
 

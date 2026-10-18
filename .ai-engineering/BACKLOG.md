@@ -22,6 +22,7 @@ Rama de integración: `dev`.
 | OPS-05 | hecho v0.4.59 | Cajero no cobra sin turno abierto (admin sigue con aviso) |
 | OPS-06 | hecho v0.4.60 | Cancelar ítem post-cocina: caja/admin por defecto; permiso `ORDERS_CANCEL_ITEM` para habilitar/inhabilitar |
 | OPS-07 | hecho v0.4.58 | Recibos en el chrome de caja (lista + imprimir, sin pasar por admin) |
+| OPS-08 | hecho HU-033 | Print-agent `/health` no espera WMI en Windows; lookup con timeout |
 
 ## Después del piloto (no inventar ahora)
 

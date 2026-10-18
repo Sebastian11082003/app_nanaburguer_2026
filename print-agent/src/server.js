@@ -5,7 +5,7 @@
 
 const http = require("http");
 const { renderJob } = require("./escpos");
-const { sendBuffer, status } = require("./send");
+const { sendBuffer, healthSnapshot, refreshPrinterCache } = require("./send");
 
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.PRINT_AGENT_PORT || 19100);
@@ -37,7 +37,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && req.url === "/health") {
-      sendJson(res, 200, await status());
+      // Sync: WMI discovery runs in the background after listen.
+      sendJson(res, 200, healthSnapshot());
       return;
     }
 
@@ -77,4 +78,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`RestoOS print-agent http://${HOST}:${PORT}`);
+  void refreshPrinterCache().catch((err) => {
+    console.error("[print-agent] printer lookup skipped", err instanceof Error ? err.message : err);
+  });
 });

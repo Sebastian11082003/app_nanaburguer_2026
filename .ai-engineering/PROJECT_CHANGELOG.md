@@ -1,5 +1,10 @@
 # PROJECT CHANGELOG
 
+## HU-033 — print-agent health en Windows
+
+- `/health` deja de esperar WMI. El POS detecta el agente en el PC de caja aunque `Get-CimInstance` se cuelgue.
+- Lookup de impresoras en background con timeout 1.5s.
+
 ## DEC-012 — trabajo local y rama `qa`
 
 - Desarrollo en local. Rama `qa` desde `main`; PRs hacia `qa`. VPS/producción solo si el usuario lo pide.

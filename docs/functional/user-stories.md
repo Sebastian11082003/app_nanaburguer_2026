@@ -885,3 +885,27 @@ High
 ### Status
 
 Implemented
+
+## HU-033 — Print-agent health must not hang on Windows
+
+**Actor:** Cashier / Admin (PC de caja)
+
+### Description
+
+As a cashier on Windows,  
+I want Configuración → Impresora térmica to detect the local agent immediately,  
+So that a hung WMI printer query does not look like the agent is offline.
+
+### Acceptance Criteria
+
+- `GET /health` on the print-agent does not wait on `Get-CimInstance Win32_Printer`.
+- PowerShell printer lookup has a timeout under the POS 4s abort.
+- The POS still falls back to `window.print()` 80mm if the agent is actually down.
+
+### Priority
+
+High
+
+### Status
+
+Implemented
