@@ -1,5 +1,9 @@
 # PROJECT CHANGELOG
 
+## HU-036 — recibo con el mismo número de factura
+
+- El número de factura del ticket impreso era un segundo `Date.now()` y podía quedar 1 ms distinto al guardado (`INV-…433` en pantalla, `INV-…434` en el recibo). Ahora se calcula una vez.
+
 ## HU-035 — JWT vencido vuelve al login
 
 - El piso ya no muestra `Unauthorized` en inglés cuando el JWT murió: cierra sesión y pide entrar de nuevo.

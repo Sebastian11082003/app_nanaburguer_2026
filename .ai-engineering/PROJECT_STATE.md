@@ -39,6 +39,7 @@ Sprint 5 — Salón piloto (superar Loggro Restobar)
 - **HU-033** Print-agent `/health` no cuelga en Windows — Implemented
 - **HU-034** Print-agent `/print` no cuelga WMI; fallback archivo — Implemented
 - **HU-035** JWT vencido del personal vuelve al login — Implemented
+- **HU-036** Recibo impreso con el mismo número de factura guardado — Implemented
 - Fuera del sprint: HU-027 WhatsApp, DIAN real, inventario como ERP
 - **UI:** dirección C (pase/comanda) evaluada e implementada en cromo operativo. Originalidad 8 / encaje 9.
 
@@ -51,6 +52,13 @@ Orchestrator; UI Designer **antes** de Frontend Engineer en cualquier cambio de 
 ---
 
 ## Último avance
+
+### Smoke ronda 2 + impresión (2026-10-18)
+
+- Mesa M1 #11: ronda 1 → cocina, ronda 2 → cocina. KDS marca NUEVO solo en la línea de la ronda 2; la comanda de ronda trae solo el delta.
+- print-agent `PRINT_TARGET=file`: `/health` OK, Imprimir prueba, comanda y recibo escritos al archivo.
+- Bug encontrado → **HU-036**: número de factura del snapshot ≠ fila. Test `payments.service.spec.ts`.
+- Copy: voseo → español neutro (`Ingresa de nuevo`, `Abre la caja`).
 
 ### HU-035 JWT vencido (2026-10-18)
 

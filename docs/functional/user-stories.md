@@ -963,3 +963,29 @@ High
 ### Status
 
 Implemented
+
+---
+
+## HU-036 — Printed receipt carries the stored invoice number
+
+**Actor:** Cashier, Admin
+
+### Description
+
+As a cashier,  
+I want the receipt I hand over to show the same invoice number the system stored,  
+So that a guest or the admin can find the invoice from the paper ticket.
+
+### Acceptance Criteria
+
+- `invoice.number` and `responseJson.invoice.number` are the same string after a payment.
+- The receipt screen header and the printed/80mm body show the same number.
+- Jest covers it even when the clock ticks between the row and the snapshot.
+
+### Priority
+
+High
+
+### Status
+
+Implemented

@@ -195,13 +195,16 @@ export class PaymentsService {
         notes: i.notes,
       }));
 
+    // Row and printed snapshot must carry the same number.
+    const number = `INV-${Date.now()}`;
+
     return tx.invoice.create({
       data: {
         saleId: sale.id,
         paymentId: payment.id,
         restaurantId,
 
-        number: `INV-${Date.now()}`,
+        number,
         status: 'PENDING',
 
         totalCents: payment.amountCents,
@@ -217,7 +220,7 @@ export class PaymentsService {
           },
 
           invoice: {
-            number: `INV-${Date.now()}`,
+            number,
             date: new Date(),
           },
 
