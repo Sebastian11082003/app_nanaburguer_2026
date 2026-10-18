@@ -16,7 +16,7 @@ El **turno de restaurante del MVP está construido**. Un local puede: entrar, ar
 
 Eso es un **MVP de piloto en la máquina** (o LAN). **No** es un SaaS público en VPS.
 
-**Actualizado 2026-10-18:** `smoke-salon-mvp.mjs` OK en local (mesa Burger smoke → cocina → CASH + invoice; reports 7 ventas). Postgres `nanaburguer_db` en **5437** porque **5432** lo usa otro contenedor. Sprint 5 HU-029–034. Sin E2E UI.
+**Actualizado 2026-10-18:** `smoke-salon-mvp.mjs` OK (API). Smoke visual POS: login `admin@smoke-cash-922.test` → Llevar #10 Burger smoke → cocina cola/preparando/listo → CASH $150 → recibo. HU-035: JWT muerto ya no deja `Unauthorized` en el piso. Postgres **5437**. Sprint 5 HU-029–035.
 
 Inventario, DIAN real, WhatsApp y menú público **siguen fuera**. La térmica ESC/POS entra en el demo local (`print-agent`).
 

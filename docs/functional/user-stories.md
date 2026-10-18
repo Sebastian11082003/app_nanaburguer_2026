@@ -936,3 +936,30 @@ High
 ### Status
 
 Implemented
+
+---
+
+## HU-035 — Expired staff JWT returns to login
+
+**Actor:** Admin, Cashier, Waiter
+
+### Description
+
+As staff on the POS,  
+I want a dead JWT to send me back to login instead of painting "Unauthorized" on the floor,  
+So that I can sign in again without guessing that the session died.
+
+### Acceptance Criteria
+
+- A 401 on POS APIs (floor, orders, etc.) clears the staff session and opens `/restaurant/login`.
+- `POST /auth/staff-login` (and recover/reset) 401 stay on the form so a wrong password is not treated as session expiry.
+- The floor error copy is Spanish, not Nest's `Unauthorized`.
+- `node --test` covers which URLs expire the session.
+
+### Priority
+
+High
+
+### Status
+
+Implemented

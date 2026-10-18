@@ -1,5 +1,10 @@
 # PROJECT CHANGELOG
 
+## HU-035 — JWT vencido vuelve al login
+
+- El piso ya no muestra `Unauthorized` en inglés cuando el JWT murió: cierra sesión y pide entrar de nuevo.
+- El 401 de staff-login/recover sigue siendo error de formulario.
+
 ## OPS-10 — smoke salón local (2026-10-18)
 
 - Docker Desktop + `nanaburguer_db` en **5437** (5432 ocupado por otro Postgres; no se detuvo).

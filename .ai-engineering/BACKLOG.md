@@ -25,6 +25,7 @@ Rama de integración: `dev`.
 | OPS-08 | hecho HU-033 | Print-agent `/health` no espera WMI en Windows; lookup con timeout |
 | OPS-09 | hecho HU-034 | Print-agent `/print` no cuelga WMI; `file` / auto sin térmica |
 | OPS-10 | hecho 2026-10-18 | Smoke `smoke-salon-mvp.mjs` local: mesa→cocina→CASH+invoice+reportes. DB `nanaburguer_db:5437` (5432 ocupado, no se mató) |
+| OPS-11 | hecho HU-035 | JWT vencido: POS no pinta `Unauthorized`; vuelve a `/restaurant/login` |
 
 ## Después del piloto (no inventar ahora)
 

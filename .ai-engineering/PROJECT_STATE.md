@@ -38,6 +38,7 @@ Sprint 5 — Salón piloto (superar Loggro Restobar)
 - **HU-032** Nav por permisos asignados — Implemented
 - **HU-033** Print-agent `/health` no cuelga en Windows — Implemented
 - **HU-034** Print-agent `/print` no cuelga WMI; fallback archivo — Implemented
+- **HU-035** JWT vencido del personal vuelve al login — Implemented
 - Fuera del sprint: HU-027 WhatsApp, DIAN real, inventario como ERP
 - **UI:** dirección C (pase/comanda) evaluada e implementada en cromo operativo. Originalidad 8 / encaje 9.
 
@@ -50,6 +51,12 @@ Orchestrator; UI Designer **antes** de Frontend Engineer en cualquier cambio de 
 ---
 
 ## Último avance
+
+### HU-035 JWT vencido (2026-10-18)
+
+- Smoke visual POS: piso Unauthorized con sesión persistida muerta; Llevar #10 → cocina → CASH $150 → recibo.
+- 401 de piso/órdenes cierra sesión y abre `/restaurant/login`. Login/recover no rebotan.
+- Tests: `frontend` `node --test src/lib/staff-auth-expired.spec.ts`.
 
 ### Smoke salón local (2026-10-18)
 

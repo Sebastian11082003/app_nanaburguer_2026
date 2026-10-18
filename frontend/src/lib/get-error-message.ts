@@ -1,4 +1,7 @@
+import { STAFF_AUTH_EXPIRED_MESSAGE } from "@/src/lib/staff-auth-expired";
+
 const API_MESSAGE_ES: Record<string, string> = {
+  Unauthorized: STAFF_AUTH_EXPIRED_MESSAGE,
   "Open a cash session before recording cash":
     "Abrí la caja (turno) antes de cobrar o registrar efectivo",
   "Invoice already accepted": "Esta factura ya fue emitida",
