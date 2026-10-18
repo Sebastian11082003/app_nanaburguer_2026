@@ -227,7 +227,7 @@ export function CashShiftPanel() {
             <p className="text-sm text-zinc-500">
               El efectivo esperado es fondo + ventas en efectivo + ingresos
               manuales − egresos. Tarjeta y transferencia no entran al cajón.
-              Si no contás, el cierre igual guarda el resumen.
+              Si no cuentas, el cierre igual guarda el resumen.
             </p>
           </form>
         </section>

@@ -6,7 +6,7 @@ import {
 } from "@/src/services/payment.service";
 
 const CASH_SESSION_REQUIRED_ES =
-  "Abrí la caja (turno) antes de cobrar o registrar efectivo";
+  "Abre la caja (turno) antes de cobrar o registrar efectivo";
 
 /**
  * Closes the order (creates Sale) and records a single full payment.

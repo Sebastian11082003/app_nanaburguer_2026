@@ -1,5 +1,5 @@
 export const STAFF_AUTH_EXPIRED_MESSAGE =
-  "Sesión vencida. Entrá de nuevo.";
+  "Sesión vencida. Ingresa de nuevo.";
 
 const AUTH_PATH =
   /\/auth\/(staff-login|forgot-password|reset-password)(?:\?|$)/;
