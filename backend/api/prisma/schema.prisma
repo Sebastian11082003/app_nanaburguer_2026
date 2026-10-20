@@ -1,0 +1,596 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//////////////////////
+// ENUMS
+//////////////////////
+
+enum UserRole {
+  ADMIN
+  CASHIER
+  WAITER
+  KITCHEN
+  DELIVERY
+}
+
+enum OrderType {
+  DINE_IN
+  DELIVERY
+  PICKUP
+}
+
+enum OrderStatus {
+  CREATED
+  SENT_TO_KITCHEN
+  IN_PREPARATION
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CLOSED
+  CANCELED
+}
+
+enum OrderSource {
+  WAITER
+  CASHIER
+  DELIVERY
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+enum InvoiceStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum DeliveryStatus {
+  PENDING
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum CashType {
+  INCOME
+  EXPENSE
+}
+
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum TipType {
+  NONE
+  PERCENTAGE
+  FIXED
+}
+
+//////////////////////
+// TENANT
+//////////////////////
+
+model PlatformAdmin {
+  id           String @id @default(uuid())
+  email        String @unique
+  fullName     String @map("full_name")
+  passwordHash String @map("password_hash")
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lastLoginAt DateTime?
+}
+
+model Restaurant {
+  id String @id @default(uuid())
+
+  name String
+  slug String @unique
+  nit  String @unique
+
+  email String?
+
+  restaurantPasswordHash String? @map("restaurant_password_hash")
+
+  phone        String?
+  address      String?
+  logoUrl      String?
+  primaryColor String?
+
+  factusApiKey String? @map("factus_api_key")
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  users User[]
+
+  categories Category[]
+  menuItems  MenuItem[]
+
+  tables TableEntity[]
+
+  orders Order[]
+
+  sales    Sale[]
+  invoices Invoice[]
+  payments Payment[]
+
+  deliveries Delivery[]
+
+  cashMovements CashMovement[]
+  cashSessions  CashSession[]
+
+  paymentMethods RestaurantPaymentMethod[]
+
+  roles Role[]
+
+  @@map("restaurant")
+}
+
+//////////////////////
+// PAYMENT METHODS (per tenant)
+//////////////////////
+
+/// Enable/disable + rename the built-in PaymentMethod codes per restaurant.
+/// Business rules (e.g. cash change / cash drawer) still key off `method`.
+model RestaurantPaymentMethod {
+  id           String @id @default(uuid())
+  restaurantId String
+
+  method    PaymentMethod
+  label     String
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([restaurantId, method])
+  @@index([restaurantId, isActive])
+  @@map("restaurant_payment_method")
+}
+
+//////////////////////
+// USERS + ROLES
+//////////////////////
+
+/// Global permission catalog (shared across tenants).
+model Permission {
+  id          String @id @default(uuid())
+  code        String @unique
+  name        String
+  description String?
+  groupName   String @map("group_name")
+
+  roles RolePermission[]
+
+  @@map("permission")
+}
+
+/// Tenant role: 5 system templates + custom roles with a permission matrix.
+model Role {
+  id           String @id @default(uuid())
+  restaurantId String
+
+  name        String
+  description String?
+
+  /// Set only for the five seeded templates (one per station).
+  systemKey UserRole?
+  isSystem  Boolean  @default(false)
+
+  /// Which login hub / app shell this role uses (ADMIN, WAITER, …).
+  stationKey UserRole
+
+  isActive Boolean @default(true)
+
+  restaurant  Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  permissions RolePermission[]
+  users       User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([restaurantId, name])
+  @@unique([restaurantId, systemKey])
+  @@index([restaurantId, isActive])
+  @@map("role")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permission")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  fullName     String   @map("full_name")
+  passwordHash String   @map("password_hash")
+  /// Station key used for role-login endpoints (kept in sync with Role.stationKey).
+  role         UserRole
+  isActive     Boolean  @default(true) @map("is_active")
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  /// Assigned role row (system template or custom). Null = legacy users until backfilled.
+  roleId       String? @map("role_id")
+  assignedRole Role?   @relation(fields: [roleId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdOrders Order[]              @relation("orders_created")
+  updatedOrders Order[]              @relation("orders_updated")
+  statusChanges OrderStatusHistory[]
+  deliveries    Delivery[]           @relation("DeliveryUser")
+
+  payments      Payment[]
+  cashMovements CashMovement[]
+  passwordResets PasswordResetToken[]
+  openedCashSessions CashSession[] @relation("cash_sessions_opened")
+  closedCashSessions CashSession[] @relation("cash_sessions_closed")
+
+  @@unique([email, restaurantId])
+  @@index([restaurantId])
+  @@index([roleId])
+}
+
+/// One-time token for "olvidé mi contraseña". Hash only; raw token is emailed/shown once.
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+//////////////////////
+// MENU
+//////////////////////
+
+model Category {
+  id       String  @id @default(uuid())
+  name     String
+  isActive Boolean @default(true)
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items MenuItem[]
+
+  @@index([restaurantId])
+}
+
+model MenuItem {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  priceCents  Int
+  isAvailable Boolean @default(true)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@index([restaurantId])
+  @@index([categoryId])
+}
+
+//////////////////////
+// TABLES
+//////////////////////
+
+model TableEntity {
+  id       String  @id @default(uuid())
+  label    String
+  capacity Int
+  isActive Boolean @default(true)
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  orders Order[]
+
+  @@index([restaurantId])
+}
+
+//////////////////////
+// ORDER
+//////////////////////
+
+model Order {
+  id          String @id @default(uuid())
+  orderNumber Int
+
+  type   OrderType
+  status OrderStatus
+  source OrderSource
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  tableId String?
+  table   TableEntity? @relation(fields: [tableId], references: [id])
+
+  subtotalCents  Int
+  taxCents       Int
+  discountCents  Int @default(0)
+  totalCents     Int
+  /// Estimated pickup instant for PICKUP orders (HU-014).
+  pickupAt       DateTime?
+
+  createdById String
+  updatedById String
+
+  createdBy User @relation("orders_created", fields: [createdById], references: [id])
+  updatedBy User @relation("orders_updated", fields: [updatedById], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  items    OrderItem[]
+  history  OrderStatusHistory[]
+  sale     Sale?
+  delivery Delivery?
+
+  @@unique([restaurantId, orderNumber])
+  @@index([restaurantId])
+  @@index([tableId])
+  @@index([status])
+  @@index([type])
+}
+
+model OrderItem {
+  id             String  @id @default(uuid())
+  orderId        String
+  menuItemId     String
+  quantity       Int
+  unitPriceCents Int
+  lineTotalCents Int
+  notes          String?
+  /// When true, lineTotalCents is forced to 0 (kitchen still prepares it).
+  isComplimentary Boolean @default(false)
+  /// Soft-cancel after the ticket left CREATED (HU-012). Kept for audit.
+  canceledAt      DateTime?
+  cancelReason    String?
+  /// When set, kitchen already received this line (HU-030). Null = pending.
+  sentToKitchenAt DateTime?
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+}
+
+model OrderStatusHistory {
+  id          String      @id @default(uuid())
+  orderId     String
+  fromStatus  OrderStatus
+  toStatus    OrderStatus
+  changedById String
+  changedAt   DateTime    @default(now())
+  note        String?
+
+  order     Order @relation(fields: [orderId], references: [id])
+  changedBy User  @relation(fields: [changedById], references: [id])
+
+  @@index([orderId])
+}
+
+//////////////////////
+// SALE
+//////////////////////
+
+model Sale {
+  id           String @id @default(uuid())
+  orderId      String @unique
+  restaurantId String
+
+  totalCents Int
+
+  order      Order      @relation(fields: [orderId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  payment Payment?
+  invoice Invoice?
+
+  createdAt DateTime @default(now())
+
+  @@index([restaurantId])
+}
+
+model Payment {
+  id           String @id @default(uuid())
+  saleId       String @unique
+  restaurantId String
+
+  tipCents          Int  @default(0)
+  tipSuggestedCents Int?
+
+  method      PaymentMethod
+  amountCents Int
+  currency    String        @default("COP")
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  sale       Sale       @relation(fields: [saleId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  invoice Invoice?
+
+  paidAt DateTime @default(now())
+
+  @@index([restaurantId])
+}
+
+//////////////////////
+// INVOICE
+//////////////////////
+
+model Invoice {
+  id           String @id @default(uuid())
+  saleId       String @unique
+  paymentId    String @unique
+  restaurantId String
+
+  number String        @unique
+  cufe   String?
+  status InvoiceStatus
+
+  totalCents Int
+  currency   String
+
+  responseJson Json?
+
+  sale       Sale       @relation(fields: [saleId], references: [id])
+  payment    Payment    @relation(fields: [paymentId], references: [id])
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([restaurantId])
+}
+
+//////////////////////
+// DELIVERY
+//////////////////////
+
+model Delivery {
+  id      String @id @default(uuid())
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  customerName     String
+  phone            String
+  address          String?
+  neighborhood     String?
+  deliveryFeeCents Int     @default(0)
+  deliveryUserId   String?
+
+  deliveryUser User?     @relation("DeliveryUser", fields: [deliveryUserId], references: [id])
+  takenAt      DateTime  @default(now()) // cuando se toma el pedido
+  printedAt    DateTime? // cuando se imprime la orden para el delivery  
+  dispatchedAt DateTime? // cuando se asigna a un repartidor  
+  deliveredAt  DateTime? // cuando se marca como entregado  
+
+  notes   String?
+  printed Boolean @default(false)
+
+  paymentMethod PaymentMethod?
+
+  status DeliveryStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@index([restaurantId])
+}
+
+//////////////////////
+// CASH MOVEMENT
+//////////////////////
+
+model CashMovement {
+  id          String   @id @default(uuid())
+  type        CashType
+  concept     String
+  reference   String?
+  amountCents Int
+
+  createdAt DateTime @default(now())
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@index([restaurantId])
+  @@index([createdAt])
+}
+
+/// One open drawer per tenant. Close freezes sales-by-method + expected cash
+/// so HU-025 has a historical closing, not a live recalculation.
+model CashSession {
+  id           String @id @default(uuid())
+  restaurantId String
+
+  status CashSessionStatus @default(OPEN)
+
+  openedById String
+  closedById String?
+
+  openedAt DateTime  @default(now())
+  closedAt DateTime?
+
+  openingCents Int  @default(0)
+  countedCents Int?
+  notes        String?
+
+  salesTotalCents    Int?
+  cashSalesCents     Int?
+  cardSalesCents     Int?
+  transferSalesCents Int?
+  otherSalesCents    Int?
+  manualIncomeCents  Int?
+  expenseCents       Int?
+  expectedCashCents  Int?
+  differenceCents    Int?
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  openedBy   User       @relation("cash_sessions_opened", fields: [openedById], references: [id])
+  closedBy   User?      @relation("cash_sessions_closed", fields: [closedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([restaurantId, status])
+  @@index([restaurantId, openedAt])
+  @@map("cash_session")
+}

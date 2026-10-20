@@ -1,0 +1,48 @@
+# Backlog operativo (NanaBurguer / RestoOS)
+
+Fuente viva del trabajo pendiente. GitHub Projects **no existe** todavía en esta cuenta (`projectsV2` vacío) y este agente **no puede crear** Project ni Issues (token de GitHub de solo lectura).
+
+Para tener el tablero en GitHub:
+
+1. En el repo: **Projects → New project** (tabla o board).
+2. Activa **Issues** si están apagadas (Settings → Features).
+3. Crea un issue por fila de abajo, o pega el título en el Project.
+
+Rama de integración: `dev`.
+
+## Ahora (turno / piloto local)
+
+| ID | Estado | Qué |
+|---|---|---|
+| UX-01 | hecho | Dirección C (pase/comanda) evaluada e implementada en shell, piso, KDS y login |
+| OPS-01 | hecho v0.4.56 | Liberar mesa vacía post-cocina; KDS sin tickets a $0; transferir mesa desde caja |
+| OPS-02 | hecho v0.4.57 | Editar hora de recoger con el ticket ya en cocina |
+| OPS-03 | hecho v0.4.57 | Tras cobrar, abrir recibo imprimible (caja y admin) |
+| OPS-04 | hecho v0.4.57 | Aviso si se cobra sin turno de caja abierto (no bloquea) |
+| OPS-05 | hecho v0.4.59 | Cajero no cobra sin turno abierto (admin sigue con aviso) |
+| OPS-06 | hecho v0.4.60 | Cancelar ítem post-cocina: caja/admin por defecto; permiso `ORDERS_CANCEL_ITEM` para habilitar/inhabilitar |
+| OPS-07 | hecho v0.4.58 | Recibos en el chrome de caja (lista + imprimir, sin pasar por admin) |
+| OPS-08 | hecho HU-033 | Print-agent `/health` no espera WMI en Windows; lookup con timeout |
+| OPS-09 | hecho HU-034 | Print-agent `/print` no cuelga WMI; `file` / auto sin térmica |
+| OPS-10 | hecho 2026-10-18 | Smoke `smoke-salon-mvp.mjs` local: mesa→cocina→CASH+invoice+reportes. DB `nanaburguer_db:5437` (5432 ocupado, no se mató) |
+| OPS-11 | hecho HU-035 | JWT vencido: POS no pinta `Unauthorized`; vuelve a `/restaurant/login` |
+| OPS-12 | hecho HU-036 | Recibo impreso con el mismo número de factura que la fila |
+| OPS-13 | hecho HU-037 | Reimprimir comanda completa desde el KDS (POS cocina y estación) |
+
+## Después del piloto (no inventar ahora)
+
+| ID | Qué | Por qué no ahora |
+|---|---|---|
+| OUT-01 | Inventario / recetas / stock | Fuera del MVP escrito |
+| OUT-02 | Factus / DIAN real | HU-026 Planned |
+| OUT-03 | Impresora térmica ESC/POS | Hecho para demo: `print-agent` :19100 + POS/comanda/recibo. DIAN/red en local sigue aparte |
+| OUT-04 | Rappi / QR / Nequi / pagos online | Fuera de alcance |
+| OUT-05 | WhatsApp / push | HU-027 |
+
+## Plataforma
+
+| ID | Qué |
+|---|---|
+| PLAT-01 | GitHub Project + Issues como tablero (hace falta permiso write) |
+| PLAT-02 | VPS + DNS + secretos reales |
+| PLAT-03 | Issues deshabilitadas o vacías en el repo hoy |

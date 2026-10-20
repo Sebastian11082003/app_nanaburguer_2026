@@ -1,0 +1,16 @@
+---
+description: Regla 13 OS — no implementar UI genérica; dirección de diseño primero
+alwaysApply: true
+---
+
+# UI/UX (AI Engineering OS `b71085f`)
+
+Fuente: `AI_ENGINEERING_OS` main `b71085f` — [FRAMEWORK_RULES.md](c:/Users/USER/projects/AI_ENGINEERING_OS/FRAMEWORK_RULES.md) regla 13, [standards/ui-ux-design.md](c:/Users/USER/projects/AI_ENGINEERING_OS/standards/ui-ux-design.md).
+
+- No implementar ni cerrar interfaz si falta `docs/12-ux-ui/design-direction.md` evaluado (originalidad ≥ 7, encaje ≥ 8).
+- Plantilla: `AI_ENGINEERING_OS/templates/docs/_template-design-direction.md`.
+- Diseño con capas (no copiar un sitio): Mobbin (interacción), Godly (identidad), Web Anatomy (composición por sección), Land-book (valor y CTA), Google Stitch (A editorial, B expresiva, C producto) antes de elegir.
+- Prohibido por inercia: gradiente púrpura/azul, Inter sobre blanco, cards redondeadas en todo, glass, sidebar + grilla de tres features, hero genérico con un botón.
+- Si la UI actual se ve genérica, el próximo incremento visual abre con dirección nueva de las pantallas afectadas. No recortar color sobre el mismo layout.
+- Pregunta de cierre: sin logo ni nombre, ¿podría ser otro producto? Si sí, no se publica.
+- DEC-006 (tokens) no sustituye la dirección. DEC-009 (mobile-first) sigue vigente dentro del ADN.

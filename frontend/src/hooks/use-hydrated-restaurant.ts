@@ -1,0 +1,70 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { restaurantAuthService } from "@/src/services/restaurant-auth.service";
+import { useRestaurantStore } from "@/src/store/restaurant.store";
+
+const BRANDING_TIMEOUT_MS = 2500;
+
+/**
+ * Wait for persist, then refresh name/logo from the API. Persist can be
+ * stale (logo uploaded later); the monogram must not replace a real logo.
+ */
+export function useHydratedRestaurant() {
+  const restaurant = useRestaurantStore((s) => s.restaurant);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const persist = useRestaurantStore.persist;
+    const start = persist.hasHydrated()
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => {
+          persist.onFinishHydration(() => resolve());
+        });
+
+    let cancelled = false;
+
+    void start.then(async () => {
+      const current = useRestaurantStore.getState().restaurant;
+      if (!current?.slug) {
+        if (!cancelled) setReady(true);
+        return;
+      }
+
+      try {
+        const branding = await Promise.race([
+          restaurantAuthService.getBranding(current.slug),
+          new Promise<null>((resolve) => {
+            setTimeout(() => resolve(null), BRANDING_TIMEOUT_MS);
+          }),
+        ]);
+        if (cancelled || !branding) return;
+        const latest = useRestaurantStore.getState().restaurant;
+        if (!latest || latest.slug !== current.slug) return;
+        if (
+          branding.logoUrl !== latest.logoUrl ||
+          branding.name !== latest.name ||
+          branding.primaryColor !== latest.primaryColor
+        ) {
+          useRestaurantStore.getState().setTenantPreview({
+            ...latest,
+            name: branding.name,
+            logoUrl: branding.logoUrl,
+            primaryColor: branding.primaryColor,
+          });
+        }
+      } catch {
+        // Keep persist values if branding is unreachable.
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurant?.slug]);
+
+  return { restaurant, ready };
+}

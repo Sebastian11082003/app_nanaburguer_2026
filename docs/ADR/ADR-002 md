@@ -1,0 +1,158 @@
+# ADR-002 — Backend Framework Selection
+
+| Campo                      | Detalle                    |
+| -------------------------- | -------------------------- |
+| **Estado**                 | ✅ Accepted                |
+| **Fecha**                  | 2026-05-10                 |
+| **Tecnología elegida**     | NestJS                     |
+| **Patrón / Principio**     | Enterprise Modular Backend |
+| **Impacto arquitectónico** | Crítico                    |
+
+---
+
+# Contexto
+
+El backend requiere soportar:
+
+- múltiples módulos,
+- JWT,
+- RBAC,
+- Swagger,
+- Prisma,
+- Docker,
+- despliegue cloud.
+
+---
+
+# Problema
+
+¿Qué framework backend debe utilizarse para garantizar:
+
+- escalabilidad,
+- modularidad,
+- mantenibilidad,
+- productividad?
+
+---
+
+# Opciones Consideradas
+
+## Express.js
+
+### Beneficios
+
+| ✅ Beneficios     |
+| ----------------- |
+| Lightweight       |
+| Flexible          |
+| Ecosistema grande |
+
+### Problemas
+
+| ❌ Problemas               |
+| -------------------------- |
+| Sin arquitectura definida  |
+| Escalabilidad limitada     |
+| Mucha configuración manual |
+
+---
+
+## Fastify
+
+### Beneficios
+
+| ✅ Beneficios    |
+| ---------------- |
+| Alto rendimiento |
+| Bajo overhead    |
+
+### Problemas
+
+| ❌ Problemas        |
+| ------------------- |
+| Menos tooling       |
+| Ecosistema reducido |
+
+---
+
+## NestJS
+
+### Beneficios
+
+| ✅ Beneficios        |
+| -------------------- |
+| Arquitectura modular |
+| Dependency Injection |
+| Swagger integrado    |
+| Enterprise-ready     |
+
+### Problemas
+
+| ❌ Problemas         |
+| -------------------- |
+| Más boilerplate      |
+| Curva de aprendizaje |
+
+---
+
+# Decisión
+
+Se adopta:
+
+# NestJS
+
+como framework backend oficial.
+
+---
+
+# Justificación
+
+NestJS permite:
+
+- Clean Architecture,
+- modularidad,
+- testing,
+- escalabilidad,
+- integración Prisma,
+- Swagger,
+- JWT + RBAC.
+
+---
+
+# Beneficios
+
+| ✅ Beneficios     | ⚠️ Trade-offs     |
+| ----------------- | ----------------- |
+| Escalable         | Más boilerplate   |
+| Modular           | Mayor complejidad |
+| Swagger integrado | Más estructura    |
+| Enterprise-ready  | Curva aprendizaje |
+
+---
+
+# Riesgos
+
+| Riesgo           | Mitigación                |
+| ---------------- | ------------------------- |
+| Overengineering  | Modularización controlada |
+| Abuso decorators | Code reviews              |
+
+---
+
+# Futuro
+
+Permitirá:
+
+- GraphQL,
+- queues,
+- workers,
+- microservices parciales.
+
+---
+
+# Referencias
+
+- NestJS Documentation
+- TypeScript Documentation
+
+---

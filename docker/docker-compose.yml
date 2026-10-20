@@ -1,0 +1,104 @@
+# Local / single-host MVP. Not AWS.
+# Copy .env.example to .env before a public bind.
+
+services:
+  db:
+    image: postgres:15
+    container_name: nanaburguer_db
+    restart: always
+
+    environment:
+      POSTGRES_USER: nanaburguer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nanaburguer}
+      POSTGRES_DB: nanaburguer_dev
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nanaburguer -d nanaburguer_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - nanaburguer_net
+
+  api:
+    build:
+      context: ../backend/api
+      dockerfile: Dockerfile.prod
+
+    container_name: nanaburguer_api
+    restart: always
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://nanaburguer:${POSTGRES_PASSWORD:-nanaburguer}@db:5432/nanaburguer_dev?schema=public
+      JWT_SECRET: ${JWT_SECRET:-change-me-local-mvp-only}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,http://localhost:80,http://127.0.0.1}
+      # Local MVP: documented JWT/seed are allowed. HTTPS overlay sets this false.
+      ALLOW_INSECURE_DEFAULTS: ${ALLOW_INSECURE_DEFAULTS:-true}
+      SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
+      PLATFORM_ADMIN_EMAIL: ${PLATFORM_ADMIN_EMAIL:-admin@nanaburger.com}
+      PLATFORM_ADMIN_PASSWORD: ${PLATFORM_ADMIN_PASSWORD:-123456}
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    volumes:
+      # Logos live on disk under /app/uploads. Without this volume a
+      # recreate of nanaburguer_api wipes every tenant logo.
+      - api_uploads:/app/uploads
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - nanaburguer_net
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+
+    container_name: nanaburguer_frontend
+    restart: always
+
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+
+    ports:
+      - "80:3000"
+
+    depends_on:
+      api:
+        condition: service_healthy
+
+    networks:
+      - nanaburguer_net
+
+volumes:
+  postgres_data:
+  api_uploads:
+
+networks:
+  nanaburguer_net:
+    driver: bridge
