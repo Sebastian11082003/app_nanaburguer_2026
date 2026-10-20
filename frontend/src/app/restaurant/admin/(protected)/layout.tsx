@@ -23,7 +23,11 @@ import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
  * hardcoded one — reading from `useRestaurantStore`.
  */
 function AdminBrand() {
-  const { restaurant } = useHydratedRestaurant();
+  const { restaurant: stored } = useHydratedRestaurant();
+  // Persisted stores read localStorage on the client's first render; SSR has
+  // no tenant, so wait until mounted to avoid a hydration text mismatch.
+  const hydrated = useAuthHydrated();
+  const restaurant = hydrated ? stored : null;
 
   return (
     <div className="flex min-w-0 items-center gap-3">
@@ -131,7 +135,7 @@ export default function RestaurantAdminLayout({
                 Panel administrativo
               </p>
               <h1 className="font-display text-lg sm:text-xl">
-                {user?.fullName ?? "Administración"}
+                {(hydrated && user?.fullName) || "Administración"}
               </h1>
             </div>
           </div>
