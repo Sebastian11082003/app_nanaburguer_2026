@@ -609,7 +609,7 @@ describe('OrdersService', () => {
         'WAITER',
       );
 
-      expect(prisma.order.update).toHaveBeenCalled();
+      expect((prisma.order as { update: jest.Mock }).update).toHaveBeenCalled();
     });
 
     it('lets a waiter release a post-kitchen ticket with no live lines', async () => {
@@ -631,7 +631,7 @@ describe('OrdersService', () => {
         'WAITER',
       );
 
-      expect(prisma.order.update).toHaveBeenCalled();
+      expect((prisma.order as { update: jest.Mock }).update).toHaveBeenCalled();
     });
 
     it('stamps unsent live lines when sending to kitchen', async () => {

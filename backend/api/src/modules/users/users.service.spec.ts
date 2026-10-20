@@ -39,6 +39,7 @@ describe('UsersService', () => {
     findFirst: jest.Mock;
     findMany: jest.Mock;
     create: jest.Mock;
+    update: jest.Mock;
   };
 
   it('provisions only the stations that are still missing', async () => {

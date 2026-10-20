@@ -341,7 +341,7 @@ describe('AuthService', () => {
 
       const result = await service.forgotPassword('cashier@nana.test');
       expect(result.ok).toBe(true);
-      expect(result.resetUrl).toMatch(/^\/restaurant\/reset\?token=/);
+      expect('resetUrl' in result && result.resetUrl).toMatch(/^\/restaurant\/reset\?token=/);
     });
   });
 
