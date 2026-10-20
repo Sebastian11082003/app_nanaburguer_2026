@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { BrandMark } from "@/src/components/brand/brand-mark";
+import { KitchenTicket } from "@/src/components/orders/kitchen-ticket";
 import { useHydratedRestaurant } from "@/src/hooks/use-hydrated-restaurant";
 import { getErrorMessage } from "@/src/lib/get-error-message";
 import { formatCents } from "@/src/lib/money";
@@ -10,6 +11,7 @@ import { orderChannelLabel } from "@/src/lib/order-channel-label";
 import { orderLineLabel } from "@/src/lib/order-line-label";
 import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { isLatestKitchenRoundLine } from "@/src/lib/kitchen-lines";
+import { printKitchenOrder } from "@/src/lib/print-ticket";
 import { ordersService } from "@/src/services/orders.service";
 import { Order, OrderStatus } from "@/src/types/order";
 
@@ -38,6 +40,11 @@ export function KitchenBoard({
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [printBusyId, setPrintBusyId] = useState<string | null>(null);
+  const [printHint, setPrintHint] = useState<{ id: string; text: string } | null>(
+    null,
+  );
+  const [reprintOrder, setReprintOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
 
   const load = useCallback(
@@ -92,12 +99,35 @@ export function KitchenBoard({
     }
   }
 
+  /**
+   * Lost thermal slip: reprint the whole ticket, not the last-round delta.
+   * If the print-agent is up, send ESC/POS in one tap. Otherwise open the
+   * existing comanda modal so window.print() does not dump the KDS board.
+   */
+  async function reprint(order: Order) {
+    try {
+      setPrintBusyId(order.id);
+      setError("");
+      const mode = await printKitchenOrder(order, { skipBrowser: true });
+      if (mode === "thermal") {
+        setPrintHint({ id: order.id, text: "Enviado a la térmica" });
+        return;
+      }
+      setReprintOrder(order);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "No se pudo imprimir la comanda"));
+    } finally {
+      setPrintBusyId(null);
+    }
+  }
+
   return (
+    <>
     <main
       className={
         embedded
-          ? "space-y-6 overflow-x-hidden"
-          : "mx-auto max-w-5xl space-y-6 overflow-x-hidden p-4 sm:p-8"
+          ? "space-y-6 overflow-x-hidden print:hidden"
+          : "mx-auto max-w-5xl space-y-6 overflow-x-hidden p-4 sm:p-8 print:hidden"
       }
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -160,16 +190,26 @@ export function KitchenBoard({
                   </p>
                 </div>
 
-                {nextStatus && nextLabel && (
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                   <button
                     type="button"
-                    disabled={busyId === order.id}
-                    onClick={() => advance(order.id)}
-                    className="btn-primary min-h-11 w-full px-5 py-3 disabled:opacity-50 sm:w-auto"
+                    disabled={printBusyId === order.id}
+                    onClick={() => void reprint(order)}
+                    className="min-h-11 w-full rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-paper disabled:opacity-50 sm:w-auto"
                   >
-                    {busyId === order.id ? "..." : nextLabel}
+                    {printBusyId === order.id ? "..." : "Imprimir"}
                   </button>
-                )}
+                  {nextStatus && nextLabel && (
+                    <button
+                      type="button"
+                      disabled={busyId === order.id}
+                      onClick={() => advance(order.id)}
+                      className="btn-primary min-h-11 w-full px-5 py-3 disabled:opacity-50 sm:w-auto"
+                    >
+                      {busyId === order.id ? "..." : nextLabel}
+                    </button>
+                  )}
+                </div>
               </div>
 
               <ul className="mt-3 space-y-1 text-sm">
@@ -199,6 +239,9 @@ export function KitchenBoard({
                   );
                 })}
               </ul>
+              {printHint?.id === order.id ? (
+                <p className="mt-2 text-sm text-zinc-400">{printHint.text}</p>
+              ) : null}
             </div>
             );
           })}
@@ -209,5 +252,12 @@ export function KitchenBoard({
         </div>
       )}
     </main>
+      {reprintOrder ? (
+        <KitchenTicket
+          order={reprintOrder}
+          onClose={() => setReprintOrder(null)}
+        />
+      ) : null}
+    </>
   );
 }

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test src/lib/staff-auth-expired.spec.ts"
+    "test": "node --experimental-strip-types --test src/lib/staff-auth-expired.spec.ts src/lib/kitchen-print-job.spec.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.10",

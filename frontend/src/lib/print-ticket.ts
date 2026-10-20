@@ -1,5 +1,6 @@
 import { formatPickupAt } from "@/src/lib/format-pickup-at";
 import { latestKitchenRoundLines } from "@/src/lib/kitchen-lines";
+import { kitchenJobTitle, toKitchenJobLines } from "@/src/lib/kitchen-print-job";
 import { orderChannelLabel } from "@/src/lib/order-channel-label";
 import {
   KitchenPrintJob,
@@ -11,27 +12,25 @@ import { Order } from "@/src/types/order";
 
 export async function printKitchenOrder(
   order: Order,
-  opts?: { deltaOnly?: boolean },
-): Promise<"thermal" | "browser"> {
+  opts?: { deltaOnly?: boolean; skipBrowser?: boolean },
+): Promise<"thermal" | "browser" | "needs-browser"> {
   const lines = opts?.deltaOnly
     ? latestKitchenRoundLines(order)
     : (order.items ?? []);
   const job: KitchenPrintJob = {
     type: "kitchen",
-    title: opts?.deltaOnly ? "COMANDA RONDA" : "COMANDA",
+    title: kitchenJobTitle(opts?.deltaOnly),
     channel: orderChannelLabel(order),
     orderNumber: order.orderNumber,
     pickupAt: formatPickupAt(order.pickupAt),
     at: new Date().toLocaleString("es-CO"),
-    lines: lines.map((item) => ({
-      qty: item.quantity,
-      name: item.menuItem?.name ?? "item",
-      notes: item.notes,
-      canceled: Boolean(item.canceledAt),
-    })),
+    lines: toKitchenJobLines(lines),
   };
   const sent = await sendPrintJob(job);
   if (sent.ok) return "thermal";
+  // KDS reprint must not window.print() the whole board; the caller opens
+  // KitchenTicket so only .comanda-ticket hits the browser dialog.
+  if (opts?.skipBrowser) return "needs-browser";
   window.print();
   return "browser";
 }

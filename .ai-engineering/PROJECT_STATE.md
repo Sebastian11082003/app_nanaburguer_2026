@@ -40,6 +40,7 @@ Sprint 5 — Salón piloto (superar Loggro Restobar)
 - **HU-034** Print-agent `/print` no cuelga WMI; fallback archivo — Implemented
 - **HU-035** JWT vencido del personal vuelve al login — Implemented
 - **HU-036** Recibo impreso con el mismo número de factura guardado — Implemented
+- **HU-037** Reimprimir comanda completa desde el KDS — Implemented
 - Fuera del sprint: HU-027 WhatsApp, DIAN real, inventario como ERP
 - **UI:** dirección C (pase/comanda) evaluada e implementada en cromo operativo. Originalidad 8 / encaje 9.
 
@@ -52,6 +53,12 @@ Orchestrator; UI Designer **antes** de Frontend Engineer en cualquier cambio de 
 ---
 
 ## Último avance
+
+### HU-037 reimprimir comanda en KDS (2026-10-20)
+
+- Cola / Preparando / Listas tienen Imprimir. Reimpresión = ticket completo, no el delta de ronda.
+- Con print-agent: ESC/POS en un tap. Sin agente: modal de comanda (no imprime el tablero).
+- `tsc --noEmit` del frontend no incluye `*.spec.ts` (node:test sigue usando imports `.ts`).
 
 ### Smoke ronda 2 + impresión (2026-10-18)
 

@@ -16,6 +16,8 @@ El **turno de restaurante del MVP está construido**. Un local puede: entrar, ar
 
 Eso es un **MVP de piloto en la máquina** (o LAN). **No** es un SaaS público en VPS.
 
+**Actualizado 2026-10-20:** HU-037 — KDS reimprime la comanda completa (POS cocina y estación). Sprint 5 HU-029–037.
+
 **Actualizado 2026-10-18:** `smoke-salon-mvp.mjs` OK (API). Smoke visual POS: login `admin@smoke-cash-922.test` → Llevar #10 Burger smoke → cocina cola/preparando/listo → CASH $150 → recibo. HU-035: JWT muerto ya no deja `Unauthorized` en el piso. Postgres **5437**. Sprint 5 HU-029–035.
 
 Inventario, DIAN real, WhatsApp y menú público **siguen fuera**. La térmica ESC/POS entra en el demo local (`print-agent`).

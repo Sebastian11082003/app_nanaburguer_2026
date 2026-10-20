@@ -27,6 +27,7 @@ Rama de integración: `dev`.
 | OPS-10 | hecho 2026-10-18 | Smoke `smoke-salon-mvp.mjs` local: mesa→cocina→CASH+invoice+reportes. DB `nanaburguer_db:5437` (5432 ocupado, no se mató) |
 | OPS-11 | hecho HU-035 | JWT vencido: POS no pinta `Unauthorized`; vuelve a `/restaurant/login` |
 | OPS-12 | hecho HU-036 | Recibo impreso con el mismo número de factura que la fila |
+| OPS-13 | hecho HU-037 | Reimprimir comanda completa desde el KDS (POS cocina y estación) |
 
 ## Después del piloto (no inventar ahora)
 

@@ -1,5 +1,10 @@
 # PROJECT CHANGELOG
 
+## HU-037 — reimprimir comanda desde el KDS
+
+- Cocina puede reimprimir el ticket completo (Cola / Preparando / Listas) sin que el mesero envíe otra ronda.
+- Con print-agent sale por térmica; si no, se abre la comanda 80mm. El tablero no va al diálogo de impresión.
+
 ## HU-036 — recibo con el mismo número de factura
 
 - El número de factura del ticket impreso era un segundo `Date.now()` y podía quedar 1 ms distinto al guardado (`INV-…433` en pantalla, `INV-…434` en el recibo). Ahora se calcula una vez.

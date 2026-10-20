@@ -7,7 +7,7 @@ import { KitchenBoard } from "@/src/components/kitchen/kitchen-board";
 export default function KitchenQueuePage() {
   return (
     <div>
-      <div className="px-4 pt-4 sm:px-8 sm:pt-6">
+      <div className="px-4 pt-4 sm:px-8 sm:pt-6 print:hidden">
         <Link
           href="/restaurant/kitchen"
           className="inline-flex min-h-11 items-center text-zinc-400 hover:text-white"

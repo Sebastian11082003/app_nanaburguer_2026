@@ -62,7 +62,7 @@ export function PosKitchenStation() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 overflow-x-auto">
+      <div className="flex gap-1 overflow-x-auto print:hidden">
         {PANES.map((item) => (
           <button
             key={item.key}

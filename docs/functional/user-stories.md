@@ -989,3 +989,30 @@ High
 ### Status
 
 Implemented
+
+---
+
+## HU-037 — Reprint kitchen ticket from the KDS
+
+**Actor:** Kitchen, Admin, Cashier
+
+### Description
+
+As kitchen staff,  
+I want to reprint a comanda from the KDS,  
+So that a jammed or lost thermal slip does not force the waiter to send a fake new round.
+
+### Acceptance Criteria
+
+- Each ticket on Cola / Preparando / Listas has Imprimir (POS cocina and standalone KDS).
+- Reprint is the full live ticket (`COMANDA`), not the last-round delta (`COMANDA RONDA`).
+- Print-agent on the kitchen PC sends ESC/POS in one tap; without agent, the existing comanda preview opens so `window.print()` does not dump the board.
+- Node tests cover full-ticket title and canceled lines on reprint.
+
+### Priority
+
+High
+
+### Status
+
+Implemented
